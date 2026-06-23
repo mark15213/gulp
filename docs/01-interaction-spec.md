@@ -1,6 +1,6 @@
 # 01 — Interaction Spec
 
-*Gulp · interaction specification · v2 · 2026-06-22*
+*Gulp · interaction specification · v3 · 2026-06-23*
 
 > Companion to [`00-product-one-pager.md`](00-product-one-pager.md). The one-pager defines **what** Gulp is and **why**; this doc defines **how the user moves through it** — the flows, key screens, states, and transitions across **mobile and web**.
 >
@@ -36,8 +36,8 @@ These are the rules every flow must obey. When a screen decision is ambiguous, r
 
 | Surface | Owns | Notes |
 |---|---|---|
-| **Mobile app** | Capture (share sheet), daily Gulp mode, notifications, quick review, digest | Primary for ingestion and daily habit |
-| **Web app** | Deep reading, library/knowledge-base work, feed management, long Gulp sessions | NotebookLM-style workspace layout |
+| **Mobile app** | Capture (share sheet), daily Gulp mode, notifications, batch-confirm of new captures, digest | Primary for ingestion and daily habit; **consumption end** |
+| **Web app** | Deep reading, inbox triage & pack curation, library/knowledge-base work, feed management, long Gulp sessions | NotebookLM-style workspace; **management end** |
 | **External targets** | WeChat forward, OS share sheet, `gulp@…` email-in | Headless capture → lands in Inbox |
 
 **Sync model:** all surfaces read/write the same account state. Capture and mastery updates sync optimistically; conflicts resolve last-write-wins on scalar fields and union on collections (e.g., tags). A capture made offline queues locally and uploads on reconnect (§10.4).
@@ -58,7 +58,7 @@ Gulp is conceptually rich, so the objects must read as **one pipeline**, not a p
 | **Digest** | **Knowledge pack** | "It read it for me" |
 | **Practice** | **Card** (inside Gulp mode) | "It tests me" |
 | **Master** | **mastery state** + **Concept** | "It knows what I know, and how ideas connect" |
-| **Organize** | **Knowledge base** · **Feeds** | "Group by project; auto-follow what I want" |
+| **Organize** | **Knowledge base** | "Group by project" |
 
 Read the object list below through this spine and the count stops mattering — each thing has exactly one job in the flow.
 
@@ -86,7 +86,7 @@ For **organization**:
 
 Cross-cutting: every knowledge-bearing object carries a **mastery state** (§F7).
 
-> **Naming discipline:** "Source" now means the umbrella only. The thing you usually point at is a **Snapshot**. The feed-management surface is called **Feeds** (never "Sources"), so the word is never overloaded.
+> **Naming discipline:** "Source" is the umbrella only; **Subscription** is the streaming *form* of Source, while **Feeds** is the *surface* that manages Subscriptions — so Feeds is not a spine object (§4.1), just a place. The thing you usually point at is a **Snapshot**.
 
 ### 4.3 Navigation
 
@@ -95,7 +95,8 @@ Navigation is organized by **intent**, not by object type. The forms of Source a
 **Mobile — bottom tab bar (4):**
 `Today · Library · ⊕ Capture · You`
 - `⊕ Capture` is the center action (sheet, not a tab); it produces a **Snapshot**.
-- A persistent "**N due**" badge sits on `Today`; the **Daily digest** lives inside `Today`.
+- **Mobile is the consumption end** — capture, Gulp, conversation. There is no Inbox/triage tab; bulk triage and library/pack management live on web (below). So capture is never a black hole, `Today` carries a read-only **"recently captured / processing"** peek of what just landed.
+- `Today` also surfaces the daily essentials: a persistent "**N due**" badge, the **Daily digest**, and — when captures finish processing — a lightweight **"N new to confirm"** batch-review card (the mobile form of review, §F2).
 - Concepts, Conversations, and Knowledge bases are **filters inside Library**; feed management lives in `You/Settings`. Power is present, not in your face.
 
 **Web — left sidebar (the power workspace):**
@@ -124,31 +125,39 @@ Each flow: **trigger → steps → key screens → states → edge cases**, with
 
 **Key screens:** Capture confirm sheet · Inbox list.
 
-**States:** `Queued (offline)` → `Processing` → `Ready` / `Needs attention` (extraction failed, §10.2).
+**States:** `Queued (offline)` → `Processing` → `Ready (awaiting review)` → `In library` (committed; or auto-committed when **auto-approve** is on, §F2) · `Needs attention` (extraction failed, §10.2).
 
-**Mobile vs web:** mobile = OS share sheet → confirm sheet; web = `⌘K → paste`. Both land in the same Inbox.
+**Mobile vs web:** mobile = OS share sheet → confirm sheet, then a "saved" toast and the item appears in `Today`'s recent-captures peek (no Inbox tab on mobile); web = `⌘K → paste`, lands in the `Inbox` surface. Both write the same Inbox state.
 
 **Edge cases:** duplicate URL → offer "open existing" instead of re-capturing; paywalled/blocked page → capture whatever selection/text is available; unsupported file type → store as a Snapshot with no pack and flag it.
 
 ---
 
 ### F2 — Knowledge pack generation & review
-**Goal:** turn a Snapshot into a structured, skimmable pack, then let the user accept it into the library.
+**Goal:** turn a Snapshot into a structured, skimmable pack, then commit it (and its Cards) into the library — reviewed by default, but never as a hard blocker.
 
 **Steps:**
 1. Snapshot enters `Processing`; Gulp builds the **Knowledge pack**: summary → background → key terms → people/orgs → core claims → counter-views → connections to existing Concepts.
 2. Candidate **Cards** are drafted from the pack (not yet scheduled).
-3. On `Ready`, user opens the **Snapshot detail**.
-4. User skims the pack; can edit/dismiss any element; can promote/reject draft Cards.
-5. "**Add to library**" commits the Snapshot, its accepted Cards, and new Concepts into the knowledge graph (Cards enter scheduling at §F7).
+3. On `Ready`, the Snapshot is `awaiting review` (unless auto-approve, below).
+4. User reviews (see **Review model**): edit/dismiss pack elements, promote/reject draft Cards.
+5. Commit — "**Add to library**" / "**Approve**" — moves the Snapshot, its accepted Cards, and new Concepts into the knowledge graph (Cards enter scheduling at §F7).
 
-**Key screens:** Snapshot detail (reader on one side, pack on the other) · draft-cards review strip.
+**Review model (default on, batchable, skippable):**
+- **Default = required.** Captures sit `awaiting review` until approved, so nothing enters scheduling unvetted.
+- **Batch.** Approve many at once — "approve all from these N captures" — not one Snapshot at a time.
+- **Auto-approve (opt-in).** A setting — global, with a per-Feed/source override (§F6) — that commits packs+Cards automatically on `Ready`, skipping the gate. The path for mobile-only users who don't want to curate.
+- **Two shapes, mapped to the two surfaces:**
+  - *Lightweight batch review = a consumption act → available on mobile.* Surfaces as the "**N new to confirm**" card in `Today`: approve-all, or tap through a quick accept/reject strip.
+  - *Deep curation = a management act → web only.* Full Snapshot detail (edit pack elements, split/merge Concepts, re-file into KBs) lives in the web `Inbox`/`Library`.
 
-**States:** pack element = `suggested` → `kept` / `dismissed`; Card = `draft` → `accepted` (enters queue) / `rejected`.
+**Key screens:** `Today` batch-confirm card (mobile) · Snapshot detail (reader on one side, pack on the other; web) · draft-cards review strip.
 
-**Mobile vs web:** web shows reader + pack side-by-side (three-pane); mobile stacks them with a segmented control (`Read · Pack · Cards`).
+**States:** Snapshot = `awaiting review` → `in library` (committed) / auto-committed (auto-approve); pack element = `suggested` → `kept` / `dismissed`; Card = `draft` → `accepted` (enters queue) / `rejected`.
 
-**Edge cases:** thin/low-confidence content → pack shows only what's reliable and says so; very long content (book/long video) → pack is section-chunked with per-section cards.
+**Mobile vs web:** web shows reader + pack side-by-side (three-pane) for deep curation; mobile does lightweight batch-confirm from `Today`, and can open a single Snapshot in a stacked segmented control (`Read · Pack · Cards`) for a quick look — but bulk triage and management stay on web.
+
+**Edge cases:** thin/low-confidence content → pack shows only what's reliable and says so; very long content (book/long video) → pack is section-chunked with per-section cards; **mobile-only user** → closes the loop via the `Today` batch-confirm (or auto-approve), never needing web (§F8).
 
 ---
 
@@ -223,9 +232,9 @@ Each flow: **trigger → steps → key screens → states → edge cases**, with
 1. Add a **Subscription** (RSS / newsletter address / channel) or import OPML.
 2. New items auto-create **Snapshots** (lightweight, unprocessed) under that subscription.
 3. Gulp assembles a **Daily digest** (and a **Weekly review**): "what's worth your time, why, and how it connects to what you already know," not a raw feed dump.
-4. From the digest, the user can: read, gulp (full pack), dismiss, or send straight into a Gulp session.
+4. From the digest, the user can: read, gulp (full pack), dismiss, or send straight into a Gulp session. A per-Subscription **auto-approve** (§F2) lets trusted feeds skip the review gate, while ad-hoc captures still require review.
 
-**Key screens:** Feeds list (per-subscription health, unread count, mute) · Daily digest (ranked, reasoned cards) · Weekly review (themes, concept evolution, "saved but not yet mastered").
+**Key screens:** Feeds list (per-subscription health, unread count, mute, **auto-approve toggle**) · Daily digest (ranked, reasoned cards) · Weekly review (themes, concept evolution, "saved but not yet mastered").
 
 **States:** subscription = `active`/`muted`/`error`; digest item = `unseen`/`read`/`gulped`/`dismissed`.
 
@@ -260,7 +269,7 @@ Each flow: **trigger → steps → key screens → states → edge cases**, with
 
 **Key screens:** sign-in · interest/seed · capture-setup · first-pack tour · first mini-session.
 
-**Edge cases:** user skips capture setup → still seed a sample Snapshot so they can experience a pack + mini-session immediately.
+**Edge cases:** user skips capture setup → still seed a sample Snapshot so they can experience a pack + mini-session immediately; **mobile-only user** → the first pack's Cards are confirmed via the `Today` batch-confirm card (or onboarding offers auto-approve), so the loop closes without ever touching web (§F2).
 
 ---
 
@@ -280,10 +289,10 @@ Each flow: **trigger → steps → key screens → states → edge cases**, with
 
 | Screen | Surface | Primary job | Primary action |
 |---|---|---|---|
-| Today | both | "what to do now" | Start Gulp |
+| Today | both | "what to do now" (+ mobile batch-confirm of new captures) | Start Gulp / Approve new |
 | Capture confirm | both | one-gesture save | Confirm |
-| Inbox | both | triage recent captures | Open / gulp |
-| Snapshot detail | both | read + review pack | Add to library |
+| Inbox | web-led | triage recent captures (mobile triages via `Today`) | Open / approve |
+| Snapshot detail | both | read + curate pack (deep curation web-only) | Add to library |
 | Library list | both | find & filter | Open object |
 | Concept page | both | understand + test | Test me |
 | Gulp prompt / reveal | both | learn one thing | Answer → grade |
@@ -342,9 +351,10 @@ Every list and object screen defines these explicitly:
 
 **Deferred:** browser extension (one-click web capture), team/shared knowledge bases, public sharing/publishing, content marketplace, advanced graph visualization, FSRS (interaction is FSRS-ready; algorithm swap is later), full localization beyond zh/en.
 
+**Decided (was open):** review of AI-drafted packs/Cards is **required by default**, **batchable**, and **skippable via auto-approve** (global + per-Feed override). Review has two shapes — lightweight batch-confirm (consumption, on mobile in `Today`) and deep curation (management, web only). See §F2.
+
 **Open questions:**
 - Default Gulp session length and whether it auto-adapts to available time.
-- How aggressively to auto-accept AI-drafted Cards vs. require review (friction vs. trust).
 - Digest cadence/volume defaults per user.
 - Whether a `Snapshot` always stores its full content body or keeps only the reference/link (storage cost vs. link-rot protection).
 - Web `Inbox`: keep it as a pinned sidebar entry, or fold it into Library as a "new / unprocessed" filter?
