@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gulp — UI System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ── Local fonts (offline-safe) ─────────────────────────────── */
+@font-face{font-family:'Geist Mono';src:url('fonts/GeistMono-Regular.ttf');font-weight:400;font-display:swap}
+@font-face{font-family:'Geist Mono';src:url('fonts/GeistMono-Bold.ttf');font-weight:700;font-display:swap}
+@font-face{font-family:'Instrument Serif';src:url('fonts/InstrumentSerif-Regular.ttf');font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:'Instrument Serif';src:url('fonts/InstrumentSerif-Italic.ttf');font-weight:400;font-style:italic;font-display:swap}
+
+/* ── Tokens — shared + web register (page default) ──────────── */
+:root{
+  --font-sans:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --font-mono:'Geist Mono',ui-monospace,'SF Mono',Menlo,monospace;
+  --font-serif:'Instrument Serif',Georgia,serif;
+
+  --blue-50:#EFF5FF; --blue-100:#DBE8FE; --blue-500:#3B82F6; --blue-600:#2563EB; --blue-700:#1D4ED8;
+
+  --new:#94A3B8;   --new-t:#F1F5F9;   --new-o:#475569;
+  --learn:#F59E0B; --learn-t:#FEF3C7; --learn-o:#92400E;
+  --known:#10B981; --known-t:#D1FAE5; --known-o:#065F46;
+  --due:#2563EB;   --due-t:#EFF5FF;   --due-o:#1D4ED8;
+  --risk:#EF4444;  --risk-t:#FEE2E2;  --risk-o:#991B1B;
+
+  /* neutrals — web (cool slate) */
+  --bg:#F8FAFC; --surface:#FFFFFF; --fill:#F1F5F9; --border:#E2E8F0; --border-strong:#CBD5E1;
+  --muted:#94A3B8; --text-2:#64748B; --text-1:#0F172A;
+
+  --radius-sm:4px; --radius-md:6px; --radius-lg:8px; --radius-xl:12px; --radius-pill:999px;
+  --shadow-sm:0 1px 2px rgba(15,23,42,.06);
+  --shadow-card:0 1px 2px rgba(15,23,42,.06);
+  --shadow-overlay:0 8px 28px rgba(15,23,42,.14);
+  --ease:cubic-bezier(.2,0,0,1);
+}
+/* mobile register — warm sand, rounder, softer */
+.reg-mobile{
+  --bg:#FAFAF7; --surface:#FFFFFF; --fill:#F4F3EE; --border:#E9E6DD; --border-strong:#D8D3C7;
+  --muted:#A8A395; --text-2:#6B665A; --text-1:#1C1B18;
+  --radius-sm:8px; --radius-md:12px; --radius-lg:16px; --radius-xl:20px;
+  --shadow-card:0 2px 8px rgba(28,27,24,.08);
+  --shadow-overlay:0 8px 28px rgba(28,27,24,.16);
+}
+
+/* ── Base ───────────────────────────────────────────────────── */
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--text-1);font-family:var(--font-sans);
+  font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+h1,h2,h3,h4{margin:0;font-weight:600;letter-spacing:-.01em;line-height:1.2}
+p{margin:0}
+a{color:var(--blue-600);text-decoration:none}
+.mono{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+.overline{font-family:var(--font-mono);font-size:11px;letter-spacing:.10em;text-transform:uppercase;color:var(--text-2)}
+.serif{font-family:var(--font-serif)}
+
+/* ── Layout shell ───────────────────────────────────────────── */
+.topbar{position:sticky;top:0;z-index:50;background:rgba(248,250,252,.85);backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--border)}
+.topbar .inner{max-width:1120px;margin:0 auto;padding:12px 28px;display:flex;align-items:center;gap:20px}
+.brand{display:flex;align-items:center;gap:9px;font-weight:700;letter-spacing:-.02em;font-size:16px}
+.brand .dot{width:18px;height:18px;border-radius:6px;background:linear-gradient(135deg,#2563EB,#3B82F6)}
+.topnav{display:flex;gap:4px;margin-left:auto;flex-wrap:wrap}
+.topnav a{font-size:13px;color:var(--text-2);padding:5px 10px;border-radius:var(--radius-pill)}
+.topnav a:hover{background:var(--fill);color:var(--text-1)}
+
+.wrap{max-width:1120px;margin:0 auto;padding:0 28px}
+header.hero{padding:56px 0 36px}
+header.hero .meta{margin-bottom:18px}
+header.hero h1{font-size:46px;letter-spacing:-.025em}
+header.hero .lede{margin-top:16px;font-size:18px;color:var(--text-2);max-width:680px}
+header.hero .lede b{color:var(--text-1);font-weight:600}
+
+section{padding:34px 0;border-top:1px solid var(--border)}
+.sec-head{display:flex;align-items:baseline;gap:14px;margin-bottom:22px}
+.sec-head .num{font-family:var(--font-mono);font-size:12px;color:var(--blue-600)}
+.sec-head h2{font-size:24px}
+.sec-head .sub{color:var(--text-2);font-size:14px;margin-left:auto;max-width:440px;text-align:right}
+
+/* ── Generic cards/grids ────────────────────────────────────── */
+.grid{display:grid;gap:16px}
+.cols-2{grid-template-columns:1fr 1fr}
+.cols-3{grid-template-columns:repeat(3,1fr)}
+.cols-4{grid-template-columns:repeat(4,1fr)}
+@media(max-width:820px){.cols-2,.cols-3,.cols-4{grid-template-columns:1fr 1fr}}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px}
+
+/* ── Register compare ───────────────────────────────────────── */
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:820px){.compare{grid-template-columns:1fr}}
+.reg-card{border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;background:var(--surface)}
+.reg-card .top{padding:16px 18px;border-bottom:1px solid var(--border)}
+.reg-card .top h3{font-size:17px}
+.reg-card .top .tag{font-size:12px;color:var(--text-2);margin-top:3px}
+.reg-card ul{margin:0;padding:14px 18px 16px 32px;color:var(--text-2);font-size:13.5px}
+.reg-card li{margin:4px 0}
+.reg-card.web .strip{height:6px;background:var(--blue-600)}
+.reg-card.mob .strip{height:6px;background:linear-gradient(90deg,#2563EB,#F59E0B)}
+
+/* ── Color swatches ─────────────────────────────────────────── */
+.swatches{display:flex;flex-wrap:wrap;gap:10px}
+.sw{border:1px solid var(--border);border-radius:var(--radius-md);overflow:hidden;width:120px;background:var(--surface)}
+.sw .chip{height:54px}
+.sw .lab{padding:7px 9px}
+.sw .lab .n{font-size:12px;font-weight:600}
+.sw .lab .h{font-family:var(--font-mono);font-size:11px;color:var(--text-2);text-transform:uppercase}
+
+.neu-table{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:0;border:1px solid var(--border);
+  border-radius:var(--radius-lg);overflow:hidden;font-size:13px}
+.neu-table>div{padding:9px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:9px}
+.neu-table .head{background:var(--fill);font-weight:600;color:var(--text-2);font-size:11px;
+  font-family:var(--font-mono);text-transform:uppercase;letter-spacing:.06em}
+.neu-table .role{color:var(--text-1)}
+.neu-dot{width:18px;height:18px;border-radius:5px;border:1px solid rgba(0,0,0,.08);flex:none}
+.neu-table code{font-family:var(--font-mono);font-size:11.5px;color:var(--text-2)}
+
+/* ── Mastery + functional chips ─────────────────────────────── */
+.chip{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:var(--radius-pill);
+  font-size:12.5px;font-weight:500;line-height:1.4}
+.chip .d{width:7px;height:7px;border-radius:50%}
+.chip.new{background:var(--new-t);color:var(--new-o)} .chip.new .d{background:var(--new)}
+.chip.learn{background:var(--learn-t);color:var(--learn-o)} .chip.learn .d{background:var(--learn)}
+.chip.known{background:var(--known-t);color:var(--known-o)} .chip.known .d{background:var(--known)}
+.chip.due{background:var(--due-t);color:var(--due-o)} .chip.due .d{background:var(--due)}
+.chip.risk{background:var(--risk-t);color:var(--risk-o)} .chip.risk .d{background:var(--risk)}
+.chiprow{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+
+/* ── Buttons ────────────────────────────────────────────────── */
+.btn{font-family:var(--font-sans);font-size:14px;font-weight:600;border-radius:var(--radius-md);
+  padding:8px 16px;border:1px solid transparent;cursor:pointer;transition:.12s var(--ease);line-height:1.2}
+.btn.primary{background:var(--blue-600);color:#fff}
+.btn.primary:hover{background:var(--blue-700)}
+.btn.secondary{background:var(--surface);border-color:var(--border-strong);color:var(--text-1)}
+.btn.secondary:hover{background:var(--fill)}
+.btn.ghost{background:transparent;color:var(--text-2)}
+.btn.ghost:hover{color:var(--text-1)}
+.btn.danger{background:transparent;color:var(--risk)}
+.btn.danger:hover{background:var(--risk-t)}
+
+/* ── filter chips ───────────────────────────────────────────── */
+.fchip{font-size:13px;padding:5px 12px;border-radius:var(--radius-pill);border:1px solid var(--border);
+  background:var(--surface);color:var(--text-2);cursor:pointer;font-weight:500}
+.fchip.on{background:var(--blue-50);border-color:var(--blue-100);color:var(--blue-700)}
+
+/* ── input + toggle ─────────────────────────────────────────── */
+.field{width:100%;font-family:var(--font-sans);font-size:14px;padding:9px 12px;border:1px solid var(--border-strong);
+  border-radius:var(--radius-md);background:var(--surface);color:var(--text-1)}
+.field:focus{outline:none;border-color:var(--blue-600);box-shadow:0 0 0 3px rgba(37,99,235,.18)}
+.toggle{width:42px;height:24px;border-radius:999px;background:var(--border-strong);position:relative;cursor:pointer;
+  transition:.16s var(--ease)}
+.toggle.on{background:var(--blue-600)}
+.toggle::after{content:"";position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:#fff;
+  transition:.16s var(--ease);box-shadow:0 1px 2px rgba(0,0,0,.2)}
+.toggle.on::after{left:20px}
+
+/* ── object glyph ───────────────────────────────────────────── */
+.glyph{width:28px;height:28px;border-radius:7px;display:grid;place-items:center;flex:none;
+  font-family:var(--font-mono);font-size:12px;font-weight:700;color:#fff}
+.g-snap{background:#334155} .g-conv{background:#0EA5E9} .g-sub{background:#8B5CF6}
+.g-conc{background:#0F766E} .g-kb{background:#475569}
+
+/* object row (web) */
+.orow{display:flex;align-items:center;gap:12px;padding:11px 14px;border-bottom:1px solid var(--border);
+  background:var(--surface)}
+.orow:hover{background:var(--fill)}
+.orow .ttl{font-size:14px;font-weight:600}
+.orow .sum{font-size:12.5px;color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.orow .meta{font-family:var(--font-mono);font-size:11px;color:var(--muted);white-space:nowrap}
+
+/* type specimens */
+.spec{display:flex;align-items:baseline;gap:16px;padding:11px 0;border-bottom:1px dashed var(--border)}
+.spec .tag{width:160px;flex:none;color:var(--text-2);font-size:12px}
+.spec .tag b{display:block;color:var(--text-1);font-size:13px;font-weight:600}
+.spec .demo{flex:1}
+
+/* spacing + radius */
+.spacebar{display:flex;align-items:flex-end;gap:14px}
+.spacebar .b{background:var(--blue-100);border-radius:3px;width:30px}
+.spacebar .b span{display:block;text-align:center;margin-top:6px;font-family:var(--font-mono);font-size:10px;color:var(--text-2)}
+.radbox{height:64px;border:1.5px solid var(--blue-600);background:var(--blue-50);display:grid;place-items:end center}
+.radbox span{font-family:var(--font-mono);font-size:10px;color:var(--blue-700);padding:4px}
+
+/* ════════ WEB WORKBENCH MOCKUP ════════ */
+.device-label{display:flex;align-items:center;gap:8px;margin:0 0 12px}
+.device-label .pill{font-family:var(--font-mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;
+  background:var(--blue-600);color:#fff;padding:3px 9px;border-radius:var(--radius-pill)}
+.device-label.mob .pill{background:linear-gradient(135deg,#2563EB,#F59E0B)}
+.device-label .t{color:var(--text-2);font-size:13px}
+
+.workbench{border:1px solid var(--border-strong);border-radius:var(--radius-xl);overflow:hidden;
+  box-shadow:var(--shadow-overlay);background:var(--surface);display:grid;grid-template-columns:208px 1fr 320px;
+  height:520px;font-size:13px}
+@media(max-width:820px){.workbench{grid-template-columns:64px 1fr;height:480px}.wb-panel{display:none!important}}
+.wb-side{background:var(--bg);border-right:1px solid var(--border);padding:14px 10px;display:flex;flex-direction:column;gap:2px}
+.wb-side .wbrand{display:flex;align-items:center;gap:8px;font-weight:700;padding:6px 8px 12px}
+.wb-side .wbrand .dot{width:16px;height:16px;border-radius:5px;background:linear-gradient(135deg,#2563EB,#3B82F6)}
+.wb-nav{display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:var(--radius-md);color:var(--text-2);cursor:default}
+.wb-nav .ic{width:15px;height:15px;border-radius:4px;border:1.6px solid currentColor;flex:none;opacity:.7}
+.wb-nav.on{background:var(--blue-50);color:var(--blue-700);font-weight:600;position:relative}
+.wb-nav.on::before{content:"";position:absolute;left:-10px;top:6px;bottom:6px;width:3px;border-radius:3px;background:var(--blue-600)}
+.wb-nav .ct{margin-left:auto;font-family:var(--font-mono);font-size:11px;background:var(--blue-600);color:#fff;
+  padding:1px 7px;border-radius:999px}
+@media(max-width:820px){.wb-nav span.lbl,.wb-side .wbrand span,.wb-nav .ct{display:none}}
+
+.wb-main{display:flex;flex-direction:column;min-width:0}
+.wb-top{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px}
+.wb-top h3{font-size:17px}
+.wb-top .k{margin-left:auto;font-family:var(--font-mono);font-size:11px;color:var(--muted);border:1px solid var(--border);
+  padding:3px 8px;border-radius:var(--radius-sm)}
+.wb-filters{display:flex;gap:8px;padding:11px 18px;border-bottom:1px solid var(--border);flex-wrap:wrap}
+.wb-list{overflow:auto;flex:1}
+
+.wb-panel{border-left:1px solid var(--border);display:flex;flex-direction:column;min-width:0;background:var(--surface)}
+.wb-panel .ph{padding:13px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
+.wb-panel .pb{padding:14px 16px;overflow:auto;flex:1}
+.pack-sec{margin-bottom:16px}
+.pack-sec .lab{font-family:var(--font-mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-2);margin-bottom:6px}
+.pack-sec p{font-size:12.5px;color:var(--text-1);line-height:1.5}
+.termchip{display:inline-block;font-size:11.5px;padding:2px 9px;border-radius:999px;background:var(--fill);
+  color:var(--text-1);margin:0 5px 5px 0}
+.draftcard{border:1px solid var(--border);border-radius:var(--radius-md);padding:10px;margin-top:8px;font-size:12px}
+.draftcard .q{font-weight:600;margin-bottom:7px}
+.draftcard .acts{display:flex;gap:7px}
+.mini{font-size:11px;font-weight:600;padding:4px 10px;border-radius:var(--radius-sm);cursor:pointer;border:1px solid transparent}
+.mini.acc{background:var(--blue-600);color:#fff} .mini.rej{background:var(--fill);color:var(--text-2)}
+
+/* ════════ PHONE MOCKUPS ════════ */
+.phones{display:flex;gap:30px;flex-wrap:wrap;justify-content:center}
+.phone{width:300px;flex:none}
+.phone .frame{background:var(--surface);border:1px solid var(--border-strong);border-radius:36px;padding:10px;
+  box-shadow:var(--shadow-overlay)}
+.screen{background:var(--bg);border-radius:28px;overflow:hidden;height:600px;display:flex;flex-direction:column;position:relative}
+.statusbar{display:flex;justify-content:space-between;align-items:center;padding:10px 20px 4px;
+  font-family:var(--font-mono);font-size:11px;color:var(--text-2)}
+.scr-body{flex:1;overflow:auto;padding:6px 16px 16px}
+.scr-h{font-size:26px;font-weight:600;letter-spacing:-.02em;margin:8px 2px 4px}
+.tabbar{display:flex;align-items:center;justify-content:space-around;padding:9px 12px 16px;border-top:1px solid var(--border);
+  background:var(--surface)}
+.tab{display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--muted);font-size:10px}
+.tab .ic{width:20px;height:20px;border-radius:6px;border:1.8px solid currentColor;opacity:.8}
+.tab.on{color:var(--blue-600)} .tab.on .ic{background:currentColor;opacity:1;border-color:transparent}
+.tab.cap .ic{width:38px;height:38px;border-radius:13px;background:linear-gradient(135deg,#2563EB,#3B82F6);
+  border:none;opacity:1;display:grid;place-items:center;color:#fff;font-size:22px;font-weight:300;margin-top:-14px;
+  box-shadow:0 4px 12px rgba(37,99,235,.35)}
+
+/* mobile cards */
+.mcard{background:var(--surface);border-radius:var(--radius-lg);box-shadow:var(--shadow-card);padding:14px;margin:10px 0}
+.mcard.hero{background:linear-gradient(135deg,#2563EB,#3B82F6);color:#fff;box-shadow:0 6px 18px rgba(37,99,235,.32)}
+.mcard.hero .big{font-family:var(--font-mono);font-size:34px;font-weight:700;line-height:1}
+.mcard.hero .sub{opacity:.9;font-size:13px;margin-top:2px}
+.mcard.hero .go{margin-top:12px;background:#fff;color:var(--blue-700);border-radius:var(--radius-md);
+  text-align:center;font-weight:700;font-size:14px;padding:10px}
+.mcard .row1{display:flex;align-items:center;gap:10px}
+.mcard .mt{font-family:var(--font-mono);font-size:11px;color:var(--muted);margin-top:6px}
+.mcard .ttl{font-size:14.5px;font-weight:600;line-height:1.35}
+.mcard .why{font-size:12.5px;color:var(--text-2);margin-top:5px}
+.sect-lab{font-family:var(--font-mono);font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);
+  margin:16px 2px 2px}
+.confirm{border:1.5px solid var(--blue-100);background:var(--blue-50)}
+.confirm .top{display:flex;align-items:center;justify-content:space-between}
+.confirm .strip{display:flex;gap:8px;margin-top:11px}
+.peek{display:flex;align-items:center;gap:9px;padding:8px 2px;font-size:12.5px;color:var(--text-2)}
+.peek .glyph{width:22px;height:22px;border-radius:6px;font-size:10px}
+.spin{width:13px;height:13px;border-radius:50%;border:2px solid var(--border-strong);border-top-color:var(--blue-600);
+  animation:sp 1s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+/* gulp prompt screen */
+.gulp{background:var(--surface);display:flex;flex-direction:column;height:100%}
+.gulp .gt{padding:14px 18px 0;display:flex;justify-content:space-between;align-items:center}
+.gulp .prog{height:4px;border-radius:2px;background:var(--fill);flex:1;margin-right:12px;overflow:hidden}
+.gulp .prog i{display:block;height:100%;width:55%;background:var(--blue-600)}
+.gulp .gq{padding:26px 22px 10px;flex:1;display:flex;flex-direction:column}
+.gulp .qlabel{font-family:var(--font-mono);font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--blue-600)}
+.gulp .qtext{font-size:22px;font-weight:600;line-height:1.3;margin-top:14px;letter-spacing:-.01em}
+.opts{margin-top:auto;display:flex;flex-direction:column;gap:9px;padding:0 0 6px}
+.opt{border:1.5px solid var(--border);border-radius:var(--radius-lg);padding:13px 14px;font-size:14px;cursor:pointer;
+  display:flex;align-items:center;gap:11px;transition:.12s var(--ease);background:var(--surface)}
+.opt .key{font-family:var(--font-mono);font-size:11px;color:var(--muted);border:1px solid var(--border);border-radius:5px;
+  width:20px;height:20px;display:grid;place-items:center;flex:none}
+.opt:hover{border-color:var(--border-strong)}
+.opt.correct{border-color:var(--known);background:var(--known-t)}
+.opt.wrong{border-color:var(--risk);background:var(--risk-t)}
+.reveal{padding:14px 22px 8px;display:none}
+.reveal.show{display:block;animation:fade .25s var(--ease)}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.reveal .expl{font-size:13px;color:var(--text-2);line-height:1.5;background:var(--fill);border-radius:var(--radius-md);
+  padding:11px 13px;border-left:3px solid var(--blue-600)}
+.grades{display:flex;gap:8px;padding:12px 22px 20px}
+.grade{flex:1;text-align:center;font-weight:600;font-size:13px;padding:11px 0;border-radius:var(--radius-md);cursor:pointer}
+.grade.g{background:var(--known-t);color:var(--known-o)}
+.grade.f{background:var(--learn-t);color:var(--learn-o)}
+.grade.m{background:var(--risk-t);color:var(--risk-o)}
+
+/* summary screen */
+.summary{background:radial-gradient(120% 80% at 50% 0%,#EFF5FF 0%,var(--bg) 55%);height:100%;
+  display:flex;flex-direction:column;align-items:center;text-align:center;padding:40px 24px 24px}
+.summary .burst{width:74px;height:74px;border-radius:50%;background:linear-gradient(135deg,#2563EB,#3B82F6);
+  display:grid;place-items:center;color:#fff;font-size:34px;box-shadow:0 8px 22px rgba(37,99,235,.4);margin-bottom:18px}
+.summary h2{font-family:var(--font-serif);font-size:38px;font-weight:400;letter-spacing:0;line-height:1.05}
+.summary .streak{margin-top:8px;display:inline-flex;align-items:center;gap:6px;font-family:var(--font-mono);
+  font-size:13px;background:var(--learn-t);color:var(--learn-o);padding:5px 12px;border-radius:999px}
+.sstats{display:flex;gap:10px;margin:24px 0;width:100%}
+.sstat{flex:1;background:var(--surface);border-radius:var(--radius-lg);padding:14px 8px;box-shadow:var(--shadow-card)}
+.sstat .n{font-family:var(--font-mono);font-size:24px;font-weight:700;line-height:1}
+.sstat .l{font-size:11px;color:var(--text-2);margin-top:4px}
+.summary .next{margin-top:auto;width:100%}
+.summary .next .btn{width:100%;padding:13px;font-size:15px;border-radius:var(--radius-lg)}
+
+footer{padding:40px 0 70px;color:var(--text-2);font-size:13px;border-top:1px solid var(--border)}
+footer .mono{font-size:11px;color:var(--muted)}
+.note{font-size:12px;color:var(--muted);margin-top:10px}
+</style>
+</head>
+<body>
+
+<div class="topbar"><div class="inner">
+  <div class="brand"><span class="dot"></span>Gulp</div>
+  <nav class="topnav">
+    <a href="#approach">Approach</a>
+    <a href="#color">Color</a>
+    <a href="#type">Type</a>
+    <a href="#space">Space</a>
+    <a href="#components">Components</a>
+    <a href="#web">Web</a>
+    <a href="#mobile">Mobile</a>
+  </nav>
+</div></div>
+
+<div class="wrap">
+<header class="hero">
+  <div class="overline meta">Gulp · UI System · v1 · 2026-06-23 · light · en</div>
+  <h1>One spine, two registers.</h1>
+  <p class="lede">A shared foundation keeps it one product; each surface gets a register tuned to its job.
+    <b>Web is a precise productivity workbench</b> (Linear/Notion). <b>Mobile is characterful and rewarding</b>
+    (Arc — sophisticated, not cartoon). The thread between them: one blue, one mastery-state language, one set of type roles.</p>
+</header>
+</div>
+
+<!-- ── APPROACH ─────────────────────────────────────────────── -->
+<div class="wrap"><section id="approach" style="border-top:none">
+  <div class="sec-head"><span class="num">01</span><h2>Approach</h2>
+    <span class="sub">Same spine, two visual registers — divergent feel, shared identity.</span></div>
+  <div class="compare">
+    <div class="reg-card web"><div class="strip"></div>
+      <div class="top"><h3>Web register — precise productivity</h3><div class="tag">the management workbench · Linear / Notion</div></div>
+      <ul>
+        <li>Near-grayscale slate + one functional blue accent</li>
+        <li>High density — three-pane, compact rows, filter chips</li>
+        <li>14px base, keyboard-first (<span class="mono">⌘K · 1–4 · space · enter</span>)</li>
+        <li>Fast, functional motion · no celebration</li>
+      </ul></div>
+    <div class="reg-card mob"><div class="strip"></div>
+      <div class="top"><h3>Mobile register — characterful &amp; rewarding</h3><div class="tag">the daily ritual · Arc</div></div>
+      <ul>
+        <li>Amplified blue brand + amber celebration, warm neutrals</li>
+        <li>Comfortable single column, ≥44px targets, 16px base</li>
+        <li>Instrument Serif for hero moments · thumb-first · haptics</li>
+        <li>Expressive motion — only at moments of progress</li>
+      </ul></div>
+  </div>
+  <div class="grid cols-3" style="margin-top:16px">
+    <div class="panel"><div class="overline">Shared spine</div><p style="margin-top:8px;font-size:13.5px;color:var(--text-2)">
+      Gulp Blue · the 5-state mastery language · Inter + Geist Mono + Instrument Serif roles · the Card as atom · 4px base · plain voice.</p></div>
+    <div class="panel"><div class="overline">Blue means “act”</div><p style="margin-top:8px;font-size:13.5px;color:var(--text-2)">
+      The brand blue is rationed to the one key action per screen — and to <span class="chip due"><span class="d"></span>Due</span>, which <i>is</i> a call to act.</p></div>
+    <div class="panel"><div class="overline">State is always legible</div><p style="margin-top:8px;font-size:13.5px;color:var(--text-2)">
+      Every knowledge object shows its mastery state without a tap — color <i>and</i> label, never color alone.</p></div>
+  </div>
+</section></div>
+
+<!-- ── COLOR ────────────────────────────────────────────────── -->
+<div class="wrap"><section id="color">
+  <div class="sec-head"><span class="num">02</span><h2>Color</h2>
+    <span class="sub">Light theme only (v1). One blue brand; a shared mastery palette that never localizes per surface.</span></div>
+
+  <div class="overline" style="margin-bottom:10px">Brand — Gulp Blue</div>
+  <div class="swatches">
+    <div class="sw"><div class="chip" style="background:#EFF5FF"></div><div class="lab"><div class="n">blue-50</div><div class="h">#EFF5FF</div></div></div>
+    <div class="sw"><div class="chip" style="background:#DBE8FE"></div><div class="lab"><div class="n">blue-100</div><div class="h">#DBE8FE</div></div></div>
+    <div class="sw"><div class="chip" style="background:#3B82F6"></div><div class="lab"><div class="n">blue-500</div><div class="h">#3B82F6</div></div></div>
+    <div class="sw"><div class="chip" style="background:#2563EB"></div><div class="lab"><div class="n">blue-600 ·primary</div><div class="h">#2563EB</div></div></div>
+    <div class="sw"><div class="chip" style="background:#1D4ED8"></div><div class="lab"><div class="n">blue-700 ·pressed</div><div class="h">#1D4ED8</div></div></div>
+  </div>
+
+  <div class="grid cols-2" style="margin-top:26px;align-items:start">
+    <div>
+      <div class="overline" style="margin-bottom:10px">Neutrals — web (cool) vs mobile (warm)</div>
+      <div class="neu-table">
+        <div class="head">Role</div><div class="head">Web slate</div><div class="head">Mobile sand</div>
+        <div class="role">App background</div><div><span class="neu-dot" style="background:#F8FAFC"></span><code>#F8FAFC</code></div><div><span class="neu-dot" style="background:#FAFAF7"></span><code>#FAFAF7</code></div>
+        <div class="role">Subtle fill</div><div><span class="neu-dot" style="background:#F1F5F9"></span><code>#F1F5F9</code></div><div><span class="neu-dot" style="background:#F4F3EE"></span><code>#F4F3EE</code></div>
+        <div class="role">Border</div><div><span class="neu-dot" style="background:#E2E8F0"></span><code>#E2E8F0</code></div><div><span class="neu-dot" style="background:#E9E6DD"></span><code>#E9E6DD</code></div>
+        <div class="role">Secondary text</div><div><span class="neu-dot" style="background:#64748B"></span><code>#64748B</code></div><div><span class="neu-dot" style="background:#6B665A"></span><code>#6B665A</code></div>
+        <div class="role" style="border-bottom:none">Ink / primary text</div><div style="border-bottom:none"><span class="neu-dot" style="background:#0F172A"></span><code>#0F172A</code></div><div style="border-bottom:none"><span class="neu-dot" style="background:#1C1B18"></span><code>#1C1B18</code></div>
+      </div>
+      <p class="note">Ink is near-shared; only surfaces &amp; borders carry the register difference. Everything stays light.</p>
+    </div>
+    <div>
+      <div class="overline" style="margin-bottom:10px">Mastery-state language — shared everywhere</div>
+      <div class="panel">
+        <div class="chiprow" style="gap:12px">
+          <span class="chip new"><span class="d"></span>New</span>
+          <span class="chip learn"><span class="d"></span>Learning</span>
+          <span class="chip known"><span class="d"></span>Known</span>
+          <span class="chip due"><span class="d"></span>Due</span>
+          <span class="chip risk"><span class="d"></span>At risk</span>
+        </div>
+        <div class="swatches" style="margin-top:16px">
+          <div class="sw" style="width:104px"><div class="chip" style="background:#94A3B8"></div><div class="lab"><div class="n">New</div><div class="h">#94A3B8</div></div></div>
+          <div class="sw" style="width:104px"><div class="chip" style="background:#F59E0B"></div><div class="lab"><div class="n">Learning</div><div class="h">#F59E0B</div></div></div>
+          <div class="sw" style="width:104px"><div class="chip" style="background:#10B981"></div><div class="lab"><div class="n">Known</div><div class="h">#10B981</div></div></div>
+          <div class="sw" style="width:104px"><div class="chip" style="background:#2563EB"></div><div class="lab"><div class="n">Due</div><div class="h">#2563EB</div></div></div>
+          <div class="sw" style="width:104px"><div class="chip" style="background:#EF4444"></div><div class="lab"><div class="n">At risk</div><div class="h">#EF4444</div></div></div>
+        </div>
+        <p class="note">Functional colors reuse this palette: success = Known, warning = Learning, danger = At risk, info = brand. One vocabulary.</p>
+      </div>
+    </div>
+  </div>
+</section></div>
+
+<!-- ── TYPE ─────────────────────────────────────────────────── -->
+<div class="wrap"><section id="type">
+  <div class="sec-head"><span class="num">03</span><h2>Typography</h2>
+    <span class="sub">Inter (workhorse) · Geist Mono (all numbers &amp; labels) · Instrument Serif (mobile hero moments).</span></div>
+  <div class="panel">
+    <div class="spec"><div class="tag"><b>Display</b>Instrument Serif · mobile 40</div><div class="demo"><span class="serif" style="font-size:38px">Forwarded an article. Got tested on it.</span></div></div>
+    <div class="spec"><div class="tag"><b>Title L</b>Inter 600 · 22 / 28</div><div class="demo"><span style="font-size:24px;font-weight:600;letter-spacing:-.01em">Your library is a training ground</span></div></div>
+    <div class="spec"><div class="tag"><b>Title M</b>Inter 600 · 18 / 20</div><div class="demo"><span style="font-size:19px;font-weight:600">Knowledge pack — review &amp; commit</span></div></div>
+    <div class="spec"><div class="tag"><b>Body M</b>Inter 400 · web 14 / mobile 16</div><div class="demo"><span style="font-size:15px">Capture confirms instantly; the pack fills in behind the scenes and notifies when ready.</span></div></div>
+    <div class="spec"><div class="tag"><b>Label / overline</b>Geist Mono 500 · 11 · +.10em</div><div class="demo"><span class="overline">RECENTLY CAPTURED · PROCESSING</span></div></div>
+    <div class="spec" style="border-bottom:none"><div class="tag"><b>Data / numerals</b>Geist Mono · tabular</div><div class="demo"><span class="mono" style="font-size:20px;font-weight:700">3 due</span> &nbsp; <span class="mono" style="font-size:20px;font-weight:700">+4 days</span> &nbsp; <span class="mono" style="font-size:20px;font-weight:700">5-day streak</span></div></div>
+  </div>
+</section></div>
+
+<!-- ── SPACE ────────────────────────────────────────────────── -->
+<div class="wrap"><section id="space">
+  <div class="sec-head"><span class="num">04</span><h2>Space, radius &amp; elevation</h2>
+    <span class="sub">4px base, shared. Web reaches for tighter steps &amp; flat hairlines; mobile reaches for more air &amp; softer corners.</span></div>
+  <div class="grid cols-2" style="align-items:start">
+    <div class="panel">
+      <div class="overline" style="margin-bottom:14px">4px spacing scale</div>
+      <div class="spacebar">
+        <div class="b" style="height:16px"><span>4</span></div>
+        <div class="b" style="height:24px"><span>8</span></div>
+        <div class="b" style="height:32px"><span>12</span></div>
+        <div class="b" style="height:44px"><span>16</span></div>
+        <div class="b" style="height:56px"><span>24</span></div>
+        <div class="b" style="height:72px"><span>32</span></div>
+        <div class="b" style="height:92px"><span>48</span></div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="overline" style="margin-bottom:14px">Radius — web (tight) vs mobile (round)</div>
+      <div class="grid cols-4" style="gap:10px">
+        <div class="radbox" style="border-radius:4px"><span>4 / 8</span></div>
+        <div class="radbox" style="border-radius:6px"><span>6 / 12</span></div>
+        <div class="radbox" style="border-radius:8px"><span>8 / 16</span></div>
+        <div class="radbox" style="border-radius:12px"><span>12 / 20</span></div>
+      </div>
+      <p class="note">Web leans on 1px hairlines, near-flat. Mobile leans on soft shadows &amp; rounder corners.</p>
+    </div>
+  </div>
+</section></div>
+
+<!-- ── COMPONENTS ───────────────────────────────────────────── -->
+<div class="wrap"><section id="components">
+  <div class="sec-head"><span class="num">05</span><h2>Components</h2>
+    <span class="sub">The shared building blocks, mapped to the interaction spec's screen inventory.</span></div>
+  <div class="grid cols-2" style="align-items:start">
+    <div class="panel">
+      <div class="overline" style="margin-bottom:12px">Buttons — one primary per screen</div>
+      <div class="chiprow">
+        <button class="btn primary">Start Gulp</button>
+        <button class="btn secondary">Open original</button>
+        <button class="btn ghost">Snooze</button>
+        <button class="btn danger">Discard</button>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="overline" style="margin-bottom:12px">Filter chips — web Library</div>
+      <div class="chiprow">
+        <span class="fchip on">All</span><span class="fchip">Snapshots</span><span class="fchip">Conversations</span>
+        <span class="fchip">Cards</span><span class="fchip">Concepts</span><span class="fchip on">Due</span>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="overline" style="margin-bottom:12px">Inputs &amp; toggle</div>
+      <input class="field" placeholder="Add a one-line note…">
+      <div style="display:flex;align-items:center;gap:10px;margin-top:14px;font-size:13.5px">
+        <span class="toggle on" onclick="this.classList.toggle('on')"></span> Auto-approve packs from this feed
+      </div>
+    </div>
+    <div class="panel">
+      <div class="overline" style="margin-bottom:12px">Object glyphs</div>
+      <div class="chiprow" style="gap:16px">
+        <span style="display:flex;align-items:center;gap:7px;font-size:12px"><span class="glyph g-snap">S</span>Snapshot</span>
+        <span style="display:flex;align-items:center;gap:7px;font-size:12px"><span class="glyph g-conv">C</span>Conversation</span>
+        <span style="display:flex;align-items:center;gap:7px;font-size:12px"><span class="glyph g-sub">F</span>Subscription</span>
+        <span style="display:flex;align-items:center;gap:7px;font-size:12px"><span class="glyph g-conc">◆</span>Concept</span>
+      </div>
+    </div>
+  </div>
+  <div class="panel" style="margin-top:16px;padding:0;overflow:hidden">
+    <div class="overline" style="padding:14px 16px 0">Object row — web list item (anatomy: glyph · title · summary · mono meta · state chip)</div>
+    <div style="margin-top:10px">
+      <div class="orow"><span class="glyph g-snap">S</span><div style="flex:1;min-width:0"><div class="ttl">Attention Is All You Need</div><div class="sum">Transformer architecture · self-attention replaces recurrence…</div></div><span class="meta">arxiv · 2d · +6 cards</span><span class="chip learn"><span class="d"></span>Learning</span></div>
+      <div class="orow"><span class="glyph g-sub">F</span><div style="flex:1;min-width:0"><div class="ttl">Stratechery — Aggregation Theory</div><div class="sum">Why owning the demand side beats owning supply…</div></div><span class="meta">newsletter · 5h · +3 cards</span><span class="chip due"><span class="d"></span>2 due</span></div>
+      <div class="orow" style="border-bottom:none"><span class="glyph g-conv">C</span><div style="flex:1;min-width:0"><div class="ttl">Chat — “How does FSRS differ from SM-2?”</div><div class="sum">Sediment: 4 new points · 2 cards proposed…</div></div><span class="meta">conversation · 1d</span><span class="chip known"><span class="d"></span>Known</span></div>
+    </div>
+  </div>
+</section></div>
+
+<!-- ── WEB WORKBENCH ────────────────────────────────────────── -->
+<div class="wrap"><section id="web">
+  <div class="sec-head"><span class="num">06</span><h2>Web — the workbench</h2>
+    <span class="sub">Register B in situ: three-pane, dense, near-grayscale with one functional blue. List ▸ reader ▸ knowledge-pack panel.</span></div>
+  <div class="device-label"><span class="pill">Web · register B</span><span class="t">Library → Snapshot detail → knowledge pack &amp; draft cards</span></div>
+  <div class="workbench">
+    <!-- sidebar -->
+    <aside class="wb-side">
+      <div class="wbrand"><span class="dot"></span><span>Gulp</span></div>
+      <div class="wb-nav on"><span class="ic"></span><span class="lbl">Today</span><span class="ct">3</span></div>
+      <div class="wb-nav"><span class="ic"></span><span class="lbl">Inbox</span><span class="ct">12</span></div>
+      <div class="wb-nav"><span class="ic"></span><span class="lbl">Library</span></div>
+      <div class="wb-nav"><span class="ic"></span><span class="lbl">Feeds</span></div>
+      <div class="wb-nav"><span class="ic"></span><span class="lbl">Knowledge bases</span></div>
+      <div class="wb-nav"><span class="ic"></span><span class="lbl">Search</span></div>
+      <div class="wb-nav" style="margin-top:auto"><span class="ic"></span><span class="lbl">Settings</span></div>
+    </aside>
+    <!-- main list -->
+    <main class="wb-main">
+      <div class="wb-top"><h3>Library</h3><span class="k">⌘K</span></div>
+      <div class="wb-filters">
+        <span class="fchip on">All</span><span class="fchip">Snapshots</span><span class="fchip">Concepts</span>
+        <span class="fchip">ML &amp; AI</span><span class="fchip on">Due</span>
+      </div>
+      <div class="wb-list">
+        <div class="orow" style="background:var(--blue-50)"><span class="glyph g-snap">S</span><div style="flex:1;min-width:0"><div class="ttl">Attention Is All You Need</div><div class="sum">Transformer architecture · self-attention…</div></div><span class="meta">2d</span><span class="chip learn"><span class="d"></span>Learning</span></div>
+        <div class="orow"><span class="glyph g-conc">◆</span><div style="flex:1;min-width:0"><div class="ttl">Self-attention</div><div class="sum">Concept · linked to 4 sources, 9 cards</div></div><span class="meta">—</span><span class="chip due"><span class="d"></span>Due</span></div>
+        <div class="orow"><span class="glyph g-snap">S</span><div style="flex:1;min-width:0"><div class="ttl">A Survey of FSRS</div><div class="sum">Spaced-repetition scheduling, memory model…</div></div><span class="meta">5h</span><span class="chip new"><span class="d"></span>New</span></div>
+        <div class="orow"><span class="glyph g-sub">F</span><div style="flex:1;min-width:0"><div class="ttl">Stratechery — Aggregation Theory</div><div class="sum">Owning demand beats owning supply…</div></div><span class="meta">1d</span><span class="chip known"><span class="d"></span>Known</span></div>
+        <div class="orow"><span class="glyph g-snap">S</span><div style="flex:1;min-width:0"><div class="ttl">PDF — Bloom's Taxonomy revised</div><div class="sum" style="color:var(--learn-o)">Couldn't fully read this — retry</div></div><span class="meta">3d</span><span class="chip risk"><span class="d"></span>Attn</span></div>
+      </div>
+    </main>
+    <!-- pack panel -->
+    <aside class="wb-panel">
+      <div class="ph"><span class="glyph g-snap">S</span><div style="font-weight:600;font-size:13px">Knowledge pack</div><button class="btn primary" style="margin-left:auto;padding:5px 12px;font-size:12px">Add to library</button></div>
+      <div class="pb">
+        <div class="pack-sec"><div class="lab">Summary</div><p>Introduces the Transformer: a sequence model relying entirely on attention, dropping recurrence and convolutions for parallelism and long-range dependencies.</p></div>
+        <div class="pack-sec"><div class="lab">Key terms</div>
+          <span class="termchip">self-attention</span><span class="termchip">multi-head</span><span class="termchip">positional encoding</span><span class="termchip">encoder–decoder</span></div>
+        <div class="pack-sec"><div class="lab">Core claim</div><p>Attention alone, without recurrence, suffices for state-of-the-art sequence transduction — at far greater parallelism.</p></div>
+        <div class="pack-sec"><div class="lab">Draft cards · 2</div>
+          <div class="draftcard"><div class="q">Q · What does self-attention replace in the Transformer?</div><div class="acts"><span class="mini acc">Accept</span><span class="mini rej">Reject</span></div></div>
+          <div class="draftcard"><div class="q">Cloze · Positional ______ injects order information.</div><div class="acts"><span class="mini acc">Accept</span><span class="mini rej">Reject</span></div></div>
+        </div>
+      </div>
+    </aside>
+  </div>
+</section></div>
+
+<!-- ── MOBILE ───────────────────────────────────────────────── -->
+<div class="wrap"><section id="mobile">
+  <div class="sec-head"><span class="num">07</span><h2>Mobile — the daily ritual</h2>
+    <span class="sub">Register C in situ: warm neutrals, amplified blue, amber celebration, Instrument Serif. Today · Gulp prompt · session summary.</span></div>
+  <div class="device-label mob"><span class="pill">Mobile · register C</span><span class="t">tap an answer in the middle phone to see reveal &amp; grade</span></div>
+
+  <div class="phones reg-mobile">
+
+    <!-- TODAY -->
+    <div class="phone"><div class="frame"><div class="screen">
+      <div class="statusbar"><span>9:41</span><span>●●● ⌗ 100</span></div>
+      <div class="scr-body">
+        <div class="scr-h">Today</div>
+        <div class="mcard hero">
+          <div class="big">3 due</div>
+          <div class="sub">~5 min · new + reviews + 1 retest</div>
+          <div class="go">Start Gulp →</div>
+        </div>
+        <div class="sect-lab">Daily digest</div>
+        <div class="mcard"><div class="row1"><span class="glyph g-sub">F</span><span class="chip new" style="margin-left:auto"><span class="d"></span>New</span></div>
+          <div class="ttl" style="margin-top:8px">The case against infinite scroll feeds</div>
+          <div class="why">Connects to your <b>Aggregation Theory</b> notes — same attention-economy thread.</div></div>
+        <div class="sect-lab">2 new to confirm</div>
+        <div class="mcard confirm"><div class="top"><div style="font-weight:600;font-size:14px">From 2 captures</div><span class="chip due"><span class="d"></span>Ready</span></div>
+          <div style="font-size:12.5px;color:var(--text-2);margin-top:6px">Packs &amp; 9 cards drafted and ready to review.</div>
+          <div class="strip"><button class="btn primary" style="flex:1">Approve all</button><button class="btn secondary" style="flex:1">Review</button></div></div>
+        <div class="sect-lab">Recently captured</div>
+        <div class="peek"><span class="glyph g-snap">S</span><div style="flex:1">Lex Fridman × Karpathy</div><span class="spin"></span><span class="mono" style="font-size:11px;color:var(--muted)">processing</span></div>
+      </div>
+      <div class="tabbar">
+        <div class="tab on"><span class="ic"></span>Today</div>
+        <div class="tab"><span class="ic"></span>Library</div>
+        <div class="tab cap"><span class="ic">+</span></div>
+        <div class="tab"><span class="ic"></span>You</div>
+      </div>
+    </div></div></div>
+
+    <!-- GULP PROMPT (interactive) -->
+    <div class="phone"><div class="frame"><div class="screen">
+      <div class="gulp">
+        <div class="gt"><div class="prog"><i></i></div><span class="mono" style="font-size:11px;color:var(--muted)">3 / 5</span></div>
+        <div class="gq">
+          <span class="qlabel">Multiple choice · Self-attention</span>
+          <div class="qtext">In the Transformer, what does self-attention primarily replace?</div>
+          <div class="opts" id="opts">
+            <div class="opt" data-correct="0"><span class="key">1</span>Convolutional filters</div>
+            <div class="opt" data-correct="1"><span class="key">2</span>Recurrence (RNN steps)</div>
+            <div class="opt" data-correct="0"><span class="key">3</span>The loss function</div>
+            <div class="opt" data-correct="0"><span class="key">4</span>Tokenization</div>
+          </div>
+        </div>
+        <div class="reveal" id="reveal">
+          <div class="expl"><b>Recurrence.</b> Attention lets every position see every other in one step — no sequential RNN passes — which is what unlocks parallelism. <span style="color:var(--muted)">— source: §2, Attention Is All You Need</span></div>
+        </div>
+        <div class="grades" id="grades" style="display:none">
+          <div class="grade g">Got it</div><div class="grade f">Fuzzy</div><div class="grade m">Missed</div>
+        </div>
+      </div>
+    </div></div></div>
+
+    <!-- SESSION SUMMARY -->
+    <div class="phone"><div class="frame"><div class="screen">
+      <div class="summary">
+        <div class="burst">✓</div>
+        <h2>Nice work.</h2>
+        <div class="streak">🔥 5-day streak</div>
+        <div class="sstats">
+          <div class="sstat"><div class="n" style="color:var(--blue-600)">5</div><div class="l">reviewed</div></div>
+          <div class="sstat"><div class="n" style="color:var(--known)">2</div><div class="l">mastered</div></div>
+          <div class="sstat"><div class="n" style="color:var(--learn)">1</div><div class="l">fuzzy</div></div>
+        </div>
+        <p style="font-size:13.5px;color:var(--text-2)">Next: 3 cards on <b style="color:var(--text-1)">Aggregation Theory</b> are warming up for tomorrow.</p>
+        <div class="next">
+          <button class="btn primary">Keep going →</button>
+          <button class="btn ghost" style="width:100%;margin-top:6px">Done for today</button>
+        </div>
+      </div>
+    </div></div></div>
+
+  </div>
+  <p class="note" style="text-align:center">Celebration (amber, glow, serif headline, motion) appears only at genuine progress — never on working surfaces, never on web.</p>
+</section></div>
+
+<div class="wrap"><footer>
+  <p>Living preview of <b>03 — UI System</b> · companion to the product one-pager &amp; interaction spec.</p>
+  <p class="mono" style="margin-top:8px">light · en · Inter + Geist Mono + Instrument Serif · dark theme &amp; CJK pairing deferred (§10)</p>
+</footer></div>
+
+<script>
+// Gulp prompt — tap an option to reveal answer + grade
+document.querySelectorAll('#opts .opt').forEach(function(o){
+  o.addEventListener('click', function(){
+    if(document.querySelector('#opts .opt.correct, #opts .opt.wrong')) return; // lock after first answer
+    document.querySelectorAll('#opts .opt').forEach(function(x){
+      if(x.dataset.correct==='1') x.classList.add('correct');
+    });
+    if(o.dataset.correct!=='1') o.classList.add('wrong');
+    document.getElementById('reveal').classList.add('show');
+    document.getElementById('grades').style.display='flex';
+  });
+});
+</script>
+</body>
+</html>
