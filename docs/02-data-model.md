@@ -155,36 +155,55 @@ The frozen, point-in-time item — "the everyday thing you gulped" (`01 §4.2`).
 | `pack` | `→KnowledgePack?` | 1–1; null until generated, and null forever for unsupported content (`01 §10.3`) |
 
 **`status` domain (the capture/review lifecycle, `01 §F1`/`§F2`):**
-`queued` → `processing` → `ready` → `awaiting_review` → `in_library`, with the branch `needs_attention` (extraction failed). `awaiting_review` is skipped when auto-approve applies (→ straight to `in_library`). Full transitions in §6.
+`unprocessed` → `processing` → `ready` → `awaiting_review` → `in_library`, with `queued` for the offline buffer and the branch `needs_attention` (extraction failed). Processing is **manually triggered** in v1 — a captured snapshot rests at `unprocessed` until the user starts it (or imports an externally-produced result), per S2 design §2.4. `awaiting_review` is skipped when auto-approve applies (→ straight to `in_library`). Full transitions in §6.
 
 ---
 
-### 4.4 `KnowledgePack` + `PackElement`
+### 4.4 `KnowledgePack` + `PackSection` / `PackBlock` + `PackElement`
 
-The AI-generated digest. Exists **only** for a `Snapshot` (invariant, §9).
+The AI-generated **digest, authored as a readable report** — not a flat summary. Exists **only** for a `Snapshot` (invariant, §9). *Structure resolved in S2 design ([`subsystems/S2-processing-design.md §3`](subsystems/S2-processing-design.md)).*
 
 **`KnowledgePack`**
 
 | Field | Type | Notes |
 |---|---|---|
 | `snapshot` | `→Source` | the `kind=snapshot` it digests (1–1) |
-| `summary` | `text` | |
+| `summary` | `text` | pack-level abstract |
 | `background` | `text?` | |
 | `confidence` | `float?` | low/thin-content signal — drives "only what's reliable, and says so" (`01 §F2`) |
 | `status` | `enum{generating·ready}` | |
 
-**`PackElement`** — the reviewable, individually stateful bits of the pack. Modeling the heterogeneous parts (terms, people, claims, counter-views, connections) as one entity with a discriminator keeps the `suggested → kept/dismissed` review state uniform across all of them (`01 §F2`).
+**`PackSection` / `PackBlock`** — the **report the user reads** (the spine). A pack has ordered `PackSection`s, each holding ordered `PackBlock`s; every block anchors back to the source for grounding / "open original".
+
+| `PackSection` field | Type | Notes |
+|---|---|---|
+| `pack` | `→KnowledgePack` | parent |
+| `heading` | `string?` | |
+| `position` | `int` | order within the pack |
+
+| `PackBlock` field | Type | Notes |
+|---|---|---|
+| `section` | `→PackSection` | parent |
+| `block_type` | `enum{prose·figure·callout·quote}` | `figure` = mermaid source (text) or a blob ref |
+| `content` | `text?` | prose body / figure source |
+| `content_ref` | `string?` | blob pointer for raster figures (deferred) |
+| `source_anchor` | *value object*`?` | coordinate back into the source — `{kind: char_range·page·timestamp, …}` |
+| `anchor_id` | `string` | stable id; chat, annotations, and Cards attach here |
+| `position` | `int` | order within the section |
+
+**`PackElement`** — the reviewable **facet-annotations** layered on the report (terms, people, claims, counter-views, connections). One entity with a discriminator keeps the `suggested → kept/dismissed` review state uniform; each hangs on the report block it annotates.
 
 | Field | Type | Notes |
 |---|---|---|
 | `pack` | `→KnowledgePack` | parent |
 | `element_type` | `enum{key_term·person_org·claim·counter_view·connection}` | |
 | `text` | `text?` | the gloss/claim/counter-view body |
-| `concept` | `→Concept?` | set for `key_term` (the term), `person_org`, and `connection` (the linked Concept) |
-| `section_label` | `string?` | for section-chunked long content (`01 §F2` edge case) |
+| `concept` | `→Concept?` | set for `key_term`, `person_org`, and `connection` (the linked Concept) |
+| `block` | `→PackBlock?` | the report block this annotation hangs on (`anchor_id`) |
+| `section_label` | `string?` | for section-chunked long content (`01 §F2`) |
 | `state` | `enum{suggested·kept·dismissed}` | `01 §F2` |
 
-> *summary* and *background* are plain text on the pack (not reviewed element-by-element). *Key terms* and *people/orgs* become links to `Concept` (created/normalized on commit). *Connections* become `ConceptEdge`s on commit. *Claims* and *counter-views* are textual elements and, if the user wants to be tested on one, are promoted to a `Card`.
+> The **report (`PackSection`/`PackBlock`) is the reading deliverable** — read/editable, not reviewed block-by-block. The **facets (`PackElement`) are reviewed** `suggested → kept/dismissed`. *Key terms*/*people/orgs* become links to `Concept`; *connections* become `ConceptEdge`s (both created/normalized on commit, S3); *claims*/*counter-views* can be promoted to a `Card`. The pack is a **living document** — user-triggered figures and accepted conversation sediment append new blocks after generation.
 
 ---
 
@@ -198,6 +217,7 @@ The atomic, testable unit — "the unit of Gulp mode and scheduling" (`01 §4.2`
 | `card_type` | `enum{short_answer·mcq·cloze·explain·apply·recall}` | `recall` = "say it in your own words" (`01 §F4`) |
 | `prompt` | `text` | |
 | `answer` | `text?` | canonical answer or rubric for AI feedback |
+| `explanation` | `text?` | source-grounded reveal explanation (`01 §F4`; S2 design §4) |
 | `options` | `string[]?` | choices for `mcq` |
 | `origin` | `enum{pack·conversation·user}` | drafted from a pack, sedimented from a conversation, or hand-authored |
 | `status` | `enum{draft·accepted·rejected}` | enters scheduling only at `accepted` (invariant, §9) |
@@ -246,7 +266,7 @@ A Conversation is itself a **form of `Source`** (`01 §F5`) — an interactive o
 
 | Field | Type | Notes |
 |---|---|---|
-| `anchor_type` | `enum{source·concept·card·knowledge_base·none}` | what it's anchored to (`01 §F5`) |
+| `anchor_type` | `enum{source·concept·card·knowledge_base·pack_block·none}` | what it's anchored to (`01 §F5`); `pack_block` = a block inside a pack report (S2 design §3) |
 | `anchor_ref` | `ID?` | the anchored object (polymorphic; null when `anchor_type = none`) |
 | `sediment` | `→Sediment?` | produced on save |
 
@@ -428,7 +448,7 @@ Every `status`/`state` field, in one place. (`Source.status` is split by form, s
 
 | Entity · field | States | Transitions |
 |---|---|---|
-| **`Snapshot.status`** | `queued · processing · ready · awaiting_review · in_library · needs_attention` | `queued`→`processing`→`ready`→`awaiting_review`→`in_library`; `ready`→`in_library` directly (auto-approve); `processing`→`needs_attention` (extraction failed) → `processing` (retry) |
+| **`Snapshot.status`** | `queued · unprocessed · processing · ready · awaiting_review · in_library · needs_attention` | capture lands `unprocessed`; processing is **manually triggered** (S2 §2.4): `unprocessed`→`processing`→`ready`→`awaiting_review`→`in_library`; `unprocessed`→`ready` (import external result); `ready`→`in_library` directly (auto-approve); `processing`→`needs_attention` (extraction failed) → `processing` (retry); `queued` = offline buffer |
 | **`Conversation.status`** | `active · saved · discarded` | `active`→`saved` (with sediment) · `active`→`discarded` (keeps thread) |
 | **`Subscription.status`** | `active · muted · error` | `active`↔`muted` · `active`↔`error` (fetch) |
 | **`KnowledgePack.status`** | `generating · ready` | `generating`→`ready` |
@@ -448,7 +468,10 @@ These realize the cross-cutting states in `01 §7` (Loading/Empty/Processing/Err
 |---|---|---|---|---|
 | `User` | `Source` | 1 — N | `owner` | owns everything |
 | `Source(snapshot)` | `KnowledgePack` | 1 — 0..1 | `Snapshot.pack` | pack only for snapshots |
-| `KnowledgePack` | `PackElement` | 1 — N | `PackElement.pack` | |
+| `KnowledgePack` | `PackSection` | 1 — N | `PackSection.pack` | the report spine |
+| `PackSection` | `PackBlock` | 1 — N | `PackBlock.section` | ordered blocks |
+| `KnowledgePack` | `PackElement` | 1 — N | `PackElement.pack` | facet-annotations |
+| `PackElement` | `PackBlock` | N — 0..1 | `PackElement.block` | annotation hangs on a block |
 | `Source` | `Card` | 1 — N | `Card.source` | a Card may be sourceless (`user` takeaway) |
 | `Card` | `Concept` | N — M | `CardConcept` | what a Card tests |
 | `Source` | `Concept` | N — M | `SourceConcept` | what a Source is about |
@@ -477,6 +500,7 @@ Each resolves an open question from `01 §11` (or a modeling fork). **Reversible
 | D4 | **Mastery stores the 7-rung ladder; the 3-state view and `due`/`at_risk` are derived.** | `01 §F7` explicitly wants both granularities without "seven badges" in daily UI. One stored source of truth → no drift. | Yes — mapping table (§5.1) is the only thing to change. |
 | D5 | **No `Insight`/`Claim`/`Question` entities.** Takeaways are `Card(origin=user)`; claims/counter-views are `PackElement`s; questions are `Card`s. | Follows `01 §4.2`'s pruning of `00`'s longer list. | Yes — could promote any to a first-class entity later. |
 | D6 | **`Card.scheduling` is a fold over append-only `ReviewEvent`s.** | Keeps history immutable and makes the FSRS swap (`01 §11`) a pure recompute, not a migration. | Yes. |
+| D7 | **The pack is a readable, re-authored report** (`PackSection`/`PackBlock` spine) with facets (`PackElement`) as annotations; v1 processing is **manual-trigger** (relaxes `01` principle 2) and reports are authored in English. | Reading-first digestion is the product thesis (`00`); manual trigger controls API cost. Resolved in S2 design (`subsystems/S2-processing-design.md`, `04 §6`). | Yes — structure/triggers can evolve per `04 §6`. |
 
 ---
 

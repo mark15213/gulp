@@ -22,7 +22,7 @@
 These are the rules every flow must obey. When a screen decision is ambiguous, resolve it toward these.
 
 1. **Capture is one gesture.** From intent to "saved" must never exceed a single deliberate action. The user should be able to capture without opening the app, and without waiting for processing.
-2. **Processing is asynchronous and invisible-until-ready.** The user never waits on AI. Capture confirms instantly; the knowledge pack fills in behind the scenes and notifies when ready.
+2. **Processing is asynchronous; capture never blocks on AI.** Capture confirms instantly and the user never waits on AI at capture time. *v1 relaxation (S2 design §2.4): pack generation is **manually triggered** — a captured snapshot rests until the user starts it (or imports an externally-produced result), a deliberate step back from auto "invisible-until-ready" for API-cost control; an `auto_process` toggle can restore the auto path later.*
 3. **Every object has a mastery state, and it is always visible.** The user can always see whether something is *new*, *learning*, *known*, or *due* — the library is a training ground, not a graveyard.
 4. **The daily loop is the home.** The default screen answers "what should I do right now?" in under 5 seconds, not "here is everything you saved."
 5. **Conversations end in knowledge.** No chat is a dead end; exiting a conversation always offers to keep what was learned.
@@ -120,12 +120,12 @@ Each flow: **trigger → steps → key screens → states → edge cases**, with
 1. User invokes capture from anywhere.
 2. Gulp shows a **Capture confirm** (lightweight): detected title/type, target knowledge base (default: Inbox), optional one-line note, optional tags.
 3. User confirms (or it auto-confirms after a short timeout for true one-gesture capture).
-4. A **Snapshot** appears immediately in **Inbox** with status `Processing`.
-5. Pack generation runs async (§F2); on completion it flips to `Ready` and (if enabled) fires a notification.
+4. A **Snapshot** appears immediately in **Inbox** with status `Unprocessed` (captured, not yet digested).
+5. The user **triggers** pack generation — **▶ Start** (run the pipeline) or **⤓ Upload** (import a result produced externally); it runs async (§F2) and flips to `Ready` on completion (S2 design §2.4). *(An `auto_process` setting can auto-start on capture — deferred.)*
 
 **Key screens:** Capture confirm sheet · Inbox list.
 
-**States:** `Queued (offline)` → `Processing` → `Ready (awaiting review)` → `In library` (committed; or auto-committed when **auto-approve** is on, §F2) · `Needs attention` (extraction failed, §10.2).
+**States:** `Queued (offline)` → `Unprocessed` → `Processing` → `Ready (awaiting review)` → `In library` (committed; or auto-committed when **auto-approve** is on, §F2) · `Needs attention` (extraction failed, §10.2).
 
 **Mobile vs web:** mobile = OS share sheet → confirm sheet, then a "saved" toast and the item appears in `Today`'s recent-captures peek (no Inbox tab on mobile); web = `⌘K → paste`, lands in the `Inbox` surface. Both write the same Inbox state.
 
@@ -134,10 +134,10 @@ Each flow: **trigger → steps → key screens → states → edge cases**, with
 ---
 
 ### F2 — Knowledge pack generation & review
-**Goal:** turn a Snapshot into a structured, skimmable pack, then commit it (and its Cards) into the library — reviewed by default, but never as a hard blocker.
+**Goal:** turn a Snapshot into a **readable, re-authored knowledge pack** (a report the user pages through), then commit it (and its Cards) into the library — reviewed by default, but never as a hard blocker.
 
 **Steps:**
-1. Snapshot enters `Processing`; Gulp builds the **Knowledge pack**: summary → background → key terms → people/orgs → core claims → counter-views → connections to existing Concepts.
+1. On trigger (§F1), the Snapshot enters `Processing`; Gulp **re-authors the source into a report** (sections the user reads, each grounded back to the source) and extracts the **facets** over it: summary → background → key terms → people/orgs → core claims → counter-views → connections to existing Concepts. *(Pack-as-report structure: S2 design §3.)*
 2. Candidate **Cards** are drafted from the pack (not yet scheduled).
 3. On `Ready`, the Snapshot is `awaiting review` (unless auto-approve, below).
 4. User reviews (see **Review model**): edit/dismiss pack elements, promote/reject draft Cards.
