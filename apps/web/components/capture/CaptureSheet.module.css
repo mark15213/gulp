@@ -1,0 +1,41 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 12vh;
+  z-index: 50;
+}
+.sheet {
+  width: min(560px, 92vw);
+  background: var(--surface, #fff);
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+}
+.tabs { display: flex; gap: 8px; }
+.tab,
+.tabActive {
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border, #e3e3e3);
+  background: transparent;
+  cursor: pointer;
+}
+.tabActive { border-color: var(--accent, #2f6bff); color: var(--accent, #2f6bff); }
+.input,
+.textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border, #e3e3e3);
+  border-radius: 8px;
+  font: inherit;
+}
+.textarea { min-height: 120px; resize: vertical; }
+.actions { display: flex; align-items: center; justify-content: space-between; }
+.target { font-size: 13px; color: var(--text-muted, #777); }
