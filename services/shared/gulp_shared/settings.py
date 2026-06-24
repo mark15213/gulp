@@ -11,6 +11,8 @@ class Settings(BaseSettings):
     auth_secret: str = "change-me"
     anthropic_api_key: str = ""
     web_origin: str = "http://localhost:3000"
+    llm_provider: str = "anthropic"
+    llm_model: str = "claude-sonnet-4-6"
 
 
 settings = Settings()
