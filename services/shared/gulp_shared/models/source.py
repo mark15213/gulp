@@ -17,6 +17,7 @@ class SourceKind(str, enum.Enum):
 
 class SnapshotStatus(str, enum.Enum):
     queued = "queued"
+    unprocessed = "unprocessed"
     processing = "processing"
     ready = "ready"
     awaiting_review = "awaiting_review"
@@ -66,4 +67,4 @@ class Source(TimestampedBase, Base):
     captured_via: Mapped[CapturedVia | None] = mapped_column(
         Enum(CapturedVia, name="captured_via"), default=None
     )
-    # Deferred: `emitted_by` (S7), `pack_id` (S2) — target tables don't exist yet.
+    # 1–1 KnowledgePack is modeled from KnowledgePack.snapshot_id (S2). Deferred: emitted_by (S7).
