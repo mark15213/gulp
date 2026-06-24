@@ -55,8 +55,8 @@ gen-client:
     uv run --package gulp-api python -m app.export_openapi > packages/api-client/openapi.json
     pnpm --filter @gulp/api-client generate
 
-# Alembic migrations
+# Alembic migrations (run from services/api/ so alembic.ini is picked up)
 migrate message:
-    uv run --package gulp-api alembic revision --autogenerate -m "{{message}}"
+    cd services/api && uv run --package gulp-api alembic revision --autogenerate -m "{{message}}"
 migrate-up:
-    uv run --package gulp-api alembic upgrade head
+    cd services/api && uv run --package gulp-api alembic upgrade head
