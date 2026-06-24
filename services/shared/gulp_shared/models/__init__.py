@@ -7,6 +7,16 @@ from gulp_shared.models.concept import (
     ConceptType,
     SourceConcept,
 )
+from gulp_shared.models.knowledge_pack import (
+    KnowledgePack,
+    PackBlock,
+    PackBlockType,
+    PackElement,
+    PackElementState,
+    PackElementType,
+    PackSection,
+    PackStatus,
+)
 from gulp_shared.models.source import (
     CapturedVia,
     MediaType,
@@ -37,4 +47,12 @@ __all__ = [
     "ConceptRelation",
     "CardConcept",
     "SourceConcept",
+    "KnowledgePack",
+    "PackStatus",
+    "PackSection",
+    "PackBlock",
+    "PackBlockType",
+    "PackElement",
+    "PackElementType",
+    "PackElementState",
 ]
