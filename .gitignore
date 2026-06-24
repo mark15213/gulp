@@ -9,6 +9,7 @@
 # ---------- Editors / IDEs ----------
 .vscode/
 .idea/
+.claude/
 *.swp
 *.swo
 *~
@@ -20,6 +21,7 @@ dist/
 build/
 .next/
 out/
+.turbo/
 coverage/
 *.tsbuildinfo
 .npm/
