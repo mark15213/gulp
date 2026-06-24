@@ -1,5 +1,21 @@
-"""ORM entities = the docs/02 objects (Source · Snapshot · KnowledgePack ·
-Card · Concept · Conversation · …).
+from gulp_shared.models.source import (
+    CapturedVia,
+    MediaType,
+    SnapshotStatus,
+    Source,
+    SourceKind,
+)
+from gulp_shared.models.source_tag import SourceTag
+from gulp_shared.models.user import DEV_USER_ID, Locale, User
 
-Defined here as each subsystem lands (docs/04 §5). Empty until S0.
-"""
+__all__ = [
+    "User",
+    "Locale",
+    "DEV_USER_ID",
+    "Source",
+    "SourceKind",
+    "SnapshotStatus",
+    "MediaType",
+    "CapturedVia",
+    "SourceTag",
+]
