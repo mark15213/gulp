@@ -16,6 +16,8 @@ export type CaptureResponse =
 export type InboxOut =
   paths["/inbox"]["get"]["responses"]["200"]["content"]["application/json"];
 export type Snapshot = InboxOut["items"][number];
+export type SnapshotOut =
+  paths["/snapshots/{snapshot_id}"]["get"]["responses"]["200"]["content"]["application/json"];
 
 export async function capture(body: CaptureBody): Promise<CaptureResponse> {
   const { data, error } = await client.POST("/capture", { body });
@@ -24,7 +26,7 @@ export async function capture(body: CaptureBody): Promise<CaptureResponse> {
 }
 
 export async function getInbox(): Promise<InboxOut> {
-  const { data, error } = await client.GET("/inbox");
+  const { data, error } = await client.GET("/inbox", { cache: "no-store" });
   if (error || !data) throw new Error("inbox fetch failed");
   return data;
 }
@@ -32,6 +34,7 @@ export async function getInbox(): Promise<InboxOut> {
 export async function getSnapshot(id: string): Promise<Snapshot> {
   const { data, error } = await client.GET("/snapshots/{snapshot_id}", {
     params: { path: { snapshot_id: id } },
+    cache: "no-store",
   });
   if (error || !data) throw new Error("snapshot fetch failed");
   return data;

@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it } from "vitest";
+import type { CaptureBody } from "@gulp/api-client";
 import { enqueuePending, flushQueue, readQueue } from "./captureQueue";
 
 beforeEach(() => localStorage.clear());
@@ -13,7 +14,7 @@ describe("captureQueue", () => {
     enqueuePending({ localId: "1", url: "https://a.com", tags: [], captured_via: "paste" });
     enqueuePending({ localId: "2", url: "https://b.com", tags: [], captured_via: "paste" });
 
-    const send = async (body: { url?: string }) => {
+    const send = async (body: CaptureBody) => {
       if (body.url?.includes("b.com")) throw new Error("offline");
       return {} as never;
     };
@@ -21,6 +22,6 @@ describe("captureQueue", () => {
     const flushed = await flushQueue(send);
     expect(flushed).toBe(1);
     expect(readQueue()).toHaveLength(1);
-    expect(readQueue()[0].url).toContain("b.com");
+    expect(readQueue()[0]?.url).toContain("b.com");
   });
 });

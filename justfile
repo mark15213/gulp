@@ -25,7 +25,7 @@ dev:
     trap 'kill 0' EXIT
     pnpm --filter @gulp/web dev &
     uv run --package gulp-api uvicorn app.main:app --reload &
-    uv run --package gulp-worker python -m app.tasks &
+    (cd services/worker && uv run --package gulp-worker python -m app.tasks) &
     wait
 
 # Individual processes
@@ -36,7 +36,7 @@ mobile:
 api:
     uv run --package gulp-api uvicorn app.main:app --reload
 worker:
-    uv run --package gulp-worker python -m app.tasks
+    cd services/worker && uv run --package gulp-worker python -m app.tasks
 
 # Quality gates (both languages)
 lint:

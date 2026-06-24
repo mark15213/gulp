@@ -5,6 +5,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, model_validator
 
+from gulp_shared.domain.urls import is_http_url
 from gulp_shared.models.source import (
     CapturedVia,
     MediaType,
@@ -27,6 +28,8 @@ class CaptureRequest(BaseModel):
         has_text = bool(self.text and self.text.strip())
         if has_url == has_text:
             raise ValueError("provide exactly one of `url` or `text`")
+        if has_url and not is_http_url(self.url):  # type: ignore[arg-type]
+            raise ValueError("url is not a valid http(s) URL")
         return self
 
 

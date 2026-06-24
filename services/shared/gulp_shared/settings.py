@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     redis_url: str = "redis://localhost:6379/0"
     auth_secret: str = "change-me"
     anthropic_api_key: str = ""
+    web_origin: str = "http://localhost:3000"
 
 
 settings = Settings()

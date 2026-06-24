@@ -13,8 +13,11 @@ def normalize_url(raw: str) -> str:
         parts = urlsplit(f"https://{raw.strip()}")
     scheme = (parts.scheme or "https").lower()
     host = (parts.hostname or "").lower()
-    if parts.port:
-        host = f"{host}:{parts.port}"
+    try:
+        if parts.port:
+            host = f"{host}:{parts.port}"
+    except ValueError:
+        pass  # bad port (e.g. "notaport") — treat as no port
     path = parts.path.rstrip("/") or "/"
     kept = [
         (k, v)
@@ -22,3 +25,15 @@ def normalize_url(raw: str) -> str:
         if not k.lower().startswith(_TRACKING_PREFIXES) and k.lower() not in _TRACKING_KEYS
     ]
     return urlunsplit((scheme, host, path, urlencode(kept), ""))
+
+
+def is_http_url(raw: str) -> bool:
+    """True iff `raw` (https:// assumed if scheme-less) is an http(s) URL with a plausible host."""
+    s = raw.strip()
+    if not s or any(c.isspace() for c in s):
+        return False
+    parts = urlsplit(s if "//" in s else f"https://{s}")
+    if parts.scheme not in ("http", "https"):
+        return False
+    host = parts.hostname or ""
+    return bool(host) and ("." in host or host == "localhost")

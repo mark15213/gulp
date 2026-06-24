@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { StartGulpCard } from "@/components/today/StartGulpCard";
 import { DigestCard } from "@/components/today/DigestCard";
 import { ConfirmCard } from "@/components/today/ConfirmCard";
@@ -52,7 +54,7 @@ export default async function TodayPage() {
       <section className={styles.section}>
         <div className={styles.sectionHead}>
           <p className="t-label">Recently captured</p>
-          <a href="#" className={styles.seeAll}>
+          <a href="/inbox" className={styles.seeAll}>
             Open Inbox
           </a>
         </div>
