@@ -1,4 +1,12 @@
 from gulp_shared.models.card import Card, CardOrigin, CardStatus, CardType
+from gulp_shared.models.concept import (
+    CardConcept,
+    Concept,
+    ConceptEdge,
+    ConceptRelation,
+    ConceptType,
+    SourceConcept,
+)
 from gulp_shared.models.source import (
     CapturedVia,
     MediaType,
@@ -23,4 +31,10 @@ __all__ = [
     "CardType",
     "CardOrigin",
     "CardStatus",
+    "Concept",
+    "ConceptType",
+    "ConceptEdge",
+    "ConceptRelation",
+    "CardConcept",
+    "SourceConcept",
 ]
