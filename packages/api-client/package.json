@@ -10,8 +10,12 @@
     "lint": "eslint .",
     "test": "echo \"no tests yet\""
   },
+  "dependencies": {
+    "openapi-fetch": "^0.13.0"
+  },
   "devDependencies": {
     "@gulp/config": "workspace:*",
+    "@types/node": "^22.0.0",
     "openapi-typescript": "^7.4.4",
     "typescript": "^5.7.2"
   }
