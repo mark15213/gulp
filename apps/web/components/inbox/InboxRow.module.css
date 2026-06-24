@@ -1,0 +1,12 @@
+.row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border, #eee);
+}
+.text { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+.title { font-weight: 500; }
+.meta { color: var(--text-muted, #777); }
+.open { font-size: 13px; color: var(--accent, #2f6bff); text-decoration: none; }
+.status { font-size: 12px; color: var(--text-muted, #777); text-transform: lowercase; }

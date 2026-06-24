@@ -3,10 +3,24 @@ import { DigestCard } from "@/components/today/DigestCard";
 import { ConfirmCard } from "@/components/today/ConfirmCard";
 import { CapturePeek } from "@/components/today/CapturePeek";
 import { today } from "@/lib/mock";
+import { getInbox } from "@gulp/api-client";
 import styles from "./page.module.css";
 
 // Today — the web "what should I do right now?" landing (docs/03 §7.9).
-export default function TodayPage() {
+export default async function TodayPage() {
+  const inbox = await getInbox();
+  const recent = inbox.items.slice(0, 3).map((s) => ({
+    id: s.id,
+    type: "snapshot" as const,
+    title: s.title,
+    source: s.origin_url ? new URL(s.origin_url).host : "Note",
+    time: "just now",
+    status: (s.status === "needs_attention"
+      ? "attention"
+      : s.status === "ready"
+        ? "ready"
+        : "processing") as "ready" | "processing" | "attention",
+  }));
   return (
     <div className={styles.page}>
       <header className={styles.header}>
@@ -42,7 +56,7 @@ export default function TodayPage() {
             Open Inbox
           </a>
         </div>
-        <CapturePeek items={today.recent} />
+        <CapturePeek items={recent} />
       </section>
     </div>
   );

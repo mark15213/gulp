@@ -8,13 +8,13 @@ import {
   IconSearch,
   IconSettings,
 } from "@/components/ui/icons";
+import { getInbox } from "@gulp/api-client";
 import styles from "./Sidebar.module.css";
 
 type NavItem = {
   label: string;
   icon: ComponentType<SVGProps<SVGSVGElement>>;
   active?: boolean;
-  count?: number;
 };
 
 // docs/03 §5.2 — Today · Inbox · Library · Feeds · Knowledge bases. Search is
@@ -23,13 +23,14 @@ type NavItem = {
 // slice; the rest are inert placeholders.
 const NAV: NavItem[] = [
   { label: "Today", icon: IconToday, active: true },
-  { label: "Inbox", icon: IconInbox, count: 3 },
+  { label: "Inbox", icon: IconInbox },
   { label: "Library", icon: IconLibrary },
   { label: "Feeds", icon: IconFeeds },
   { label: "Knowledge bases", icon: IconKnowledge },
 ];
 
-export function Sidebar() {
+export async function Sidebar() {
+  const { count } = await getInbox();
   return (
     <aside className={styles.sidebar}>
       <div className={styles.brand}>
@@ -44,16 +45,16 @@ export function Sidebar() {
       </button>
 
       <nav className={styles.nav} aria-label="Primary">
-        {NAV.map(({ label, icon: Glyph, active, count }) => (
+        {NAV.map(({ label, icon: Glyph, active }) => (
           <a
             key={label}
-            href="#"
+            href={label === "Inbox" ? "/inbox" : "#"}
             className={`${styles.item} ${active ? styles.active : ""}`}
             aria-current={active ? "page" : undefined}
           >
             <Glyph className={styles.itemIcon} />
             <span className={styles.itemLabel}>{label}</span>
-            {count !== undefined && (
+            {label === "Inbox" && count > 0 && (
               <span className={styles.itemCount}>{count}</span>
             )}
           </a>
