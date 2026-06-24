@@ -1,3 +1,5 @@
+from datetime import UTC, datetime
+
 from app.services.capture import create_snapshot
 from app.schemas.capture import CaptureRequest
 from app.services.inbox import list_inbox
@@ -23,3 +25,9 @@ def test_inbox_excludes_in_library_and_soft_deleted(db):
     db.commit()
     items = list_inbox(db, DEV_USER_ID)
     assert [i.id for i in items] == [a.id]
+
+    gone, _ = create_snapshot(db, DEV_USER_ID, CaptureRequest(url="https://a.com/gone"), _noop)
+    gone.deleted_at = datetime.now(UTC)
+    db.commit()
+    ids = [i.id for i in list_inbox(db, DEV_USER_ID)]
+    assert gone.id not in ids

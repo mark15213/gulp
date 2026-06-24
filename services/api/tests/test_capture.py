@@ -25,7 +25,7 @@ def test_link_capture_creates_processing_webpage_and_enqueues(db):
     assert calls == [("process_snapshot", str(snap.id))]
 
 
-def test_note_capture_stores_body_and_does_not_enqueue_a_pack_for_url(db):
+def test_note_capture_stores_body_and_enqueues(db):
     calls, enq = _enqueue_spy()
     snap, dup = create_snapshot(
         db,
@@ -36,7 +36,7 @@ def test_note_capture_stores_body_and_does_not_enqueue_a_pack_for_url(db):
     assert snap.media_type == MediaType.note
     assert snap.content_body == "first line\nsecond"
     assert snap.title == "first line"
-    assert len(calls) == 1  # still enqueued (the seam runs for every fresh snapshot)
+    assert len(calls) == 1
 
 
 def test_duplicate_url_returns_existing_and_does_not_enqueue(db):

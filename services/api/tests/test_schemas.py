@@ -22,3 +22,13 @@ def test_rejects_both_url_and_text():
 def test_rejects_neither():
     with pytest.raises(ValidationError):
         CaptureRequest(note="annotation only")
+
+
+def test_rejects_non_http_url():
+    with pytest.raises(ValidationError):
+        CaptureRequest(url="javascript:alert(1)")
+
+
+def test_rejects_url_with_space():
+    with pytest.raises(ValidationError):
+        CaptureRequest(url="note: buy milk")
