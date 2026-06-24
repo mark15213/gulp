@@ -1,0 +1,27 @@
+# uv workspace root (virtual — not itself a package).
+# Members are the Python services; they share this lockfile (uv.lock).
+[tool.uv.workspace]
+members = ["services/api", "services/worker", "services/shared"]
+
+# Repo-wide dev tooling, installed into the workspace env by `uv sync`.
+[dependency-groups]
+dev = [
+    "ruff>=0.8",
+    "mypy>=1.13",
+    "pytest>=8.3",
+    "pytest-asyncio>=0.24",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.mypy]
+python_version = "3.13"
+strict = true
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"

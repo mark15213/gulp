@@ -1,0 +1,8 @@
+{
+  "extends": "@gulp/config/tsconfig.base.json",
+  "compilerOptions": {
+    "jsx": "preserve",
+    "plugins": [{ "name": "next" }]
+  },
+  "include": ["app", "next-env.d.ts", "**/*.ts", "**/*.tsx"]
+}

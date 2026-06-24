@@ -1,0 +1,7 @@
+{
+  "extends": "@gulp/config/tsconfig.base.json",
+  "compilerOptions": {
+    "jsx": "react-native"
+  },
+  "include": ["app", "**/*.ts", "**/*.tsx"]
+}

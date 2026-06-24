@@ -1,0 +1,10 @@
+{
+  "name": "@gulp/config",
+  "version": "0.0.0",
+  "private": true,
+  "files": [
+    "tsconfig.base.json",
+    "eslint.config.base.mjs",
+    "prettier.config.mjs"
+  ]
+}

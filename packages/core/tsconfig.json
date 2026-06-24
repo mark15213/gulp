@@ -1,0 +1,4 @@
+{
+  "extends": "@gulp/config/tsconfig.base.json",
+  "include": ["src"]
+}
