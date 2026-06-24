@@ -1,0 +1,15 @@
+.glyph {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  flex: none;
+  border-radius: var(--radius-md);
+  background: var(--fill);
+  color: var(--text-2);
+}
+
+.glyph svg {
+  width: 16px;
+  height: 16px;
+}

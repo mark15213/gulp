@@ -1,0 +1,115 @@
+/* apps/web — global reset + text roles.
+ * Tokens come from @gulp/ui/tokens.css (imported before this in layout.tsx).
+ * Text roles implement docs/03 §4.2/§4.4 (web column). */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+* {
+  margin: 0;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text-1);
+  font-family: var(--font-sans);
+  /* Default body = web Body M, 14/20 (docs/03 §4.2) */
+  font-size: 14px;
+  line-height: 20px;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+/* Visible focus ring on every focusable element (docs/03 §9). */
+:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* ── Text roles (docs/03 §4.2, web column) ─────────────────────── */
+.t-display {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: 32px;
+  line-height: 36px;
+  letter-spacing: -0.01em;
+}
+.t-title-l {
+  font-weight: 600;
+  font-size: 22px;
+  line-height: 28px;
+  letter-spacing: -0.01em;
+}
+.t-title-m {
+  font-weight: 600;
+  font-size: 18px;
+  line-height: 24px;
+  letter-spacing: -0.005em;
+}
+.t-title-s {
+  font-weight: 600;
+  font-size: 15px;
+  line-height: 20px;
+}
+.t-body-l {
+  font-size: 16px;
+  line-height: 24px;
+}
+.t-body-m {
+  font-size: 14px;
+  line-height: 20px;
+}
+.t-body-s {
+  font-size: 13px;
+  line-height: 18px;
+}
+.t-caption {
+  font-size: 12px;
+  line-height: 16px;
+}
+/* Overline / section label — mono, uppercase, tracked (docs/03 §4.3). */
+.t-label {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 11px;
+  line-height: 16px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-2);
+}
+/* Data / numerals — mono, tabular figures (docs/03 §4.3). */
+.t-data {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

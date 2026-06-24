@@ -1,0 +1,80 @@
+/* @gulp/ui — design tokens (implements docs/03-ui-system.md).
+ * v1: web register only (light, cool slate). Mobile + dark are later value swaps.
+ * Components reference the semantic names only — never raw hex. */
+
+:root {
+  /* ── Brand · Gulp Blue (§3.1) ───────────────────────────────── */
+  --blue-50: #eff5ff;
+  --blue-100: #dbe8fe;
+  --blue-500: #3b82f6;
+  --blue-600: #2563eb; /* primary */
+  --blue-700: #1d4ed8; /* pressed */
+
+  /* ── Neutrals · web cool (§3.2) ─────────────────────────────── */
+  --bg: #f8fafc;
+  --surface: #ffffff;
+  --fill: #f1f5f9;
+  --border: #e2e8f0;
+  --border-strong: #cbd5e1;
+  --muted: #94a3b8;
+  --text-2: #64748b;
+  --text-1: #0f172a;
+
+  /* ── Mastery-state palette (§3.3) · accent / tint / on-tint ─── */
+  --state-new-accent: #94a3b8;
+  --state-new-tint: #f1f5f9;
+  --state-new-on: #475569;
+  --state-learning-accent: #f59e0b;
+  --state-learning-tint: #fef3c7;
+  --state-learning-on: #92400e;
+  --state-known-accent: #10b981;
+  --state-known-tint: #d1fae5;
+  --state-known-on: #065f46;
+  --state-due-accent: #2563eb;
+  --state-due-tint: #eff5ff;
+  --state-due-on: #1d4ed8;
+  --state-risk-accent: #ef4444;
+  --state-risk-tint: #fee2e2;
+  --state-risk-on: #991b1b;
+
+  /* ── Functional / semantic (§3.4) ───────────────────────────── */
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --info: #2563eb;
+  --focus-ring: rgba(37, 99, 235, 0.45);
+  --overlay-scrim: rgba(15, 23, 42, 0.4);
+
+  /* ── Type families (§4.1) ───────────────────────────────────── */
+  /* --font-mono / --font-serif are injected by next/font (Geist Mono,
+   * Instrument Serif). --font-sans is the Inter stack with system fallback. */
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    Helvetica, Arial, sans-serif;
+
+  /* ── Spacing · 4px base (§5.1) ──────────────────────────────── */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* ── Radius · web precise/flat (§5.4) ───────────────────────── */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-pill: 999px;
+
+  /* ── Elevation · web leans on hairlines (§5.4) ──────────────── */
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
+  --shadow-overlay: 0 8px 28px rgba(15, 23, 42, 0.14);
+
+  /* ── Layout (§5.2) ──────────────────────────────────────────── */
+  --sidebar-w: 240px;
+  --measure: 720px;
+}

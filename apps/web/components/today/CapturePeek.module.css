@@ -1,0 +1,104 @@
+.list {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+}
+.row + .row {
+  border-top: 1px solid var(--border);
+}
+
+/* Needs-attention — amber left edge (docs/03 §8). */
+.attentionRow {
+  box-shadow: inset 3px 0 0 var(--warning);
+}
+
+.text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+  flex: 1;
+}
+.title {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-1);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 12px;
+  color: var(--text-2);
+}
+.dot {
+  color: var(--border-strong);
+}
+
+/* ── Status tags ────────────────────────────────────────────── */
+.ready {
+  font-size: 12px;
+  color: var(--muted);
+  flex: none;
+}
+
+.processing {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--text-2);
+  flex: none;
+}
+.shimmer {
+  width: 48px;
+  height: 8px;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(
+    90deg,
+    var(--fill) 25%,
+    var(--border) 50%,
+    var(--fill) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.2s ease-in-out infinite;
+}
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.attention {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--state-learning-on);
+  background: var(--state-learning-tint);
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-pill);
+  flex: none;
+}
+.attentionIcon {
+  width: 13px;
+  height: 13px;
+}

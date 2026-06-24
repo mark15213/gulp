@@ -1,0 +1,47 @@
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-pill);
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-pill);
+  background: currentColor;
+  opacity: 0.85;
+  flex: none;
+}
+
+.count {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+}
+
+.new {
+  background: var(--state-new-tint);
+  color: var(--state-new-on);
+}
+.learning {
+  background: var(--state-learning-tint);
+  color: var(--state-learning-on);
+}
+.known {
+  background: var(--state-known-tint);
+  color: var(--state-known-on);
+}
+.due {
+  background: var(--state-due-tint);
+  color: var(--state-due-on);
+}
+.at-risk {
+  background: var(--state-risk-tint);
+  color: var(--state-risk-on);
+}

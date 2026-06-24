@@ -1,0 +1,74 @@
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  font-weight: 500;
+  white-space: nowrap;
+  transition:
+    background 140ms cubic-bezier(0.2, 0, 0, 1),
+    border-color 140ms cubic-bezier(0.2, 0, 0, 1),
+    color 140ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+.btn svg {
+  width: 16px;
+  height: 16px;
+  flex: none;
+}
+
+/* Sizes — web 32 / 36 tall (docs/03 §7.4). */
+.md {
+  height: 32px;
+  padding: 0 var(--space-3);
+  font-size: 13px;
+}
+.lg {
+  height: 36px;
+  padding: 0 var(--space-4);
+  font-size: 14px;
+}
+
+/* Primary — the one key action. Blue fill, white text. */
+.primary {
+  background: var(--blue-600);
+  color: #fff;
+}
+.primary:hover {
+  background: var(--blue-500);
+}
+.primary:active {
+  background: var(--blue-700);
+}
+
+/* Secondary — surface + hairline. */
+.secondary {
+  background: var(--surface);
+  border-color: var(--border);
+  color: var(--text-1);
+}
+.secondary:hover {
+  background: var(--fill);
+  border-color: var(--border-strong);
+}
+
+/* Ghost — low-emphasis, text only. */
+.ghost {
+  background: transparent;
+  color: var(--text-2);
+}
+.ghost:hover {
+  background: var(--fill);
+  color: var(--text-1);
+}
+
+/* Danger — destructive. */
+.danger {
+  background: transparent;
+  color: var(--danger);
+}
+.danger:hover {
+  background: var(--state-risk-tint);
+}
