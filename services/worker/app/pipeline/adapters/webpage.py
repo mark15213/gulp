@@ -4,15 +4,13 @@ split the extracted markdown into sectioned NormDoc blocks.
 `content_body` IS the extracted markdown, so block anchors slice it exactly.
 Headings set the running section label and are not emitted as blocks.
 
-Implementation note (trafilatura 2.1.0): the `markdown` output_format with
-include_formatting=True duplicates paragraphs when there are multiple headings.
-We use `xml` output instead and rebuild clean markdown ourselves via stdlib
-xml.etree.ElementTree, stopping at the first repeated (tag, text) pair to
-remove the duplicate tail.
+Implementation note (trafilatura 2.1.0): the default markdown output_format
+preserves inline formatting (bold/italic/links) correctly, but appends exact
+copies of full paragraphs after the structured content. We deduplicate by
+keeping only the FIRST occurrence of each paragraph (keyed by stripped text).
 """
 
 import re
-import xml.etree.ElementTree as ET
 
 import httpx
 import trafilatura
@@ -29,46 +27,27 @@ async def fetch_html(url: str) -> str:
         return resp.text
 
 
-def _xml_to_markdown(xml: str) -> str:
-    """Convert trafilatura XML output to clean markdown.
+def _dedupe(markdown: str) -> str:
+    """Remove exact-duplicate paragraphs from trafilatura's markdown output.
 
-    Trafilatura 2.1.0 can emit duplicate paragraphs in the XML when there are
-    multiple headings (a known quirk). We deduplicate by stopping at the first
-    repeated (tag, text) pair.
+    trafilatura 2.1.0 appends exact copies of paragraph text after the
+    structured content (a known quirk). We keep the first occurrence of each
+    paragraph (keyed by stripped text) and discard subsequent duplicates.
     """
-    tree = ET.fromstring(xml)
-    main = tree.find("main")
-    if main is None:
-        return ""
-
-    seen: list[tuple[str, str | None]] = []
-    parts: list[str] = []
-
-    for elem in main:
-        key = (elem.tag, elem.text)
-        if key in seen:
-            # First repeated element — truncate (trafilatura's duplicate tail)
-            break
-        seen.append(key)
-
-        tag = elem.tag
-        text = (elem.text or "").strip()
-        if not text:
+    seen: set[str] = set()
+    kept: list[str] = []
+    for para in re.split(r"\n\s*\n", markdown):
+        key = para.strip()
+        if not key:
             continue
-
-        if tag == "head":
-            rend = elem.attrib.get("rend", "h1")
-            level = int(rend[1]) if len(rend) >= 2 and rend[1:].isdigit() else 1
-            parts.append("#" * level + " " + text)
-        else:
-            parts.append(text)
-
-    return "\n\n".join(parts)
+        if key not in seen:
+            seen.add(key)
+            kept.append(para)
+    return "\n\n".join(kept)
 
 
 def extract_markdown(html: str) -> tuple[str, str | None]:
-    xml = trafilatura.extract(html, output_format="xml", include_formatting=True) or ""
-    md = _xml_to_markdown(xml) if xml else ""
+    md = trafilatura.extract(html, output_format="markdown") or ""
     meta = trafilatura.extract_metadata(html)
     title = meta.title if meta is not None else None
     return md, title
@@ -99,11 +78,12 @@ def _split(markdown: str) -> list[NormBlock]:
 
 
 def webpage_to_normdoc(html: str, *, fallback_title: str, url: str) -> NormDoc:
-    markdown, title = extract_markdown(html)
+    raw, title = extract_markdown(html)
+    body = _dedupe(raw)
     return NormDoc(
         title=title or fallback_title,
         lang=None,
         media_type="article",
-        content_body=markdown,
-        blocks=_split(markdown),
+        content_body=body,
+        blocks=_split(body),
     )
