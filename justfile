@@ -18,9 +18,15 @@ up:
 down:
     docker compose -f infra/docker-compose.yml down
 
-# Run web + mobile + api + worker
+# Run the web-first dev stack: web + api + worker (mobile deferred — use `just mobile`)
 dev:
-    pnpm turbo run dev
+    #!/usr/bin/env bash
+    set -euo pipefail
+    trap 'kill 0' EXIT
+    pnpm --filter @gulp/web dev &
+    uv run --package gulp-api uvicorn app.main:app --reload &
+    uv run --package gulp-worker python -m app.tasks &
+    wait
 
 # Individual processes
 web:

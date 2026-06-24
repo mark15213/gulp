@@ -3,6 +3,8 @@
 Personal learning system: forward anything → AI knowledge pack → daily "Gulp mode" practice → tracked mastery.
 **Product specs live in `docs/` (00–05). This file is *how to work the repo*, not what the product is — read `docs/` for the what/why.**
 
+> **Current focus: web-first.** Build `apps/web`. `apps/mobile` is deferred (`docs/04 §5`) — don't build mobile features yet; it stays a reserved placeholder until the web client is established.
+
 ## Layout (see `docs/05-repo-structure.md` for the full rationale)
 
 - `apps/web` — Next.js web client (TypeScript)
@@ -19,7 +21,7 @@ Personal learning system: forward anything → AI knowledge pack → daily "Gulp
 
 - `just setup` — install everything (pnpm + uv)
 - `just up` / `just down` — local infra (Postgres, Redis)
-- `just dev` — run web + mobile + api + worker
+- `just dev` — run the web-first stack: web + api + worker (mobile via `just mobile`)
 - `just lint` / `just test` / `just format` — quality gates (both languages)
 - `just gen-client` — regenerate `packages/api-client` from the API's OpenAPI
 - `just migrate "msg"` / `just migrate-up` — Alembic migrations

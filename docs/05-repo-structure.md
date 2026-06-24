@@ -209,7 +209,7 @@ Conventions become machine-checkable, so a run tells you whether code conforms:
 
 The full skeleton above is stood up once, but only the parts a current subsystem needs are filled — matching the just-in-time principle of `04 §2.4` and the build order of `04 §5`.
 
-- **Now (`S0` Foundation):** root tooling (`justfile`, pnpm + uv workspaces, lint/format/CI, root + subproject `CLAUDE.md`); `services/shared` (db, settings) + `services/api/core` (auth); empty navigable shells in `apps/web` and `apps/mobile`; `packages/api-client`, `packages/config`, `packages/ui` seeded.
+- **Now (`S0` Foundation):** root tooling (`justfile`, pnpm + uv workspaces, lint/format/CI, root + subproject `CLAUDE.md`); `services/shared` (db, settings) + `services/api/core` (auth); an empty navigable shell in `apps/web` (**web-first**; `apps/mobile` stays a reserved placeholder, deferred per `04 §5`); `packages/api-client`, `packages/config`, `packages/ui` seeded.
 - **Later, per subsystem:** `services/worker/pipeline` (with `S2`), each resource `router` and `service` (with the subsystem that owns it), `infra` topology as deployment needs grow. Empty directories hold the slot until then.
 
 The skeleton declares the *intended* shape so neighbors agree on boundaries (`04 §6`); the fill follows the dependency-ordered build plan, not all at once.
