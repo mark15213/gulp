@@ -1,3 +1,4 @@
+from gulp_shared.models.card import Card, CardOrigin, CardStatus, CardType
 from gulp_shared.models.source import (
     CapturedVia,
     MediaType,
@@ -18,4 +19,8 @@ __all__ = [
     "MediaType",
     "CapturedVia",
     "SourceTag",
+    "Card",
+    "CardType",
+    "CardOrigin",
+    "CardStatus",
 ]
