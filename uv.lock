@@ -255,6 +255,7 @@ version = "0.0.0"
 source = { editable = "services/api" }
 dependencies = [
     { name = "alembic" },
+    { name = "arq" },
     { name = "fastapi" },
     { name = "gulp-shared" },
     { name = "psycopg", extra = ["binary"] },
@@ -264,6 +265,7 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "alembic", specifier = ">=1.14" },
+    { name = "arq", specifier = ">=0.26" },
     { name = "fastapi", specifier = ">=0.115" },
     { name = "gulp-shared", editable = "services/shared" },
     { name = "psycopg", extras = ["binary"], specifier = ">=3.2" },
