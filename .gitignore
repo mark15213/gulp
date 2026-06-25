@@ -62,3 +62,6 @@ temp/
 *.tmp
 *.bak
 .cache/
+
+# brainstorm + sdd scratch
+.superpowers/
