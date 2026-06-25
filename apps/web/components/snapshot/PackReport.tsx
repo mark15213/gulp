@@ -2,7 +2,7 @@ import React from "react";
 import type { PackOut } from "@gulp/api-client";
 import styles from "./PackReport.module.css";
 
-const BLOCK_CLASS: Record<string, string> = {
+const BLOCK_CLASS: Record<string, string | undefined> = {
   prose: styles.prose,
   quote: styles.quote,
   callout: styles.callout,
