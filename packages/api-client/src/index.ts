@@ -18,6 +18,8 @@ export type InboxOut =
 export type Snapshot = InboxOut["items"][number];
 export type SnapshotOut =
   paths["/snapshots/{snapshot_id}"]["get"]["responses"]["200"]["content"]["application/json"];
+export type PackOut =
+  paths["/snapshots/{snapshot_id}/pack"]["get"]["responses"]["200"]["content"]["application/json"];
 
 export async function capture(body: CaptureBody): Promise<CaptureResponse> {
   const { data, error } = await client.POST("/capture", { body });
@@ -37,5 +39,22 @@ export async function getSnapshot(id: string): Promise<Snapshot> {
     cache: "no-store",
   });
   if (error || !data) throw new Error("snapshot fetch failed");
+  return data;
+}
+
+export async function getPack(id: string): Promise<PackOut | null> {
+  const { data, error } = await client.GET("/snapshots/{snapshot_id}/pack", {
+    params: { path: { snapshot_id: id } },
+    cache: "no-store",
+  });
+  if (error) return null; // 404 = no pack yet (still processing / needs attention)
+  return data ?? null;
+}
+
+export async function startProcessing(id: string): Promise<SnapshotOut> {
+  const { data, error } = await client.POST("/snapshots/{snapshot_id}/process", {
+    params: { path: { snapshot_id: id } },
+  });
+  if (error || !data) throw new Error("start processing failed");
   return data;
 }

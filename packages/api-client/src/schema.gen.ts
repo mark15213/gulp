@@ -55,6 +55,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/snapshots/{snapshot_id}/pack": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Pack */
+        get: operations["get_pack_snapshots__snapshot_id__pack_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/snapshots/{snapshot_id}/process": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Process Snapshot Endpoint */
+        post: operations["process_snapshot_endpoint_snapshots__snapshot_id__process_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/health": {
         parameters: {
             query?: never;
@@ -122,6 +156,61 @@ export interface components {
          * @enum {string}
          */
         MediaType: "article" | "pdf" | "video" | "podcast" | "note" | "screenshot" | "audio" | "webpage";
+        /** PackBlockOut */
+        PackBlockOut: {
+            type: components["schemas"]["PackBlockType"];
+            /** Content */
+            content: string | null;
+            /** Anchor Id */
+            anchor_id: string;
+        };
+        /**
+         * PackBlockType
+         * @enum {string}
+         */
+        PackBlockType: "prose" | "figure" | "callout" | "quote";
+        /**
+         * PackElementType
+         * @enum {string}
+         */
+        PackElementType: "key_term" | "person_org" | "claim" | "counter_view" | "connection";
+        /** PackFacetOut */
+        PackFacetOut: {
+            element_type: components["schemas"]["PackElementType"];
+            /** Text */
+            text: string | null;
+        };
+        /** PackOut */
+        PackOut: {
+            /**
+             * Snapshot Id
+             * Format: uuid
+             */
+            snapshot_id: string;
+            status: components["schemas"]["PackStatus"];
+            /** Summary */
+            summary: string;
+            /** Background */
+            background: string | null;
+            /** Confidence */
+            confidence: number | null;
+            /** Sections */
+            sections: components["schemas"]["PackSectionOut"][];
+            /** Facets */
+            facets: components["schemas"]["PackFacetOut"][];
+        };
+        /** PackSectionOut */
+        PackSectionOut: {
+            /** Heading */
+            heading: string | null;
+            /** Blocks */
+            blocks: components["schemas"]["PackBlockOut"][];
+        };
+        /**
+         * PackStatus
+         * @enum {string}
+         */
+        PackStatus: "generating" | "ready";
         /** SnapshotOut */
         SnapshotOut: {
             /**
@@ -158,7 +247,7 @@ export interface components {
          * SnapshotStatus
          * @enum {string}
          */
-        SnapshotStatus: "queued" | "processing" | "ready" | "awaiting_review" | "in_library" | "needs_attention";
+        SnapshotStatus: "queued" | "unprocessed" | "processing" | "ready" | "awaiting_review" | "in_library" | "needs_attention";
         /**
          * SourceKind
          * @enum {string}
@@ -266,6 +355,68 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["InboxOut"];
+                };
+            };
+        };
+    };
+    get_pack_snapshots__snapshot_id__pack_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                snapshot_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PackOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    process_snapshot_endpoint_snapshots__snapshot_id__process_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                snapshot_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SnapshotOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
