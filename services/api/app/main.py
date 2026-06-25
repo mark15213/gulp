@@ -3,7 +3,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routers import capture, inbox
+from app.routers import capture, inbox, processing
 from gulp_shared.settings import settings
 
 app = FastAPI(title="Gulp API")
@@ -16,6 +16,7 @@ app.add_middleware(
 )
 app.include_router(capture.router, tags=["capture"])
 app.include_router(inbox.router, tags=["inbox"])
+app.include_router(processing.router, tags=["processing"])
 
 
 @app.get("/health")

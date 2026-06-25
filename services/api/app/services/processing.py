@@ -1,0 +1,21 @@
+"""Start-processing business logic (S2 manual trigger, design §2.4)."""
+
+from collections.abc import Callable
+
+from sqlalchemy.orm import Session
+
+from gulp_shared.models.source import SnapshotStatus, Source
+
+_STARTABLE = {
+    SnapshotStatus.unprocessed,
+    SnapshotStatus.needs_attention,
+    SnapshotStatus.ready,  # allow re-generation
+}
+
+
+def start_processing(db: Session, source: Source, enqueue: Callable[..., None]) -> None:
+    if source.status not in _STARTABLE:
+        raise ValueError(f"snapshot in status {source.status.value} is not startable")
+    source.status = SnapshotStatus.processing
+    db.commit()
+    enqueue("process_snapshot", str(source.id))
