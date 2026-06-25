@@ -27,14 +27,14 @@ def pack_out(db: Session, snapshot_id: uuid.UUID) -> PackOut | None:
     sections: list[PackSectionOut] = []
     for section in db.scalars(
         select(PackSection)
-        .where(PackSection.pack_id == pack.id)
+        .where(PackSection.pack_id == pack.id, PackSection.deleted_at.is_(None))
         .order_by(PackSection.position)
     ):
         blocks = [
             PackBlockOut(type=b.block_type, content=b.content, anchor_id=b.anchor_id)
             for b in db.scalars(
                 select(PackBlock)
-                .where(PackBlock.section_id == section.id)
+                .where(PackBlock.section_id == section.id, PackBlock.deleted_at.is_(None))
                 .order_by(PackBlock.position)
             )
         ]
@@ -42,7 +42,9 @@ def pack_out(db: Session, snapshot_id: uuid.UUID) -> PackOut | None:
 
     facets = [
         PackFacetOut(element_type=e.element_type, text=e.text)
-        for e in db.scalars(select(PackElement).where(PackElement.pack_id == pack.id))
+        for e in db.scalars(
+            select(PackElement).where(PackElement.pack_id == pack.id, PackElement.deleted_at.is_(None))
+        )
     ]
 
     return PackOut(

@@ -64,3 +64,17 @@ def test_get_pack_404_when_no_pack(client, db) -> None:  # type: ignore[no-untyp
 def test_get_pack_404_for_unknown_id(client) -> None:  # type: ignore[no-untyped-def]
     r = client.get("/snapshots/00000000-0000-0000-0000-0000000000ff/pack")
     assert r.status_code == 404
+
+
+def test_get_pack_404_for_foreign_snapshot(client, db) -> None:  # type: ignore[no-untyped-def]
+    # A snapshot owned by a different user must 404 (auth stub authenticates as DEV_USER_ID).
+    foreign_snap = Source(
+        owner_id=uuid.uuid4(),  # not DEV_USER_ID
+        kind=SourceKind.snapshot,
+        title="Foreign",
+        status=SnapshotStatus.ready,
+    )
+    db.add(foreign_snap)
+    db.commit()
+    r = client.get(f"/snapshots/{foreign_snap.id}/pack")
+    assert r.status_code == 404

@@ -1,4 +1,5 @@
 import uuid
+from datetime import UTC, datetime
 
 from app.services.pack import pack_out
 from gulp_shared.models.knowledge_pack import (
@@ -62,3 +63,23 @@ def test_pack_out_returns_none_when_no_pack(db) -> None:
     snap = _snapshot(db)
     db.commit()
     assert pack_out(db, snap.id) is None
+
+
+def test_pack_out_excludes_soft_deleted_facet(db) -> None:
+    snap = _snapshot(db)
+    _seed_pack(db, snap.id)
+    # Soft-delete one of the two PackElements seeded by _seed_pack.
+    from gulp_shared.models.knowledge_pack import KnowledgePack as KP
+    from sqlalchemy import select as sa_select
+    pack = db.scalar(sa_select(KP).where(KP.snapshot_id == snap.id))
+    elements = list(db.scalars(
+        sa_select(PackElement).where(PackElement.pack_id == pack.id)
+    ))
+    assert len(elements) == 2
+    elements[0].deleted_at = datetime.now(UTC)
+    db.commit()
+    out = pack_out(db, snap.id)
+    assert out is not None
+    assert len(out.facets) == 1
+    surviving_texts = {f.text for f in out.facets}
+    assert elements[0].text not in surviving_texts

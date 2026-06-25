@@ -42,6 +42,10 @@ export async function getSnapshot(id: string): Promise<Snapshot> {
   return data;
 }
 
+// v1 limitation: ALL error responses (404, 5xx, network) collapse to `null`.
+// This is fine while "no pack yet" is the only expected error state.
+// Plan B must distinguish a real 404 from a 5xx/4xx before shipping production
+// error handling (e.g. surface retries on 5xx, show a permanent error on 4xx).
 export async function getPack(id: string): Promise<PackOut | null> {
   const { data, error } = await client.GET("/snapshots/{snapshot_id}/pack", {
     params: { path: { snapshot_id: id } },
