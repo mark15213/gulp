@@ -21,11 +21,21 @@ export function groupFacets(facets: Facet[]): FacetGroup[] {
   return FACET_ORDER.map(({ type, label }) => ({
     type,
     label,
-    items: facets.filter((f) => f.element_type === type),
+    items: facets.filter((f) => f.element_type === type && f.text != null && f.text !== ""),
   })).filter((g) => g.items.length > 0);
 }
 
 // The poller keeps going while the snapshot is still being processed.
 export function isProcessing(status: Snapshot["status"]): boolean {
-  return status === "processing";
+  return status === "processing" || status === "queued";
+}
+
+// Host label for a source; never throws on a malformed/relative URL.
+export function safeHost(url: string | null | undefined): string {
+  if (!url) return "Note";
+  try {
+    return new URL(url).host;
+  } catch {
+    return "Note";
+  }
 }

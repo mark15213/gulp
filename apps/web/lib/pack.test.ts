@@ -1,8 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { groupFacets, isProcessing } from "./pack";
+import { groupFacets, isProcessing, safeHost } from "./pack";
 import type { PackOut } from "@gulp/api-client";
+import type { Facet } from "./pack";
 
-type Facet = PackOut["facets"][number];
+type _Facet = PackOut["facets"][number];
 
 const facets: Facet[] = [
   { element_type: "claim", text: "c1" },
@@ -21,6 +22,16 @@ describe("groupFacets", () => {
   it("returns [] for no facets", () => {
     expect(groupFacets([])).toEqual([]);
   });
+
+  it("excludes null-text facets", () => {
+    const withNull: Facet[] = [
+      { element_type: "claim", text: "c1" },
+      { element_type: "claim", text: null } as Facet,
+    ];
+    const groups = groupFacets(withNull);
+    expect(groups[0]!.items).toHaveLength(1);
+    expect(groups[0]!.items[0]!.text).toBe("c1");
+  });
 });
 
 describe("isProcessing", () => {
@@ -28,5 +39,23 @@ describe("isProcessing", () => {
     expect(isProcessing("processing")).toBe(true);
     expect(isProcessing("ready")).toBe(false);
     expect(isProcessing("needs_attention")).toBe(false);
+  });
+
+  it("is true for queued", () => {
+    expect(isProcessing("queued")).toBe(true);
+  });
+});
+
+describe("safeHost", () => {
+  it("returns host for a valid URL", () => {
+    expect(safeHost("https://example.com/x")).toBe("example.com");
+  });
+
+  it("returns Note for a schemeless URL", () => {
+    expect(safeHost("example.com")).toBe("Note");
+  });
+
+  it("returns Note for null", () => {
+    expect(safeHost(null)).toBe("Note");
   });
 });

@@ -5,6 +5,7 @@ import { ReaderToggle } from "@/components/snapshot/ReaderToggle";
 import { StartButton } from "@/components/snapshot/StartButton";
 import { ProcessingPoller } from "@/components/snapshot/ProcessingPoller";
 import styles from "@/components/snapshot/SnapshotStatusView.module.css";
+import { safeHost } from "@/lib/pack";
 
 export const dynamic = "force-dynamic";
 
@@ -17,7 +18,7 @@ export default async function SnapshotPage({ params }: { params: Promise<{ id: s
     notFound();
   }
 
-  const source = snap.origin_url ? new URL(snap.origin_url).host : "Note";
+  const source = safeHost(snap.origin_url);
 
   return (
     <div className={styles.page}>
@@ -34,7 +35,7 @@ export default async function SnapshotPage({ params }: { params: Promise<{ id: s
         </div>
       )}
 
-      {snap.status === "processing" && (
+      {(snap.status === "processing" || snap.status === "queued") && (
         <>
           <ProcessingPoller id={id} />
           <p className="t-data" style={{ color: "var(--text-muted, #777)" }}>Reading it for you…</p>
