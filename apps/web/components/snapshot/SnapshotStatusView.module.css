@@ -1,0 +1,10 @@
+.page { padding: 24px; max-width: 960px; }
+.back { font-size: 13px; color: var(--text-muted, #777); margin-bottom: 12px; display: inline-block; }
+.title { margin-bottom: 6px; }
+.source { color: var(--text-muted, #777); margin-bottom: 20px; }
+.skeleton { height: 12px; background: var(--surface-2, #eee); border-radius: 6px; margin: 10px 0; animation: pulse 1.4s ease-in-out infinite; }
+.skeleton.short { width: 50%; }
+@keyframes pulse { 0%,100% { opacity: 1 } 50% { opacity: 0.5 } }
+.banner { border-left: 3px solid var(--warning, #d98a00); background: var(--warning-tint, #fff7e6); padding: 12px 14px; border-radius: 6px; margin: 16px 0; }
+.actions { display: flex; gap: 12px; align-items: center; margin-top: 16px; }
+.open { font-size: 13px; color: var(--accent, #2f6bff); }
