@@ -24,19 +24,19 @@
 ### 2.1 Three layers, two unification seams **[decided]**
 
 ```
-   提取 (机械, 无 LLM)        理解 (LLM)
-┌──────────────────┐ ←缝→ ┌──────────────────────────────┐
-│ A. Adapt          │      │ B. Digest          C. Project │
-│   →  NormDoc      │  →   │   →  Knowledge Pack   →  Cards│
-└──────────────────┘      └──────────────────────────────┘
-   每种输入各写 adapter        一套 type-agnostic 逻辑
+   extract (mechanical, no LLM)      understand (LLM)
+┌──────────────────┐ ←seam→ ┌──────────────────────────────┐
+│ A. Adapt          │        │ B. Digest          C. Project │
+│   →  NormDoc      │   →    │   →  Knowledge Pack   →  Cards│
+└──────────────────┘        └──────────────────────────────┘
+   one adapter per input type        one type-agnostic path
 ```
 
 - **A — Adapt → `NormDoc`:** the only place input-type-specific code lives. Deterministic for text inputs (no LLM); ASR/OCR for audio/video/image (a model, but not the LLM — stays on the extraction side).
 - **B — Digest → Knowledge Pack:** the heaviest LLM stage — the "understanding."
 - **C — Project → Cards:** the LLM projects the pack into testable cards.
 
-**The real AI boundary is `提取(机械)` vs `理解(LLM)`, not "NormDoc vs Card."** `NormDoc` is the seam — cheap, deterministic, cacheable plumbing cleanly separated from expensive, evaluable, fallible LLM work.
+**The real AI boundary is `extract (mechanical)` vs `understand (LLM)`, not "NormDoc vs Card."** `NormDoc` is the seam — cheap, deterministic, cacheable plumbing cleanly separated from expensive, evaluable, fallible LLM work.
 
 ### 2.2 `NormDoc` — the unified intermediate representation **[decided]**
 
@@ -213,11 +213,21 @@ v1 **input scope = webpage/article + note** (deferred types follow the blob laye
 - **Intra-pack fine-grained anchors → S6** — chat anchored to a block; sediment appends back as pack blocks (§3.3/§3.4).
 - **Deferred input types** — pdf/video/podcast/audio/screenshot, each a new A-layer adapter + blob/ASR/OCR (§2.2).
 
+**v1 build slices (the S2 plans, sequenced) — S2 ships report-first:**
+- **Plan 1 — data layer** (models + migration). *Done.*
+- **Plan 2 — LLM service layer + `NormDoc` + adapters** (webpage/note). *Done.*
+- **Plan 3 — Processing pipeline (report generation):** manual Start → fetch → adapt → one **digest turn** → `KnowledgePack` (report `PackSection`/`PackBlock`) + `PackElement` facets (text, `concept_id` null) → `ready`. v1 narrowings of the decisions above:
+  - **Card generation → its own later plan** (refines C8 — only the digest turn runs in Plan 3; the card turn comes later).
+  - **Long-content map-reduce deferred** (refines C13 — Plan 3 is single-pass with a token-budget guard: over-budget content is truncated and flagged low-`confidence`; per-section map-reduce is a follow-up).
+  - **`PackBlock.source_anchor` left null in v1** (refines C3 — its consumers, citation chips / region "open original" / S6 chat, are all deferred; the digest prompt still enforces faithfulness to `NormDoc`; `origin_url` covers whole-source "open original").
+  - **Concept/edge materialization stays S3** (C9) — facets are text only.
+  - **Pipeline LLM provider is injectable** for hermetic tests (`FakeProvider`); real Start hits the API (manual trigger = cost-controlled).
+
 ## 10. Decisions log (C-series) — *draft*
 
 | # | Decision | Status | Reversible? |
 |---|---|---|---|
-| C1 | Pipeline = `Adapt→NormDoc`(机械) · `Digest→Pack`(LLM) · `Project→Cards`(LLM); `NormDoc` is the unification seam | decided | yes |
+| C1 | Pipeline = `Adapt→NormDoc` (mechanical) · `Digest→Pack` (LLM) · `Project→Cards` (LLM); `NormDoc` is the unification seam | decided | yes |
 | C2 | Pack is a **reading-first, re-authored, paginated report** (spine) + facets as **annotations** | decided (pending `02` amend) | hard |
 | C3 | Every `PackBlock` anchors back to `NormDoc` | decided | yes |
 | C4 | **Job-spec ↔ pluggable executor** seam; v1 = `inline` | decided | yes |

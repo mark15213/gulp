@@ -33,4 +33,5 @@ Personal learning system: forward anything → AI knowledge pack → daily "Gulp
 3. **Conventional layering in the API** — routers stay thin, business logic lives in `services/api/app/services`, persistence in `services/shared`.
 4. **Capture never blocks on AI** (`docs/04 §4 S1`). Heavy work goes to `services/worker` via the queue, not into a request handler.
 5. **Build incrementally** (`docs/04 §5`). The skeleton is fully laid out, but only the current subsystem's slice is filled — empty dirs are intentional placeholders.
-6. Subproject-specific conventions live in nested `CLAUDE.md` files (`apps/*`, `services/*`).
+6. **Write in English.** All design docs, code comments, commit messages, and LLM prompts are written in English. Product UI copy is exempt — the app is bilingual (`locale ∈ {zh·en}`).
+7. Subproject-specific conventions live in nested `CLAUDE.md` files (`apps/*`, `services/*`).
