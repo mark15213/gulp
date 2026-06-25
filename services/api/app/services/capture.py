@@ -1,7 +1,6 @@
 """Capture business logic (docs/04 S1): create a Snapshot, dedupe, hand off."""
 
 import uuid
-from collections.abc import Callable
 from urllib.parse import urlsplit
 
 from sqlalchemy import select
@@ -18,8 +17,6 @@ from gulp_shared.models.source import (
 )
 from gulp_shared.models.source_tag import SourceTag
 
-EnqueueFn = Callable[..., None]
-
 
 def _host(url: str) -> str:
     return urlsplit(url).hostname or url
@@ -29,7 +26,6 @@ def create_snapshot(
     db: Session,
     owner_id: uuid.UUID,
     req: CaptureRequest,
-    enqueue: EnqueueFn,
 ) -> tuple[Source, bool]:
     if req.url and req.url.strip():
         normalized = normalize_url(req.url)
@@ -47,7 +43,7 @@ def create_snapshot(
             kind=SourceKind.snapshot,
             title=req.title or _host(normalized),
             note=req.note,
-            status=SnapshotStatus.processing,
+            status=SnapshotStatus.unprocessed,
             media_type=MediaType.webpage,
             origin_url=normalized,
             captured_via=req.captured_via or CapturedVia.in_app,
@@ -60,7 +56,7 @@ def create_snapshot(
             kind=SourceKind.snapshot,
             title=req.title or default_title,
             note=req.note,
-            status=SnapshotStatus.processing,
+            status=SnapshotStatus.unprocessed,
             media_type=MediaType.note,
             content_body=text,
             captured_via=req.captured_via or CapturedVia.manual,
@@ -72,7 +68,6 @@ def create_snapshot(
         db.add(SourceTag(source_id=source.id, tag=tag))
     db.commit()
     db.refresh(source)
-
-    # The S1↔S2 seam: hand off, never process inline (docs/04 S1).
-    enqueue("process_snapshot", str(source.id))
+    # Manual trigger (S2 design §2.4): the snapshot rests at `unprocessed` until
+    # the user Starts it (POST /snapshots/{id}/process). Capture never enqueues.
     return source, False

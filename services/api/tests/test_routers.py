@@ -16,14 +16,14 @@ def client(db):
     app.dependency_overrides.clear()
 
 
-def test_post_capture_creates_a_snapshot_and_returns_it(client):
+def test_post_capture_creates_an_unprocessed_snapshot(client) -> None:  # type: ignore[no-untyped-def]
     r = client.post("/capture", json={"url": "https://a.com/x", "captured_via": "paste"})
     assert r.status_code == 200
     body = r.json()
     assert body["duplicate"] is False
-    assert body["snapshot"]["status"] == "processing"
+    assert body["snapshot"]["status"] == "unprocessed"
     assert body["snapshot"]["media_type"] == "webpage"
-    assert len(client.enqueue_calls) == 1
+    assert client.enqueue_calls == []  # capture no longer enqueues
 
 
 def test_post_capture_duplicate_url_flags_duplicate(client):
