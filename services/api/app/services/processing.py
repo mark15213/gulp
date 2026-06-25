@@ -10,6 +10,13 @@ _STARTABLE = {
     SnapshotStatus.unprocessed,
     SnapshotStatus.needs_attention,
     SnapshotStatus.ready,  # allow re-generation
+    # `processing` is startable so a snapshot stranded by a dead worker can be
+    # re-enqueued without manual DB surgery.  The persist step is idempotent
+    # (deletes and rebuilds the KnowledgePack), so re-running is safe.
+    # Caveat: re-Starting a *live* job can double-enqueue — tolerated in v1.
+    # The KnowledgePack.snapshot_id unique constraint self-heals the persist
+    # step, and a job-lock/reaper is a later refinement.
+    SnapshotStatus.processing,
 }
 
 
