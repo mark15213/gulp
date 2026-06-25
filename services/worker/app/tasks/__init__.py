@@ -1,20 +1,28 @@
-"""Job definitions (arq). The queue the API enqueues into.
-
-S1 ships a no-op `process_snapshot` — the seam S2 grows into the real pipeline
-(fetch → parse → chunk → pack → draft cards → link concepts).
-"""
+"""Job definitions (arq). `process_snapshot` runs the S2 report pipeline."""
 
 import logging
+import uuid
 
 from arq.connections import RedisSettings
 
-from gulp_shared.settings import settings
+from app.pipeline.run import process_source
+from gulp_shared.db import SessionLocal  # type: ignore[import-untyped]
+from gulp_shared.models.source import Source  # type: ignore[import-untyped]
+from gulp_shared.settings import settings  # type: ignore[import-untyped]
 
 logger = logging.getLogger("gulp.worker")
 
 
 async def process_snapshot(ctx: dict, snapshot_id: str) -> None:
-    logger.info("TODO(S2): process snapshot %s", snapshot_id)
+    db = SessionLocal()
+    try:
+        source = db.get(Source, uuid.UUID(snapshot_id))
+        if source is None:
+            logger.warning("process_snapshot: snapshot %s not found", snapshot_id)
+            return
+        await process_source(db, source)
+    finally:
+        db.close()
 
 
 class WorkerSettings:
