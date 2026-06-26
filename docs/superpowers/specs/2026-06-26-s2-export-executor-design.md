@@ -8,6 +8,16 @@
 
 The digest is a *pure* task — `content in → structured pack out` — fully specified by three things and nothing else: an **instruction** (the prompt), an **input** (the already-fetched `NormDoc`), and an **output contract** (the `DigestResult` JSON Schema). Claude Code is itself a Claude agent that reads and writes files, so a folder holding `instruction + input + schema + an empty result slot` is natively executable — no Gulp code, no API key, no network. The cheap deterministic half (fetch + parse → `NormDoc`) already ran on Gulp's server; only the *understanding* half is exported. This is exactly the `job-spec ↔ executor` seam frozen to disk.
 
+### Why it generalizes to any source → one consumable article
+
+The export inherits the architecture that lets *wildly different* inputs (a tweet, a 50-page PDF, an hour-long video transcript, a terse note, a dense paper) all become one consistently readable article. Three decisions carry it:
+
+1. **One unification seam (`NormDoc`).** Every source type is normalized by a *small per-type adapter* into a uniform `{title, lang, media_type, content_body, blocks[]}`. After that seam **nothing is source-specific** — the digest, the article structure, the export job, and the schema are written *once* against `NormDoc`. Adding a source type is one new adapter, never a new article path. This is the single most important decision for generality.
+2. **The digest owns the article, not the source.** The output is *re-authored*, not extracted: the digest imposes a consistent reading structure (summary → background → ordered prose sections → facets) **regardless of whether the source had structure**. A flat transcript and a structured paper become the *same kind* of readable article; the source's own `section_label`/`media_type` are *signals* (a light type-aware hint), not the article's skeleton.
+3. **Quality is a first-class output.** Short → don't pad; long → tier/chunk (map-reduce, post-v1); thin/partial → low `confidence` + "only what's reliable, and says so." A bad source yields an honest *small* article, not a confident wrong one.
+
+So the *same* `CLAUDE.md` + schema digests a tweet or a textbook — the archive is source-agnostic because the digest operates on `NormDoc`. A nice asymmetry: because Claude Code can iterate (not bound by one API call), the export path degrades *better* on long/complex sources than the inline single-shot.
+
 ## 2. Scope
 
 - **In:** single-job export — a worker-built `.zip` per `unprocessed` snapshot; a new `exported` status; download + upload (import) endpoints + worker jobs; the `CLAUDE.md`/`README.md`/schema/manifest archive; strict import validation reusing `persist_pack`; Inbox/detail **⤓ Export** + **⤓ Upload result** actions.
@@ -86,6 +96,23 @@ The worker `import_result` job:
 - **Archive storage:** a local **export dir** (`settings.export_dir`, default `/tmp/gulp-exports`), keyed `<snapshot_id>.zip`. Single-host, non-durable — acceptable for v1 (mirrors the deferred blob store). The api and worker share this filesystem (same host).
 - **Reuse (all worker-side):** `NormDoc` + adapters + `fetch_html` (build), the digest **prompt** (CLAUDE.md body), `DigestResult` + its `model_json_schema()` (schema file + validation), `persist_pack` (import). The API stays thin: enqueue + serve/receive files + the shallow checks.
 
+### Module design (clean, independently-testable units)
+
+```
+gulp_shared/          SnapshotStatus.exported (+ migration); settings.export_dir
+worker app/export/
+  archive.py          safe zip / unzip — zip-slip + size-cap guards            (pure)
+  manifest.py         build / parse / validate the manifest (identity+integrity) (pure)
+  builder.py          build_job_archive(snapshot, normdoc) -> bytes             (pure given a NormDoc → testable w/o fetch)
+  importer.py         import_result_archive(zip_bytes) -> DigestResult          (pure given bytes: unzip → schema-validate → model_validate)
+  templates.py        CLAUDE.md / README / pack_schema(); the CLAUDE.md body is GENERATED from the inline digest prompt (one source of truth)
+worker app/tasks/     build_export(ctx, id) · import_result(ctx, id, path) — thin orchestration (reuse `_to_normdoc`, `persist_pack`)
+api app/services/export.py + routers/export.py   thin: enqueue · stream the stashed file · shallow upload checks; owner-scoped
+web components/snapshot/                          ⤓ Export / Download / Upload + the `exported` state + an export poller (reuse the polling pattern)
+```
+
+Each unit has **one responsibility and a typed boundary**; `builder`/`importer`/`archive`/`manifest` are unit-testable in isolation (no network, no DB for builder/archive/manifest; importer reuses `persist_pack` only at the orchestration edge). The digest **prompt** and the `DigestResult` **schema** are the **single source of truth** shared by the inline and export paths — the export must never fork them.
+
 ## 8. Testing
 
 - **Builder (worker):** given a seeded snapshot, `build_export` produces a zip with all expected entries; `manifest` fields correct; `pack.schema.json` == `DigestResult.model_json_schema()`; `norm_doc.json` round-trips into a `NormDoc`. (note path is hermetic; link path uses an injected fetch.)
@@ -93,10 +120,19 @@ The worker `import_result` job:
 - **API:** `POST /export` enqueues; `GET /job` 404 before build, streams after; `POST /import` shallow-rejects a bad zip (422), enqueues a good one; all owner-scoped (foreign → 404).
 - **Web:** the Inbox/detail `exported` state renders Download + Upload; the export poller; (logic unit-tested, interactive eyeballed).
 
-## 9. Decomposition (plans)
+## 9. Implementation — a single plan
 
-1. **Plan E1 — export/build/download:** the `exported` status + migration; the worker `build_export` job + archive builder (NormDoc → files → zip, CLAUDE.md/README/schema/manifest); `POST /export` + `GET /job`; the web ⤓ Export action + `exported` state + poll-to-download.
-2. **Plan E2 — import:** `POST /import` (shallow checks) + the worker `import_result` job (safe unzip, schema-validate, `persist_pack`, status + error handling); the web ⤓ Upload result action.
+Built as **one plan** (not split), but module-by-module along clean boundaries so each unit lands test-first:
+
+1. **Data layer** — `SnapshotStatus.exported` (+ migration `ALTER TYPE … ADD VALUE 'exported'`, `02 §6` update); `settings.export_dir`.
+2. **Archive primitives** — `archive.py` (safe zip/unzip) + `manifest.py` (build/parse/validate). Pure, unit-tested first.
+3. **Builder** — `templates.py` (CLAUDE.md/README from the inline prompt; `pack_schema()`) + `builder.py` (`NormDoc` → job zip bytes). Unit-tested with a fixture `NormDoc`.
+4. **Importer** — `importer.py` (zip bytes → validated `DigestResult`). Unit-tested with good/malformed/zip-slip fixtures.
+5. **Worker jobs** — `build_export` (fetch+adapt → builder → stash) and `import_result` (importer → `persist_pack` → status). Hermetic tests (injected fetch; SQLite).
+6. **API** — `POST /export`, `GET /job`, `POST /import` (+ shallow checks); owner-scoped; thin.
+7. **Web** — Inbox/detail ⤓ Export / Download / Upload + the `exported` state + the export poll-to-download.
+
+Order is dependency-driven (data → primitives → builder/importer → jobs → API → web); the plan's tasks map to these modules so a reviewer can accept each independently.
 
 ## 10. Open / deferred
 
