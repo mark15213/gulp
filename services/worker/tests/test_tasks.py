@@ -66,3 +66,8 @@ def test_export_jobs_registered() -> None:
     from app.tasks import WorkerSettings, build_export, import_result
     assert build_export in WorkerSettings.functions
     assert import_result in WorkerSettings.functions
+
+
+def test_resolve_metadata_registered() -> None:
+    from app.tasks import WorkerSettings, resolve_metadata
+    assert resolve_metadata in WorkerSettings.functions

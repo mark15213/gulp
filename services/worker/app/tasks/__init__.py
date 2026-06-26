@@ -6,6 +6,7 @@ import uuid
 from arq.connections import RedisSettings
 
 from app.export.jobs import run_build_export, run_import_result
+from app.pipeline.metadata import run_resolve_metadata
 from app.pipeline.run import process_source
 from gulp_shared.db import SessionLocal  # type: ignore[import-untyped]
 from gulp_shared.models.source import Source  # type: ignore[import-untyped]
@@ -52,6 +53,18 @@ async def import_result(ctx: dict, snapshot_id: str, upload_path: str) -> None:
         db.close()
 
 
+async def resolve_metadata(ctx: dict, snapshot_id: str) -> None:
+    db = SessionLocal()
+    try:
+        source = db.get(Source, uuid.UUID(snapshot_id))
+        if source is None:
+            logger.warning("resolve_metadata: snapshot %s not found", snapshot_id)
+            return
+        await run_resolve_metadata(db, source)
+    finally:
+        db.close()
+
+
 class WorkerSettings:
-    functions = [process_snapshot, build_export, import_result]
+    functions = [process_snapshot, build_export, import_result, resolve_metadata]
     redis_settings = RedisSettings.from_dsn(settings.redis_url)
