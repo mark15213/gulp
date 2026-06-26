@@ -60,3 +60,9 @@ async def test_missing_snapshot_is_a_noop(monkeypatch: Any) -> None:
     Local = sessionmaker(bind=engine, expire_on_commit=False)
     monkeypatch.setattr(tasks, "SessionLocal", Local)
     await process_snapshot({}, "00000000-0000-0000-0000-0000000000ff")  # no raise
+
+
+def test_export_jobs_registered() -> None:
+    from app.tasks import WorkerSettings, build_export, import_result
+    assert build_export in WorkerSettings.functions
+    assert import_result in WorkerSettings.functions

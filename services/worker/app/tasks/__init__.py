@@ -5,6 +5,7 @@ import uuid
 
 from arq.connections import RedisSettings
 
+from app.export.jobs import run_build_export, run_import_result
 from app.pipeline.run import process_source
 from gulp_shared.db import SessionLocal  # type: ignore[import-untyped]
 from gulp_shared.models.source import Source  # type: ignore[import-untyped]
@@ -25,6 +26,32 @@ async def process_snapshot(ctx: dict, snapshot_id: str) -> None:
         db.close()
 
 
+async def build_export(ctx: dict, snapshot_id: str) -> None:
+    db = SessionLocal()
+    try:
+        source = db.get(Source, uuid.UUID(snapshot_id))
+        if source is None:
+            logger.warning("build_export: snapshot %s not found", snapshot_id)
+            return
+        await run_build_export(db, source)
+    finally:
+        db.close()
+
+
+async def import_result(ctx: dict, snapshot_id: str, upload_path: str) -> None:
+    db = SessionLocal()
+    try:
+        source = db.get(Source, uuid.UUID(snapshot_id))
+        if source is None:
+            logger.warning("import_result: snapshot %s not found", snapshot_id)
+            return
+        with open(upload_path, "rb") as f:
+            data = f.read()
+        run_import_result(db, source, data)
+    finally:
+        db.close()
+
+
 class WorkerSettings:
-    functions = [process_snapshot]
+    functions = [process_snapshot, build_export, import_result]
     redis_settings = RedisSettings.from_dsn(settings.redis_url)
