@@ -18,6 +18,7 @@ from app.pipeline.digest import run_digest
 from app.pipeline.normdoc import NormDoc
 from app.pipeline.persist import persist_pack
 from gulp_shared.models.source import MediaType, SnapshotStatus, Source  # type: ignore[import-untyped]
+from gulp_shared.urls import host_of  # type: ignore[import-untyped]
 
 logger = logging.getLogger("gulp.worker")
 
@@ -58,6 +59,13 @@ async def process_source(
             raise PipelineError("extraction produced no content")
         source.content_body = normdoc.content_body
         source.media_type = MediaType(normdoc.media_type)
+        if (
+            source.origin_url
+            and source.title == host_of(source.origin_url)
+            and normdoc.title
+            and normdoc.title != source.title
+        ):
+            source.title = normdoc.title
         digest = await run_digest(normdoc, provider=provider, config=config)
         persist_pack(db, source, digest)
         source.status = SnapshotStatus.ready

@@ -18,6 +18,7 @@ def client(db):  # type: ignore[no-untyped-def]
 
 def _capture(client: TestClient) -> str:
     r = client.post("/capture", json={"url": "https://a.com/x"})
+    client.enqueue_calls.clear()  # type: ignore[attr-defined]  # drop capture's resolve_metadata enqueue
     return r.json()["snapshot"]["id"]
 
 

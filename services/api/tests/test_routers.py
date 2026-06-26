@@ -23,7 +23,8 @@ def test_post_capture_creates_an_unprocessed_snapshot(client) -> None:  # type: 
     assert body["duplicate"] is False
     assert body["snapshot"]["status"] == "unprocessed"
     assert body["snapshot"]["media_type"] == "webpage"
-    assert client.enqueue_calls == []  # capture no longer enqueues
+    # capturing a link enqueues a metadata-resolution job (real title + media type)
+    assert client.enqueue_calls == [("resolve_metadata", body["snapshot"]["id"])]
 
 
 def test_post_capture_duplicate_url_flags_duplicate(client):

@@ -116,3 +116,21 @@ async def test_pdf_link_routes_through_pdf_adapter() -> None:
     assert snap.status == SnapshotStatus.ready
     assert snap.media_type == MediaType.pdf
     assert "Distributed practice" in (snap.content_body or "")
+
+
+async def test_link_pipeline_writes_real_title_over_host_placeholder() -> None:
+    s = _session()
+    s.add(User(id=DEV_USER_ID, display_name="Dev"))
+    snap = Source(owner_id=DEV_USER_ID, kind=SourceKind.snapshot, title="x.example",
+                  status=SnapshotStatus.unprocessed, media_type=MediaType.webpage,
+                  origin_url="https://x.example/a")
+    s.add(snap)
+    s.flush()
+
+    async def _fetch(url: str) -> FetchedDoc:
+        html = ("<html><head><title>Real Title</title></head><body><article>"
+                "<p>Body text here about relevance.</p></article></body></html>")
+        return FetchedDoc(content=html.encode(), content_type="text/html")
+
+    await process_source(s, snap, fetch=_fetch, provider=FakeProvider(_OK))
+    assert snap.title == "Real Title"  # host placeholder replaced by the extracted title

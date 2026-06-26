@@ -14,6 +14,7 @@ from app.pipeline.persist import persist_pack
 from app.pipeline.run import _to_normdoc
 from gulp_shared.models.source import MediaType, SnapshotStatus, Source  # type: ignore[import-untyped]
 from gulp_shared.settings import settings  # type: ignore[import-untyped]
+from gulp_shared.urls import host_of  # type: ignore[import-untyped]
 
 logger = logging.getLogger("gulp.worker")
 
@@ -35,6 +36,13 @@ async def run_build_export(
             raise ValueError("extraction produced no content")
         source.content_body = normdoc.content_body
         source.media_type = MediaType(normdoc.media_type)
+        if (
+            source.origin_url
+            and source.title == host_of(source.origin_url)
+            and normdoc.title
+            and normdoc.title != source.title
+        ):
+            source.title = normdoc.title
         data = build_job_archive(
             snapshot_id=str(source.id),
             owner_id=str(source.owner_id),

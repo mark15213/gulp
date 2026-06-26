@@ -1,12 +1,13 @@
 """Capture endpoints — thin (docs/05 D4): parse, call service, return."""
 
 import uuid
+from collections.abc import Callable
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.core.auth import get_current_user
-from app.deps import get_db
+from app.deps import get_db, get_enqueue
 from app.schemas.capture import CaptureRequest, CaptureResponse, SnapshotOut
 from app.services.capture import create_snapshot
 from app.services.snapshots import to_out
@@ -21,8 +22,11 @@ def capture(
     req: CaptureRequest,
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
+    enqueue: Callable[..., None] = Depends(get_enqueue),
 ) -> CaptureResponse:
     source, duplicate = create_snapshot(db, user.id, req)
+    if not duplicate and source.origin_url:
+        enqueue("resolve_metadata", str(source.id))
     return CaptureResponse(snapshot=to_out(db, source), duplicate=duplicate)
 
 
