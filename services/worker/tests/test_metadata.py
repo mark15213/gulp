@@ -48,3 +48,25 @@ async def test_resolve_keeps_a_user_supplied_title() -> None:
     await run_resolve_metadata(s, snap, fetch=_pdf_fetch())
     assert snap.title == "My own title"  # not the host placeholder -> untouched
     assert snap.media_type == MediaType.pdf  # type still refined
+
+
+async def test_resolve_uses_arxiv_abstract_title_for_a_pdf_link() -> None:
+    s = _session()
+    s.add(User(id=DEV_USER_ID, display_name="Dev"))
+    snap = Source(owner_id=DEV_USER_ID, kind=SourceKind.snapshot, title="arxiv.org",
+                  status=SnapshotStatus.unprocessed, media_type=MediaType.webpage,
+                  origin_url="https://arxiv.org/pdf/1706.03762")
+    s.add(snap); s.flush()
+
+    pdf = (Path(__file__).parent / "fixtures" / "sample.pdf").read_bytes()
+    abs_html = ('<html><head><meta name="citation_title" '
+                'content="Attention Is All You Need"></head><body>x</body></html>')
+
+    async def _fetch(url: str) -> FetchedDoc:
+        if "/abs/" in url:
+            return FetchedDoc(content=abs_html.encode(), content_type="text/html")
+        return FetchedDoc(content=pdf, content_type="application/pdf")
+
+    await run_resolve_metadata(s, snap, fetch=_fetch)
+    assert snap.title == "Attention Is All You Need"  # from the abstract page, not the PDF first line
+    assert snap.media_type == MediaType.pdf            # still from the real (PDF) fetch
