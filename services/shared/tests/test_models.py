@@ -63,3 +63,15 @@ def test_snapshot_can_be_unprocessed():
 
 def test_dev_user_id_is_the_fixed_uuid():
     assert DEV_USER_ID == uuid.UUID("00000000-0000-0000-0000-000000000001")
+
+
+def test_snapshot_can_be_exported():
+    s = _session()
+    s.add(User(id=DEV_USER_ID, display_name="Dev"))
+    snap = Source(
+        owner_id=DEV_USER_ID, kind=SourceKind.snapshot, title="X",
+        status=SnapshotStatus.exported,
+    )
+    s.add(snap)
+    s.commit()
+    assert SnapshotStatus.exported.value == "exported"

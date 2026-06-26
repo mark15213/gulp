@@ -20,6 +20,7 @@ class SnapshotStatus(str, enum.Enum):
     unprocessed = "unprocessed"
     processing = "processing"
     ready = "ready"
+    exported = "exported"
     awaiting_review = "awaiting_review"
     in_library = "in_library"
     needs_attention = "needs_attention"

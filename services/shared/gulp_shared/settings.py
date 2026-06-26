@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     web_origin: str = "http://localhost:3000"
     llm_provider: str = "anthropic"
     llm_model: str = "claude-sonnet-4-6"
+    export_dir: str = "/tmp/gulp-exports"
 
 
 settings = Settings()
