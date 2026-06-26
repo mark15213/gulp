@@ -1,22 +1,50 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { importResult, jobDownloadUrl, startExport } from "@gulp/api-client";
+import { getSnapshot, importResult, jobDownloadUrl, startExport } from "@gulp/api-client";
 import type { Snapshot } from "@gulp/api-client";
 import { Button } from "@/components/ui/Button";
+
+const POLL_MS = 3000;
+const MAX_POLLS = 40;
 
 export function ExportActions({ id, status }: { id: string; status: Snapshot["status"] }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
+  const [building, setBuilding] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  // While the worker builds the job, poll until the snapshot leaves `unprocessed`.
+  useEffect(() => {
+    if (!building) return;
+    let polls = 0;
+    const timer = setInterval(async () => {
+      polls += 1;
+      try {
+        const snap = await getSnapshot(id);
+        if (snap.status !== "unprocessed") {
+          clearInterval(timer);
+          setBuilding(false);
+          router.refresh();
+        }
+      } catch {
+        // transient — keep polling until the cap
+      }
+      if (polls >= MAX_POLLS) {
+        clearInterval(timer);
+        setBuilding(false);
+      }
+    }, POLL_MS);
+    return () => clearInterval(timer);
+  }, [building, id, router]);
 
   async function onExport() {
     setBusy(true);
     try {
       await startExport(id);
+      setBuilding(true);
     } finally {
-      router.refresh();
       setBusy(false);
     }
   }
@@ -28,7 +56,7 @@ export function ExportActions({ id, status }: { id: string; status: Snapshot["st
     try {
       await importResult(id, file);
     } catch (err) {
-      alert(String(err)); // v1: surface import errors plainly
+      alert(String(err));
     } finally {
       if (fileRef.current) fileRef.current.value = "";
       router.refresh();
@@ -46,6 +74,8 @@ export function ExportActions({ id, status }: { id: string; status: Snapshot["st
     );
   }
   return (
-    <Button variant="secondary" disabled={busy} onClick={onExport}>⇪ Export job</Button>
+    <Button variant="secondary" disabled={busy || building} onClick={onExport}>
+      {building ? "Preparing export…" : "⇪ Export job"}
+    </Button>
   );
 }

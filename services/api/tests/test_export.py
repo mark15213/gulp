@@ -72,3 +72,16 @@ def test_import_wrong_snapshot_id_422(client, db):  # type: ignore[no-untyped-de
     bad = _result_zip("00000000-0000-0000-0000-0000000000ff")
     r = client.post(f"/snapshots/{sid}/import", files={"file": ("r.zip", bad, "application/zip")})
     assert r.status_code == 422
+
+
+def test_job_streams_file(client, db, tmp_path, monkeypatch):  # type: ignore[no-untyped-def]
+    import os
+    from app.services import export as export_svc
+    monkeypatch.setattr(export_svc.settings, "export_dir", str(tmp_path))
+    sid = _snap(db, status=SnapshotStatus.exported)
+    os.makedirs(str(tmp_path), exist_ok=True)
+    with open(export_svc.job_path(sid), "wb") as f:
+        f.write(b"PK\x03\x04 fake zip bytes")
+    r = client.get(f"/snapshots/{sid}/job")
+    assert r.status_code == 200
+    assert r.headers["content-type"] == "application/zip"

@@ -26,22 +26,22 @@ def _find(zf: zipfile.ZipFile, suffix: str) -> str | None:
 def shallow_check(data: bytes, *, snapshot_id: str, owner_id: str) -> None:
     """Stdlib-only sanity check; raises ValueError with a reason on failure."""
     try:
-        zf = zipfile.ZipFile(io.BytesIO(data))
+        with zipfile.ZipFile(io.BytesIO(data)) as zf:
+            man_name = _find(zf, "manifest.json")
+            if man_name is None:
+                raise ValueError("archive has no manifest.json")
+            try:
+                man = json.loads(zf.read(man_name))
+            except json.JSONDecodeError as exc:
+                raise ValueError("manifest.json is not valid JSON") from exc
+            if man.get("snapshot_id") != snapshot_id:
+                raise ValueError("manifest snapshot_id does not match this snapshot")
+            if man.get("owner_id") != owner_id:
+                raise ValueError("manifest owner_id does not match")
+            if _find(zf, "result/pack.json") is None:
+                raise ValueError("archive has no result/pack.json")
     except zipfile.BadZipFile as exc:
         raise ValueError("upload is not a valid zip") from exc
-    man_name = _find(zf, "manifest.json")
-    if man_name is None:
-        raise ValueError("archive has no manifest.json")
-    try:
-        man = json.loads(zf.read(man_name))
-    except json.JSONDecodeError as exc:
-        raise ValueError("manifest.json is not valid JSON") from exc
-    if man.get("snapshot_id") != snapshot_id:
-        raise ValueError("manifest snapshot_id does not match this snapshot")
-    if man.get("owner_id") != owner_id:
-        raise ValueError("manifest owner_id does not match")
-    if _find(zf, "result/pack.json") is None:
-        raise ValueError("archive has no result/pack.json")
 
 
 def stash_result(data: bytes, snapshot_id: str) -> str:
