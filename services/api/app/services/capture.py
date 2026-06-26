@@ -1,7 +1,6 @@
 """Capture business logic (docs/04 S1): create a Snapshot, dedupe, hand off."""
 
 import uuid
-from urllib.parse import urlsplit
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -16,10 +15,7 @@ from gulp_shared.models.source import (
     SourceKind,
 )
 from gulp_shared.models.source_tag import SourceTag
-
-
-def _host(url: str) -> str:
-    return urlsplit(url).hostname or url
+from gulp_shared.urls import host_of
 
 
 def create_snapshot(
@@ -41,7 +37,7 @@ def create_snapshot(
         source = Source(
             owner_id=owner_id,
             kind=SourceKind.snapshot,
-            title=req.title or _host(normalized),
+            title=req.title or host_of(normalized),
             note=req.note,
             status=SnapshotStatus.unprocessed,
             media_type=MediaType.webpage,
