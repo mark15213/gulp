@@ -1,9 +1,11 @@
+from pathlib import Path
 from typing import Any
 
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import sessionmaker
 
 from app.llm.base import Message, ModelConfig
+from app.pipeline.adapters.fetch import FetchedDoc
 from app.pipeline.run import process_source
 from gulp_shared.db import Base  # type: ignore[import-untyped]
 import gulp_shared.models  # type: ignore[import-untyped]  # noqa: F401
@@ -53,7 +55,7 @@ async def test_note_pipeline_ends_ready_with_a_pack() -> None:
     s = _session()
     snap = _note(s)
 
-    async def _no_fetch(url: str) -> str:  # notes never fetch
+    async def _no_fetch(url: str) -> FetchedDoc:  # notes never fetch
         raise AssertionError("note path must not fetch")
 
     await process_source(s, snap, fetch=_no_fetch, provider=FakeProvider(_OK))
@@ -71,10 +73,11 @@ async def test_link_pipeline_fetches_then_digests() -> None:
     s.add(snap)
     s.flush()
 
-    async def _fetch(url: str) -> str:
-        return ("<html><head><title>A</title></head><body><article>"
+    async def _fetch(url: str) -> FetchedDoc:
+        html = ("<html><head><title>A</title></head><body><article>"
                 "<h1>A</h1><p>Attention weighs tokens by relevance across the input.</p>"
                 "</article></body></html>")
+        return FetchedDoc(content=html.encode(), content_type="text/html; charset=utf-8")
 
     await process_source(s, snap, fetch=_fetch, provider=FakeProvider(_OK))
 
@@ -93,3 +96,23 @@ async def test_failure_sets_needs_attention() -> None:
 
     await process_source(s, snap, provider=Boom())
     assert snap.status == SnapshotStatus.needs_attention
+
+
+async def test_pdf_link_routes_through_pdf_adapter() -> None:
+    s = _session()
+    s.add(User(id=DEV_USER_ID, display_name="Dev"))
+    snap = Source(owner_id=DEV_USER_ID, kind=SourceKind.snapshot, title="x.example",
+                  status=SnapshotStatus.unprocessed, media_type=MediaType.webpage,
+                  origin_url="https://x.example/p.pdf")
+    s.add(snap)
+    s.flush()
+    pdf_bytes = (Path(__file__).parent / "fixtures" / "sample.pdf").read_bytes()
+
+    async def _fetch(url: str) -> FetchedDoc:
+        return FetchedDoc(content=pdf_bytes, content_type="application/pdf")
+
+    await process_source(s, snap, fetch=_fetch, provider=FakeProvider(_OK))
+
+    assert snap.status == SnapshotStatus.ready
+    assert snap.media_type == MediaType.pdf
+    assert "Distributed practice" in (snap.content_body or "")

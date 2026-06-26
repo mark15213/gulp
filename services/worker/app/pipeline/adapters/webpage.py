@@ -12,19 +12,11 @@ keeping only the FIRST occurrence of each paragraph (keyed by stripped text).
 
 import re
 
-import httpx
 import trafilatura
 
 from app.pipeline.normdoc import Anchor, NormBlock, NormDoc
 
 _HEADING = re.compile(r"^#{1,6}\s+(.*\S)\s*$")
-
-
-async def fetch_html(url: str) -> str:
-    async with httpx.AsyncClient(follow_redirects=True, timeout=30.0) as client:
-        resp = await client.get(url, headers={"User-Agent": "GulpBot/1.0"})
-        resp.raise_for_status()
-        return resp.text
 
 
 def _dedupe(markdown: str) -> str:

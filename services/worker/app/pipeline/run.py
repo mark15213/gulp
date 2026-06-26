@@ -10,8 +10,10 @@ from collections.abc import Awaitable, Callable
 from sqlalchemy.orm import Session
 
 from app.llm.base import LLMProvider, ModelConfig
+from app.pipeline.adapters.fetch import FetchedDoc, fetch_document, is_pdf
 from app.pipeline.adapters.note import note_to_normdoc
-from app.pipeline.adapters.webpage import fetch_html, webpage_to_normdoc
+from app.pipeline.adapters.pdf import pdf_to_normdoc
+from app.pipeline.adapters.webpage import webpage_to_normdoc
 from app.pipeline.digest import run_digest
 from app.pipeline.normdoc import NormDoc
 from app.pipeline.persist import persist_pack
@@ -19,17 +21,24 @@ from gulp_shared.models.source import MediaType, SnapshotStatus, Source  # type:
 
 logger = logging.getLogger("gulp.worker")
 
-FetchFn = Callable[[str], Awaitable[str]]
+FetchFn = Callable[[str], Awaitable[FetchedDoc]]
 
 
 class PipelineError(Exception):
     """A processing failure that should land the snapshot in needs_attention."""
 
 
+def normdoc_from_fetched(doc: FetchedDoc, *, fallback_title: str, url: str) -> NormDoc:
+    if is_pdf(doc):
+        return pdf_to_normdoc(doc.content, fallback_title=fallback_title, url=url)
+    html = doc.content.decode("utf-8", errors="replace")
+    return webpage_to_normdoc(html, fallback_title=fallback_title, url=url)
+
+
 async def _to_normdoc(source: Source, fetch: FetchFn) -> NormDoc:
     if source.origin_url:
-        html = await fetch(source.origin_url)
-        return webpage_to_normdoc(html, fallback_title=source.title, url=source.origin_url)
+        doc = await fetch(source.origin_url)
+        return normdoc_from_fetched(doc, fallback_title=source.title, url=source.origin_url)
     return note_to_normdoc(source.title, source.content_body or "")
 
 
@@ -37,7 +46,7 @@ async def process_source(
     db: Session,
     source: Source,
     *,
-    fetch: FetchFn = fetch_html,
+    fetch: FetchFn = fetch_document,
     provider: LLMProvider | None = None,
     config: ModelConfig | None = None,
 ) -> None:

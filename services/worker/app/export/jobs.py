@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.export.builder import build_job_archive
 from app.export.importer import import_result_archive
-from app.pipeline.adapters.webpage import fetch_html
+from app.pipeline.adapters.fetch import FetchedDoc, fetch_document
 from app.pipeline.persist import persist_pack
 from app.pipeline.run import _to_normdoc
 from gulp_shared.models.source import MediaType, SnapshotStatus, Source  # type: ignore[import-untyped]
@@ -17,14 +17,14 @@ from gulp_shared.settings import settings  # type: ignore[import-untyped]
 
 logger = logging.getLogger("gulp.worker")
 
-FetchFn = Callable[[str], Awaitable[str]]
+FetchFn = Callable[[str], Awaitable[FetchedDoc]]
 
 
 async def run_build_export(
     db: Session,
     source: Source,
     *,
-    fetch: FetchFn = fetch_html,
+    fetch: FetchFn = fetch_document,
     export_dir: str | None = None,
     now: str | None = None,
 ) -> str:
