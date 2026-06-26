@@ -30,6 +30,7 @@ export function ExportActions({ id, status }: { id: string; status: Snapshot["st
     } catch (err) {
       alert(String(err)); // v1: surface import errors plainly
     } finally {
+      if (fileRef.current) fileRef.current.value = "";
       router.refresh();
       setBusy(false);
     }
