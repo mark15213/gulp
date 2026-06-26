@@ -16,9 +16,11 @@ export function exportOutcome(status: Snapshot["status"]): ExportPollOutcome {
   if (status === "unprocessed") return { state: "pending" };
   if (status === "exported") return { state: "ready" };
   // Any other status the build lands in (needs_attention) means it failed before
-  // producing a tar — the most common cause is the source page not being fetchable.
+  // producing a tar: the link was unreachable, OR its format couldn't be read
+  // (e.g. a PDF — only HTML pages and notes are supported so far).
   return {
     state: "failed",
-    message: "Export failed — the source couldn’t be fetched. Check the link and try again.",
+    message:
+      "Export failed — couldn’t read this source. The link may be unreachable, or its format (e.g. PDF) isn’t supported yet.",
   };
 }
