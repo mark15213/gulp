@@ -65,5 +65,7 @@ def create_snapshot(
     db.commit()
     db.refresh(source)
     # Manual trigger (S2 design §2.4): the snapshot rests at `unprocessed` until
-    # the user Starts it (POST /snapshots/{id}/process). Capture never enqueues.
+    # the user Starts it (POST /snapshots/{id}/process) — capture never enqueues
+    # the heavy digest. (The router does enqueue a lightweight `resolve_metadata`
+    # job for new link snapshots, to fill in the real title + media type.)
     return source, False
