@@ -10,6 +10,7 @@ dependencies = [
     "psycopg[binary]>=3.2",
     "arq>=0.26",
     "gulp-shared",
+    "python-multipart>=0.0.9",
 ]
 
 [tool.uv.sources]

@@ -3,7 +3,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routers import capture, inbox, pack, processing
+from app.routers import capture, export, inbox, pack, processing
 from gulp_shared.settings import settings
 
 app = FastAPI(title="Gulp API")
@@ -15,6 +15,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 app.include_router(capture.router, tags=["capture"])
+app.include_router(export.router, tags=["export"])
 app.include_router(inbox.router, tags=["inbox"])
 app.include_router(pack.router, tags=["pack"])
 app.include_router(processing.router, tags=["processing"])
