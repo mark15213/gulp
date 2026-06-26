@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getPack, getSnapshot } from "@gulp/api-client";
 import { ReaderToggle } from "@/components/snapshot/ReaderToggle";
 import { StartButton } from "@/components/snapshot/StartButton";
+import { ExportActions } from "@/components/snapshot/ExportActions";
 import { ProcessingPoller } from "@/components/snapshot/ProcessingPoller";
 import styles from "@/components/snapshot/SnapshotStatusView.module.css";
 import { safeHost } from "@/lib/pack";
@@ -29,6 +30,7 @@ export default async function SnapshotPage({ params }: { params: Promise<{ id: s
       {snap.status === "unprocessed" && (
         <div className={styles.actions}>
           <StartButton id={id} />
+          <ExportActions id={id} status={snap.status} />
           {snap.origin_url && (
             <a className={styles.open} href={snap.origin_url} target="_blank" rel="noreferrer">Open original</a>
           )}
@@ -50,11 +52,21 @@ export default async function SnapshotPage({ params }: { params: Promise<{ id: s
           <div className={styles.banner}>Couldn&apos;t fully read this.</div>
           <div className={styles.actions}>
             <StartButton id={id} label="▶ Retry" />
+            <ExportActions id={id} status={snap.status} />
             {snap.origin_url && (
               <a className={styles.open} href={snap.origin_url} target="_blank" rel="noreferrer">Open original</a>
             )}
           </div>
         </>
+      )}
+
+      {snap.status === "exported" && (
+        <div className={styles.actions}>
+          <ExportActions id={id} status={snap.status} />
+          <p className="t-data" style={{ color: "var(--text-muted, #777)" }}>
+            Exported — run it in Claude Code, then upload the result zip.
+          </p>
+        </div>
       )}
 
       {(snap.status === "ready" || snap.status === "in_library" || snap.status === "awaiting_review") &&

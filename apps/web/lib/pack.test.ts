@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { groupFacets, isProcessing, safeHost } from "./pack";
+import { groupFacets, isProcessing, safeHost, statusLabel } from "./pack";
 import type { PackOut } from "@gulp/api-client";
 import type { Facet } from "./pack";
 
@@ -43,6 +43,14 @@ describe("isProcessing", () => {
 
   it("is true for queued", () => {
     expect(isProcessing("queued")).toBe(true);
+  });
+});
+
+describe("statusLabel", () => {
+  it("labels exported and the rest", () => {
+    expect(statusLabel("exported")).toBe("Exported");
+    expect(statusLabel("ready")).toBe("Ready");
+    expect(statusLabel("unprocessed")).toBe("Not started");
   });
 });
 

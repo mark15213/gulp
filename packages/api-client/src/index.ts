@@ -4,7 +4,7 @@
 import createClient from "openapi-fetch";
 import type { paths } from "./schema.gen";
 
-const baseUrl =
+export const baseUrl =
   process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
 export const client = createClient<paths>({ baseUrl });
@@ -61,4 +61,24 @@ export async function startProcessing(id: string): Promise<SnapshotOut> {
   });
   if (error || !data) throw new Error("start processing failed");
   return data;
+}
+
+export async function startExport(id: string): Promise<SnapshotOut> {
+  const { data, error } = await client.POST("/snapshots/{snapshot_id}/export", {
+    params: { path: { snapshot_id: id } },
+  });
+  if (error || !data) throw new Error("export failed");
+  return data;
+}
+
+export function jobDownloadUrl(id: string): string {
+  return `${baseUrl}/snapshots/${id}/job`;
+}
+
+export async function importResult(id: string, file: File): Promise<SnapshotOut> {
+  const body = new FormData();
+  body.append("file", file);
+  const res = await fetch(`${baseUrl}/snapshots/${id}/import`, { method: "POST", body });
+  if (!res.ok) throw new Error(`import failed (${res.status})`);
+  return (await res.json()) as SnapshotOut;
 }
