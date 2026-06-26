@@ -9,6 +9,7 @@ dependencies = [
     "anthropic>=0.40",
     "pydantic>=2",
     "trafilatura>=1.12",
+    "pypdf>=4.0",
     "gulp-shared",
 ]
 
