@@ -104,12 +104,14 @@ export function PackReport({ pack }: { pack: PackOut }) {
         </section>
       )}
 
-      <section className={styles.insight}>
-        <h2 className={styles.heading}>Key insight</h2>
-        <div className={styles.prose}>
-          <Md>{pack.key_insight}</Md>
-        </div>
-      </section>
+      {pack.key_insight && (
+        <section className={styles.insight}>
+          <h2 className={styles.heading}>Key insight</h2>
+          <div className={styles.prose}>
+            <Md>{pack.key_insight}</Md>
+          </div>
+        </section>
+      )}
 
       {pack.sections.map((section, i) => (
         <section key={i} className={styles.section}>

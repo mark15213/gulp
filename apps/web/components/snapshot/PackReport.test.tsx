@@ -18,6 +18,7 @@ const pack: PackOut = {
         { type: "formula", latex: "E=mc^2", explanation: "Mass-energy." },
         { type: "table", headers: ["Model", "F1"], rows: [["BERT", "93.2"]], caption: "Results" },
         { type: "list", ordered: false, items: ["lr=1e-4"] },
+        { type: "list", ordered: true, items: ["step one"] },
         { type: "figure", label: "Figure 1", explanation: "Architecture overview." },
       ],
     },
@@ -42,6 +43,9 @@ describe("PackReport", () => {
     expect(html).toContain("93.2");
     expect(html).toContain("Results");
     expect(html).toContain("lr=1e-4");
+    expect(html).toContain("<ol");
+    expect(html).toContain("step one");
+    expect(html).toContain("Mass-energy.");
     expect(html).toContain("Figure 1");
     expect(html).toContain("Architecture overview.");
   });

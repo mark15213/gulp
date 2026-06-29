@@ -1,7 +1,5 @@
 .bar { display: flex; gap: 6px; margin-bottom: 20px; }
 .tab { border: 1px solid var(--border, #ddd); background: none; border-radius: 999px; padding: 3px 12px; font-size: 13px; color: var(--text-muted, #777); }
 .active { border-color: var(--text-1); color: var(--text-1); font-weight: 500; }
-.layout { display: flex; gap: 32px; align-items: flex-start; }
 .main { flex: 1; min-width: 0; }
-.rail { width: 220px; flex-shrink: 0; }
 .original { max-width: 680px; white-space: pre-wrap; line-height: 22px; color: var(--text-1); }

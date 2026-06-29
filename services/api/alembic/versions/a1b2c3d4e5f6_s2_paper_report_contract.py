@@ -21,6 +21,14 @@ def upgrade() -> None:
     op.execute("DROP TYPE IF EXISTS pack_element_type")
     op.execute("DROP TYPE IF EXISTS pack_element_state")
 
+    # Pre-production, no backfill: old packs cannot be represented in the new
+    # contract. Wipe them so no broken/empty rows survive, and reset snapshots
+    # that had a pack so they re-process into the new shape.
+    op.execute("UPDATE sources SET status = 'unprocessed' WHERE id IN (SELECT snapshot_id FROM knowledge_packs)")
+    op.execute("DELETE FROM pack_blocks")
+    op.execute("DELETE FROM pack_sections")
+    op.execute("DELETE FROM knowledge_packs")
+
     # 2. knowledge_packs: narrative columns -> paper-report fields.
     op.drop_column('knowledge_packs', 'summary')
     op.drop_column('knowledge_packs', 'background')
@@ -42,8 +50,6 @@ def upgrade() -> None:
     op.alter_column('pack_blocks', 'data', server_default=None)
 
     # 4. Swap the block-type enum: callout/quote -> formula/table/list.
-    # Purge any existing rows with block types that don't exist in the new enum.
-    op.execute("DELETE FROM pack_blocks WHERE block_type::text NOT IN ('prose', 'figure')")
     op.execute("ALTER TYPE pack_block_type RENAME TO pack_block_type_old")
     op.execute("CREATE TYPE pack_block_type AS ENUM ('prose', 'formula', 'table', 'figure', 'list')")
     op.execute(
@@ -54,6 +60,12 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
+    # Pre-production, no backfill: wipe new-shape packs before restoring the old
+    # enum so the cast back to {prose,figure,callout,quote} has no incompatible rows.
+    op.execute("DELETE FROM pack_blocks")
+    op.execute("DELETE FROM pack_sections")
+    op.execute("DELETE FROM knowledge_packs")
+
     # Reverse 4.
     op.execute("ALTER TYPE pack_block_type RENAME TO pack_block_type_new")
     op.execute("CREATE TYPE pack_block_type AS ENUM ('prose', 'figure', 'callout', 'quote')")

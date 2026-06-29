@@ -59,9 +59,7 @@ suggestions — do not fabricate empirical results.
 - Treat the source's main text as the body. Do not put the paper's own \
 References section into the body, but you may mine it for follow-up references.
 - Ignore extraction noise: ligatures (e.g. the ligature for "fi" in "fine"), \
-broken tables, and inline page headers / arXiv banners.
-
-Return your result via the provided tool."""
+broken tables, and inline page headers / arXiv banners."""
 
 
 def build_digest_messages(normdoc: NormDoc, body: str) -> tuple[str, list[Message]]:
