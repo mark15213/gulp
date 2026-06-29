@@ -1,11 +1,10 @@
 """Pack read contract — these become the OpenAPI types the web client reads."""
 
 import uuid
-from typing import Annotated, Literal, Union
-
-from pydantic import BaseModel, Field
+from typing import Annotated, Literal
 
 from gulp_shared.models.knowledge_pack import PackStatus
+from pydantic import BaseModel, Field
 
 
 class ProseBlockOut(BaseModel):
@@ -39,7 +38,7 @@ class ListBlockOut(BaseModel):
 
 
 BlockOut = Annotated[
-    Union[ProseBlockOut, FormulaBlockOut, TableBlockOut, FigureBlockOut, ListBlockOut],
+    ProseBlockOut | FormulaBlockOut | TableBlockOut | FigureBlockOut | ListBlockOut,
     Field(discriminator="type"),
 ]
 

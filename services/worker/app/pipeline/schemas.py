@@ -4,7 +4,7 @@ The block `type` literals mirror the ORM enum `PackBlockType` exactly, so the
 persist stage can map them by string value.
 """
 
-from typing import Annotated, Literal, Union
+from typing import Annotated, Literal
 
 from pydantic import BaseModel, Field
 
@@ -40,7 +40,7 @@ class ListBlock(BaseModel):
 
 
 Block = Annotated[
-    Union[ProseBlock, FormulaBlock, TableBlock, FigureBlock, ListBlock],
+    ProseBlock | FormulaBlock | TableBlock | FigureBlock | ListBlock,
     Field(discriminator="type"),
 ]
 
