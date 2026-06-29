@@ -195,6 +195,30 @@ export interface components {
          * @enum {string}
          */
         CapturedVia: "share_sheet" | "wechat" | "email" | "in_app" | "paste" | "manual" | "screenshot" | "audio_memo";
+        /** FigureBlockOut */
+        FigureBlockOut: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "figure";
+            /** Label */
+            label: string;
+            /** Explanation */
+            explanation: string;
+        };
+        /** FormulaBlockOut */
+        FormulaBlockOut: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "formula";
+            /** Latex */
+            latex: string;
+            /** Explanation */
+            explanation: string;
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -207,35 +231,26 @@ export interface components {
             /** Count */
             count: number;
         };
+        /** ListBlockOut */
+        ListBlockOut: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "list";
+            /** Items */
+            items: string[];
+            /**
+             * Ordered
+             * @default false
+             */
+            ordered: boolean;
+        };
         /**
          * MediaType
          * @enum {string}
          */
         MediaType: "article" | "pdf" | "video" | "podcast" | "note" | "screenshot" | "audio" | "webpage";
-        /** PackBlockOut */
-        PackBlockOut: {
-            type: components["schemas"]["PackBlockType"];
-            /** Content */
-            content: string | null;
-            /** Anchor Id */
-            anchor_id: string;
-        };
-        /**
-         * PackBlockType
-         * @enum {string}
-         */
-        PackBlockType: "prose" | "figure" | "callout" | "quote";
-        /**
-         * PackElementType
-         * @enum {string}
-         */
-        PackElementType: "key_term" | "person_org" | "claim" | "counter_view" | "connection";
-        /** PackFacetOut */
-        PackFacetOut: {
-            element_type: components["schemas"]["PackElementType"];
-            /** Text */
-            text: string | null;
-        };
         /** PackOut */
         PackOut: {
             /**
@@ -244,29 +259,46 @@ export interface components {
              */
             snapshot_id: string;
             status: components["schemas"]["PackStatus"];
-            /** Summary */
-            summary: string;
-            /** Background */
-            background: string | null;
-            /** Confidence */
-            confidence: number | null;
+            /** Title */
+            title: string;
+            /** Core Contributions */
+            core_contributions: string[];
+            /** Key Insight */
+            key_insight: string;
             /** Sections */
             sections: components["schemas"]["PackSectionOut"][];
-            /** Facets */
-            facets: components["schemas"]["PackFacetOut"][];
+            /** References */
+            references: components["schemas"]["PackReferenceOut"][];
+        };
+        /** PackReferenceOut */
+        PackReferenceOut: {
+            /** Citation */
+            citation: string;
+            /** Why Interesting */
+            why_interesting: string;
         };
         /** PackSectionOut */
         PackSectionOut: {
             /** Heading */
             heading: string | null;
             /** Blocks */
-            blocks: components["schemas"]["PackBlockOut"][];
+            blocks: (components["schemas"]["ProseBlockOut"] | components["schemas"]["FormulaBlockOut"] | components["schemas"]["TableBlockOut"] | components["schemas"]["FigureBlockOut"] | components["schemas"]["ListBlockOut"])[];
         };
         /**
          * PackStatus
          * @enum {string}
          */
         PackStatus: "generating" | "ready";
+        /** ProseBlockOut */
+        ProseBlockOut: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "prose";
+            /** Content */
+            content: string;
+        };
         /** SnapshotOut */
         SnapshotOut: {
             /**
@@ -309,6 +341,20 @@ export interface components {
          * @enum {string}
          */
         SourceKind: "snapshot" | "conversation" | "subscription";
+        /** TableBlockOut */
+        TableBlockOut: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "table";
+            /** Headers */
+            headers: string[];
+            /** Rows */
+            rows: string[][];
+            /** Caption */
+            caption?: string | null;
+        };
         /** ValidationError */
         ValidationError: {
             /** Location */
