@@ -5,7 +5,7 @@ import json
 
 from app.export.archive import write_zip
 from app.export.manifest import build_manifest
-from app.export.templates import claude_md, pack_schema, readme_md
+from app.export.templates import claude_md, pack_schema, prompt_md
 from app.pipeline.normdoc import NormDoc
 
 
@@ -18,8 +18,8 @@ def build_job_archive(*, snapshot_id: str, owner_id: str, normdoc: NormDoc, crea
         created_at=created_at,
     )
     files = {
-        "README.md": readme_md().encode(),
         "CLAUDE.md": claude_md().encode(),
+        "prompt.md": prompt_md().encode(),
         "manifest.json": json.dumps(manifest, indent=2).encode(),
         "input/norm_doc.json": norm_doc_bytes,
         "schema/pack.schema.json": json.dumps(pack_schema(), indent=2).encode(),

@@ -29,15 +29,15 @@ def _ready_snapshot_with_pack(db) -> uuid.UUID:  # type: ignore[no-untyped-def]
                   status=SnapshotStatus.ready)
     db.add(snap)
     db.flush()
-    pack = KnowledgePack(snapshot_id=snap.id, summary="sum", background=None,
-                         confidence=0.7, status=PackStatus.ready)
+    pack = KnowledgePack(snapshot_id=snap.id, title="BERT", key_insight="ki",
+                         core_contributions=["c1"], references=[], status=PackStatus.ready)
     db.add(pack)
     db.flush()
     sec = PackSection(pack_id=pack.id, heading="H", position=0)
     db.add(sec)
     db.flush()
-    db.add(PackBlock(section_id=sec.id, block_type=PackBlockType.prose, content="hello",
-                     anchor_id="s0b0", position=0))
+    db.add(PackBlock(section_id=sec.id, block_type=PackBlockType.prose,
+                     data={"content": "hello"}, position=0))
     db.commit()
     return snap.id
 
@@ -47,7 +47,7 @@ def test_get_pack_returns_report(client, db) -> None:  # type: ignore[no-untyped
     r = client.get(f"/snapshots/{sid}/pack")
     assert r.status_code == 200
     body = r.json()
-    assert body["summary"] == "sum"
+    assert body["title"] == "BERT" and body["core_contributions"] == ["c1"]
     assert body["sections"][0]["blocks"][0]["content"] == "hello"
     assert body["sections"][0]["blocks"][0]["type"] == "prose"
 
@@ -67,11 +67,8 @@ def test_get_pack_404_for_unknown_id(client) -> None:  # type: ignore[no-untyped
 
 
 def test_get_pack_404_for_foreign_snapshot(client, db) -> None:  # type: ignore[no-untyped-def]
-    # A snapshot owned by a different user must 404 (auth stub authenticates as DEV_USER_ID).
     foreign_snap = Source(
-        owner_id=uuid.uuid4(),  # not DEV_USER_ID
-        kind=SourceKind.snapshot,
-        title="Foreign",
+        owner_id=uuid.uuid4(), kind=SourceKind.snapshot, title="Foreign",
         status=SnapshotStatus.ready,
     )
     db.add(foreign_snap)

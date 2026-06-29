@@ -29,9 +29,11 @@ class FakeProvider:
 
 
 _OK = {
-    "summary": "s", "background": None, "confidence": 0.8,
+    "title": "T",
+    "core_contributions": ["c"],
+    "key_insight": "k",
     "sections": [{"heading": "H", "blocks": [{"type": "prose", "content": "c"}]}],
-    "facets": [{"element_type": "claim", "text": "x"}],
+    "references": [],
 }
 
 

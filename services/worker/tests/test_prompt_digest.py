@@ -18,11 +18,14 @@ def test_system_prompt_states_the_rules() -> None:
     low = system.lower()
     assert "english" in low
     assert "report" in low
-    assert "faithful" in low or "do not invent" in low or "never invent" in low
-    # facet vocabulary is described
-    for t in ("key_term", "person_org", "claim", "counter_view", "connection"):
-        assert t in system
-    assert "confidence" in low
+    assert "faithful" in low or "never invent" in low
+    # the report outline and the root fields are described
+    for needle in ("core challenge", "mathematical formulation", "experiments",
+                   "core_contributions", "key_insight"):
+        assert needle in low
+    # the typed block vocabulary is described
+    for block in ("formula", "table", "figure"):
+        assert block in low
 
 
 def test_user_message_carries_title_media_type_and_body() -> None:

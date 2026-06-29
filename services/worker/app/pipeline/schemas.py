@@ -1,32 +1,63 @@
-"""The digest LLM's structured response contract (S2 design §2.5/§3).
+"""The paper-report structured contract (PaperReport).
 
-The `Literal` values mirror the ORM enums `PackBlockType` / `PackElementType`
-exactly, so the persist stage can map them by string value.
+The block `type` literals mirror the ORM enum `PackBlockType` exactly, so the
+persist stage can map them by string value.
 """
 
-from typing import Literal
+from typing import Annotated, Literal, Union
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
-class DigestBlock(BaseModel):
-    type: Literal["prose", "callout", "quote"] = "prose"
+class ProseBlock(BaseModel):
+    type: Literal["prose"] = "prose"
     content: str
 
 
-class DigestSection(BaseModel):
-    heading: str | None = None
-    blocks: list[DigestBlock]
+class FormulaBlock(BaseModel):
+    type: Literal["formula"] = "formula"
+    latex: str
+    explanation: str
 
 
-class DigestFacet(BaseModel):
-    element_type: Literal["key_term", "person_org", "claim", "counter_view", "connection"]
-    text: str
+class TableBlock(BaseModel):
+    type: Literal["table"] = "table"
+    headers: list[str]
+    rows: list[list[str]]
+    caption: str | None = None
 
 
-class DigestResult(BaseModel):
-    summary: str
-    background: str | None = None
-    confidence: float = 0.7
-    sections: list[DigestSection]
-    facets: list[DigestFacet]
+class FigureBlock(BaseModel):
+    type: Literal["figure"] = "figure"
+    label: str
+    explanation: str
+
+
+class ListBlock(BaseModel):
+    type: Literal["list"] = "list"
+    items: list[str]
+    ordered: bool = False
+
+
+Block = Annotated[
+    Union[ProseBlock, FormulaBlock, TableBlock, FigureBlock, ListBlock],
+    Field(discriminator="type"),
+]
+
+
+class Section(BaseModel):
+    heading: str
+    blocks: list[Block]
+
+
+class Reference(BaseModel):
+    citation: str
+    why_interesting: str
+
+
+class PaperReport(BaseModel):
+    title: str
+    core_contributions: list[str] = Field(min_length=1, max_length=5)
+    key_insight: str
+    sections: list[Section] = Field(min_length=1)
+    references: list[Reference] = Field(default_factory=list)

@@ -1,13 +1,9 @@
 import gulp_shared.models  # noqa: F401  (registers tables)
 from gulp_shared.db import Base
-from gulp_shared.models.concept import Concept, ConceptType
 from gulp_shared.models.knowledge_pack import (
     KnowledgePack,
     PackBlock,
     PackBlockType,
-    PackElement,
-    PackElementState,
-    PackElementType,
     PackSection,
     PackStatus,
 )
@@ -23,53 +19,36 @@ def _session():
     return sessionmaker(bind=engine, expire_on_commit=False)()
 
 
-def test_pack_report_with_block_and_facet_annotation():
+def test_pack_stores_report_fields_and_typed_blocks():
     s = _session()
     s.add(User(id=DEV_USER_ID, display_name="Dev"))
-    snap = Source(
-        owner_id=DEV_USER_ID,
-        kind=SourceKind.snapshot,
-        title="Example",
-        status=SnapshotStatus.ready,
-    )
+    snap = Source(owner_id=DEV_USER_ID, kind=SourceKind.snapshot, title="Example",
+                  status=SnapshotStatus.ready)
     s.add(snap)
     s.flush()
 
     pack = KnowledgePack(
-        snapshot_id=snap.id, summary="It says X.", confidence=0.8, status=PackStatus.ready
+        snapshot_id=snap.id,
+        title="BERT",
+        key_insight="Change the objective, not the architecture.",
+        core_contributions=["MLM enables bidirectionality."],
+        references=[{"citation": "Vaswani 2017", "why_interesting": "Transformer."}],
+        status=PackStatus.ready,
     )
     s.add(pack)
     s.flush()
-    section = PackSection(pack_id=pack.id, heading="Overview", position=0)
+    section = PackSection(pack_id=pack.id, heading="Mathematical Formulation", position=0)
     s.add(section)
     s.flush()
-    block = PackBlock(
-        section_id=section.id,
-        block_type=PackBlockType.prose,
-        content="Rewritten prose.",
-        source_anchor={"kind": "char_range", "start": 0, "end": 42},
-        anchor_id="b1",
-        position=0,
-    )
-    s.add(block)
-    concept = Concept(concept_type=ConceptType.term, name="X")
-    s.add(concept)
-    s.flush()
-    s.add(
-        PackElement(
-            pack_id=pack.id,
-            element_type=PackElementType.key_term,
-            text="X — a thing",
-            concept_id=concept.id,
-            block_id=block.id,
-        )
-    )
+    s.add(PackBlock(section_id=section.id, block_type=PackBlockType.formula,
+                    data={"latex": "a=b", "explanation": "trivial"}, position=0))
     s.commit()
 
     got = s.scalar(select(KnowledgePack).where(KnowledgePack.snapshot_id == snap.id))
-    assert got is not None and got.confidence == 0.8
-    blk = s.scalar(select(PackBlock).where(PackBlock.anchor_id == "b1"))
-    assert blk.source_anchor == {"kind": "char_range", "start": 0, "end": 42}
-    el = s.scalar(select(PackElement))
-    assert el.state == PackElementState.suggested  # default
-    assert el.block_id == blk.id
+    assert got is not None
+    assert got.title == "BERT"
+    assert got.core_contributions == ["MLM enables bidirectionality."]
+    assert got.references[0]["citation"] == "Vaswani 2017"
+    blk = s.scalar(select(PackBlock))
+    assert blk.block_type == PackBlockType.formula
+    assert blk.data == {"latex": "a=b", "explanation": "trivial"}

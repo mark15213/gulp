@@ -1,13 +1,10 @@
 import uuid
-from datetime import UTC, datetime
 
 from app.services.pack import pack_out
 from gulp_shared.models.knowledge_pack import (
     KnowledgePack,
     PackBlock,
     PackBlockType,
-    PackElement,
-    PackElementType,
     PackSection,
     PackStatus,
 )
@@ -27,8 +24,10 @@ def _snapshot(db) -> Source:
 
 def _seed_pack(db, snapshot_id: uuid.UUID) -> None:
     pack = KnowledgePack(
-        snapshot_id=snapshot_id, summary="sum", background="bg",
-        confidence=0.8, status=PackStatus.ready,
+        snapshot_id=snapshot_id, title="BERT", key_insight="ki",
+        core_contributions=["c1", "c2"],
+        references=[{"citation": "V2017", "why_interesting": "t"}],
+        status=PackStatus.ready,
     )
     db.add(pack)
     db.flush()
@@ -36,50 +35,28 @@ def _seed_pack(db, snapshot_id: uuid.UUID) -> None:
     s1 = PackSection(pack_id=pack.id, heading="Details", position=1)
     db.add_all([s0, s1])
     db.flush()
-    db.add(PackBlock(section_id=s0.id, block_type=PackBlockType.prose, content="b0",
-                     anchor_id="s0b0", position=0))
-    db.add(PackBlock(section_id=s0.id, block_type=PackBlockType.quote, content="b1",
-                     anchor_id="s0b1", position=1))
-    # PackElement.state defaults to `suggested`, so the seed omits it.
-    db.add(PackElement(pack_id=pack.id, element_type=PackElementType.key_term, text="attention"))
-    db.add(PackElement(pack_id=pack.id, element_type=PackElementType.claim, text="claim-x"))
+    db.add(PackBlock(section_id=s0.id, block_type=PackBlockType.prose,
+                     data={"content": "b0"}, position=0))
+    db.add(PackBlock(section_id=s0.id, block_type=PackBlockType.formula,
+                     data={"latex": "a=b", "explanation": "x"}, position=1))
     db.commit()
 
 
-def test_pack_out_serializes_ordered_report_and_facets(db) -> None:
+def test_pack_out_serializes_ordered_report(db) -> None:
     snap = _snapshot(db)
     _seed_pack(db, snap.id)
     out = pack_out(db, snap.id)
     assert out is not None
-    assert out.status == PackStatus.ready and out.summary == "sum" and out.confidence == 0.8
+    assert out.status == PackStatus.ready and out.title == "BERT"
+    assert out.core_contributions == ["c1", "c2"] and out.key_insight == "ki"
     assert [s.heading for s in out.sections] == ["Overview", "Details"]
-    assert [b.anchor_id for b in out.sections[0].blocks] == ["s0b0", "s0b1"]
-    assert out.sections[0].blocks[0].type == PackBlockType.prose
-    assert {f.text for f in out.facets} == {"attention", "claim-x"}
-    assert {f.element_type for f in out.facets} == {PackElementType.key_term, PackElementType.claim}
+    b0, b1 = out.sections[0].blocks
+    assert b0.type == "prose" and b0.content == "b0"
+    assert b1.type == "formula" and b1.latex == "a=b" and b1.explanation == "x"
+    assert out.references[0].citation == "V2017"
 
 
 def test_pack_out_returns_none_when_no_pack(db) -> None:
     snap = _snapshot(db)
     db.commit()
     assert pack_out(db, snap.id) is None
-
-
-def test_pack_out_excludes_soft_deleted_facet(db) -> None:
-    snap = _snapshot(db)
-    _seed_pack(db, snap.id)
-    # Soft-delete one of the two PackElements seeded by _seed_pack.
-    from gulp_shared.models.knowledge_pack import KnowledgePack as KP
-    from sqlalchemy import select as sa_select
-    pack = db.scalar(sa_select(KP).where(KP.snapshot_id == snap.id))
-    elements = list(db.scalars(
-        sa_select(PackElement).where(PackElement.pack_id == pack.id)
-    ))
-    assert len(elements) == 2
-    elements[0].deleted_at = datetime.now(UTC)
-    db.commit()
-    out = pack_out(db, snap.id)
-    assert out is not None
-    assert len(out.facets) == 1
-    surviving_texts = {f.text for f in out.facets}
-    assert elements[0].text not in surviving_texts

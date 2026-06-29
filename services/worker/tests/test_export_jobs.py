@@ -43,9 +43,11 @@ async def test_build_export_writes_zip_and_sets_exported(tmp_path):  # type: ign
 
 
 _VALID = {
-    "summary": "s", "background": None, "confidence": 0.8,
+    "title": "T",
+    "core_contributions": ["c"],
+    "key_insight": "k",
     "sections": [{"heading": "H", "blocks": [{"type": "prose", "content": "c"}]}],
-    "facets": [{"element_type": "claim", "text": "x"}],
+    "references": [],
 }
 
 

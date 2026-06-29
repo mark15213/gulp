@@ -2,7 +2,7 @@ import json
 
 from app.export.archive import find_entry, read_zip
 from app.export.builder import build_job_archive
-from app.export.templates import claude_md, pack_schema
+from app.export.templates import claude_md, pack_schema, prompt_md
 from app.pipeline.normdoc import Anchor, NormBlock, NormDoc
 
 
@@ -12,20 +12,26 @@ def _doc() -> NormDoc:
                    blocks=[NormBlock(text=body, anchor=Anchor(start=0, end=len(body)))])
 
 
-def test_pack_schema_and_claude_md():
+def test_pack_schema_prompt_and_claude_md():
     schema = pack_schema()
-    assert "properties" in schema and "sections" in schema["properties"] and "facets" in schema["properties"]
+    props = schema["properties"]
+    assert "sections" in props and "core_contributions" in props and "key_insight" in props
+    assert "facets" not in props and "summary" not in props
     cm = claude_md()
-    for needle in ("result/pack.json", "input/norm_doc.json", "schema/pack.schema.json", "English"):
+    for needle in ("result/pack.json", "input/norm_doc.json", "schema/pack.schema.json", "prompt.md"):
         assert needle in cm
+    pm = prompt_md()
+    assert "expert" in pm.lower() and "core_contributions" in pm and "key_insight" in pm
 
 
 def test_build_job_archive_has_all_entries():
-    data = build_job_archive(snapshot_id="s1", owner_id="o1", normdoc=_doc(), created_at="2026-06-26T00:00:00Z")
+    data = build_job_archive(snapshot_id="s1", owner_id="o1", normdoc=_doc(),
+                             created_at="2026-06-26T00:00:00Z")
     files = read_zip(data)
-    for suffix in ("CLAUDE.md", "README.md", "manifest.json", "input/norm_doc.json",
+    for suffix in ("CLAUDE.md", "prompt.md", "manifest.json", "input/norm_doc.json",
                    "schema/pack.schema.json", "result/HOWTO.txt"):
         assert find_entry(files, suffix)  # present, non-empty
+    assert not any(name.endswith("README.md") for name in files)  # README dropped
     nd = json.loads(find_entry(files, "input/norm_doc.json"))
     assert nd["title"] == "A" and nd["blocks"][0]["text"].startswith("Attention")
     man = json.loads(find_entry(files, "manifest.json"))

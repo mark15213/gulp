@@ -2,14 +2,19 @@ from sqlalchemy import create_engine, select
 from sqlalchemy.orm import sessionmaker
 
 from app.pipeline.persist import persist_pack
-from app.pipeline.schemas import DigestBlock, DigestFacet, DigestResult, DigestSection
+from app.pipeline.schemas import (
+    FormulaBlock,
+    PaperReport,
+    ProseBlock,
+    Reference,
+    Section,
+)
 from gulp_shared.db import Base  # type: ignore[import-untyped]
 import gulp_shared.models  # type: ignore[import-untyped]  # noqa: F401
 from gulp_shared.models.knowledge_pack import (  # type: ignore[import-untyped]
     KnowledgePack,
     PackBlock,
-    PackElement,
-    PackElementState,
+    PackBlockType,
     PackSection,
     PackStatus,
 )
@@ -34,41 +39,47 @@ def _snapshot(s):  # type: ignore[no-untyped-def]
     return snap
 
 
-_DIGEST = DigestResult(
-    summary="sum", background="bg", confidence=1.5,  # out of range on purpose
-    sections=[DigestSection(heading="H", blocks=[
-        DigestBlock(type="prose", content="b0"), DigestBlock(type="quote", content="b1")])],
-    facets=[DigestFacet(element_type="key_term", text="term"),
-            DigestFacet(element_type="claim", text="claim-x")],
+_REPORT = PaperReport(
+    title="BERT",
+    key_insight="ki",
+    core_contributions=["c1", "c2"],
+    sections=[Section(heading="H", blocks=[
+        ProseBlock(content="b0"),
+        FormulaBlock(latex="a=b", explanation="x"),
+    ])],
+    references=[Reference(citation="V2017", why_interesting="t")],
 )
 
 
-def test_persist_writes_report_and_facets_with_clamped_confidence() -> None:
+def test_persist_writes_report_fields_and_typed_blocks() -> None:
     s = _session()
     snap = _snapshot(s)
-    pack = persist_pack(s, snap, _DIGEST)
+    pack = persist_pack(s, snap, _REPORT)
     s.commit()
 
     got = s.scalar(select(KnowledgePack).where(KnowledgePack.snapshot_id == snap.id))
     assert got is not None
     assert got.status == PackStatus.ready
-    assert got.confidence == 1.0  # clamped
+    assert got.title == "BERT" and got.key_insight == "ki"
+    assert got.core_contributions == ["c1", "c2"]
+    assert got.references == [{"citation": "V2017", "why_interesting": "t"}]
     sections = list(s.scalars(select(PackSection).where(PackSection.pack_id == pack.id)))
     assert len(sections) == 1 and sections[0].heading == "H"
-    blocks = list(s.scalars(select(PackBlock).where(PackBlock.section_id == sections[0].id)))
-    assert [b.anchor_id for b in sorted(blocks, key=lambda b: b.position)] == ["s0b0", "s0b1"]
-    facets = list(s.scalars(select(PackElement).where(PackElement.pack_id == pack.id)))
-    assert {f.text for f in facets} == {"term", "claim-x"}
-    assert all(f.state == PackElementState.suggested for f in facets)
-    assert all(f.concept_id is None and f.block_id is None for f in facets)
+    blocks = sorted(
+        s.scalars(select(PackBlock).where(PackBlock.section_id == sections[0].id)),
+        key=lambda b: b.position,
+    )
+    assert [b.block_type for b in blocks] == [PackBlockType.prose, PackBlockType.formula]
+    assert blocks[0].data == {"content": "b0"}
+    assert blocks[1].data == {"latex": "a=b", "explanation": "x"}
 
 
 def test_persist_is_idempotent_and_replaces() -> None:
     s = _session()
     snap = _snapshot(s)
-    persist_pack(s, snap, _DIGEST)
+    persist_pack(s, snap, _REPORT)
     s.commit()
-    persist_pack(s, snap, _DIGEST)  # second run
+    persist_pack(s, snap, _REPORT)  # second run
     s.commit()
     packs = list(s.scalars(select(KnowledgePack).where(KnowledgePack.snapshot_id == snap.id)))
     assert len(packs) == 1  # replaced, not duplicated

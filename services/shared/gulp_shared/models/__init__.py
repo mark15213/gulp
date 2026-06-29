@@ -11,9 +11,6 @@ from gulp_shared.models.knowledge_pack import (
     KnowledgePack,
     PackBlock,
     PackBlockType,
-    PackElement,
-    PackElementState,
-    PackElementType,
     PackSection,
     PackStatus,
 )
@@ -52,7 +49,4 @@ __all__ = [
     "PackSection",
     "PackBlock",
     "PackBlockType",
-    "PackElement",
-    "PackElementType",
-    "PackElementState",
 ]

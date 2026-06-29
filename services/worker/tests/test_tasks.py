@@ -17,9 +17,13 @@ from sqlalchemy.orm import sessionmaker
 
 class FakeProvider:
     async def complete_json(self, **kw: Any) -> dict[str, Any]:
-        return {"summary": "s", "background": None, "confidence": 0.7,
-                "sections": [{"heading": "H", "blocks": [{"type": "prose", "content": "c"}]}],
-                "facets": [{"element_type": "claim", "text": "x"}]}
+        return {
+            "title": "T",
+            "core_contributions": ["c"],
+            "key_insight": "k",
+            "sections": [{"heading": "H", "blocks": [{"type": "prose", "content": "c"}]}],
+            "references": [],
+        }
 
 
 def test_worker_registers_process_snapshot() -> None:

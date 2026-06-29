@@ -5,13 +5,8 @@ import uuid
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.schemas.pack import PackBlockOut, PackFacetOut, PackOut, PackSectionOut
-from gulp_shared.models.knowledge_pack import (
-    KnowledgePack,
-    PackBlock,
-    PackElement,
-    PackSection,
-)
+from app.schemas.pack import PackOut, PackReferenceOut, PackSectionOut
+from gulp_shared.models.knowledge_pack import KnowledgePack, PackBlock, PackSection
 
 
 def pack_out(db: Session, snapshot_id: uuid.UUID) -> PackOut | None:
@@ -31,7 +26,7 @@ def pack_out(db: Session, snapshot_id: uuid.UUID) -> PackOut | None:
         .order_by(PackSection.position)
     ):
         blocks = [
-            PackBlockOut(type=b.block_type, content=b.content, anchor_id=b.anchor_id)
+            {"type": b.block_type.value, **(b.data or {})}
             for b in db.scalars(
                 select(PackBlock)
                 .where(PackBlock.section_id == section.id, PackBlock.deleted_at.is_(None))
@@ -40,19 +35,12 @@ def pack_out(db: Session, snapshot_id: uuid.UUID) -> PackOut | None:
         ]
         sections.append(PackSectionOut(heading=section.heading, blocks=blocks))
 
-    facets = [
-        PackFacetOut(element_type=e.element_type, text=e.text)
-        for e in db.scalars(
-            select(PackElement).where(PackElement.pack_id == pack.id, PackElement.deleted_at.is_(None))
-        )
-    ]
-
     return PackOut(
         snapshot_id=snapshot_id,
         status=pack.status,
-        summary=pack.summary,
-        background=pack.background,
-        confidence=pack.confidence,
+        title=pack.title,
+        core_contributions=list(pack.core_contributions or []),
+        key_insight=pack.key_insight,
         sections=sections,
-        facets=facets,
+        references=[PackReferenceOut(**r) for r in (pack.references or [])],
     )

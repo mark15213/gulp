@@ -1,12 +1,12 @@
-"""Parse + validate an uploaded result archive into a DigestResult."""
+"""Parse + validate an uploaded result archive into a PaperReport."""
 
 import json
 
 from app.export.archive import find_entry, read_zip
-from app.pipeline.schemas import DigestResult
+from app.pipeline.schemas import PaperReport
 
 
-def import_result_archive(data: bytes) -> DigestResult:
+def import_result_archive(data: bytes) -> PaperReport:
     files = read_zip(data)
     try:
         raw = find_entry(files, "result/pack.json")
@@ -16,4 +16,4 @@ def import_result_archive(data: bytes) -> DigestResult:
         payload = json.loads(raw)
     except json.JSONDecodeError as exc:
         raise ValueError("result/pack.json is not valid JSON") from exc
-    return DigestResult.model_validate(payload)
+    return PaperReport.model_validate(payload)
