@@ -1,8 +1,15 @@
-.report { max-width: 680px; }
-.summary { font-size: 16px; line-height: 24px; color: var(--text-1); margin-bottom: 20px; }
-.background { color: var(--text-muted, #777); margin-bottom: 24px; }
-.section { margin-bottom: 24px; }
+.report { max-width: 720px; }
+.title { font-size: 24px; line-height: 30px; font-weight: 650; margin-bottom: 20px; }
+.section { margin-bottom: 28px; }
+.contributions, .insight, .references { margin-bottom: 28px; }
 .heading { font-weight: 600; font-size: 18px; line-height: 24px; margin-bottom: 10px; }
 .prose { line-height: 22px; margin-bottom: 10px; }
-.quote { border-left: 2px solid var(--border, #ddd); padding-left: 12px; color: var(--text-muted, #555); margin-bottom: 10px; }
-.callout { background: var(--surface-2, #f6f6f6); border-radius: var(--radius-sm, 6px); padding: 10px 12px; margin-bottom: 10px; }
+.list { line-height: 22px; margin: 0 0 10px 20px; }
+.formula { margin: 12px 0; overflow-x: auto; }
+.explanation { font-size: 13px; color: var(--text-muted, #777); margin-top: 4px; }
+.tableWrap { margin: 12px 0; overflow-x: auto; }
+.table { border-collapse: collapse; font-size: 13px; width: 100%; }
+.table th, .table td { border: 1px solid var(--border, #ddd); padding: 4px 8px; text-align: left; }
+.caption { font-size: 13px; color: var(--text-muted, #777); margin-top: 6px; }
+.figure { background: var(--surface-2, #f6f6f6); border-radius: var(--radius-sm, 6px); padding: 10px 12px; margin: 12px 0; }
+.figureLabel { font-weight: 600; font-size: 13px; margin-bottom: 4px; }
