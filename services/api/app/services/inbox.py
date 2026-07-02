@@ -1,4 +1,4 @@
-"""The Inbox derived view (docs/02 D3 / spec C4). Never an entity — a query."""
+"""The Inbox derived view — the to-do set (single-gate spec 2026-07-02). Never an entity — a query."""
 
 import uuid
 
@@ -7,16 +7,24 @@ from sqlalchemy.orm import Session
 
 from gulp_shared.models.source import SnapshotStatus, Source, SourceKind
 
+# Everything that still needs the owner's attention; `ready` lives in Library.
+_TODO = (
+    SnapshotStatus.queued,
+    SnapshotStatus.unprocessed,
+    SnapshotStatus.processing,
+    SnapshotStatus.exported,
+    SnapshotStatus.needs_attention,
+)
+
 
 def list_inbox(db: Session, owner_id: uuid.UUID) -> list[Source]:
-    # `no KBMembership` clause arrives with S3 (the table doesn't exist yet).
     stmt = (
         select(Source)
         .where(
             Source.owner_id == owner_id,
             Source.kind == SourceKind.snapshot,
             Source.deleted_at.is_(None),
-            Source.status != SnapshotStatus.in_library,
+            Source.status.in_(_TODO),
         )
         .order_by(Source.created_at.desc())
     )

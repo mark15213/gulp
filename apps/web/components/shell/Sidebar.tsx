@@ -1,10 +1,8 @@
-import type { ComponentType, SVGProps } from "react";
+import React, { type ComponentType, type SVGProps } from "react";
 import {
   IconToday,
   IconInbox,
   IconLibrary,
-  IconFeeds,
-  IconKnowledge,
   IconSearch,
   IconSettings,
 } from "@/components/ui/icons";
@@ -13,20 +11,18 @@ import styles from "./Sidebar.module.css";
 
 type NavItem = {
   label: string;
+  href: string;
   icon: ComponentType<SVGProps<SVGSVGElement>>;
   active?: boolean;
 };
 
-// docs/03 §5.2 — Today · Inbox · Library · Feeds · Knowledge bases. Search is
-// not a nav row: the ⌘K field below the wordmark is the single search entry
-// point (it doubles as the command bar). Only Today is wired in this static
-// slice; the rest are inert placeholders.
+// Single-gate nav (spec 2026-07-02): Today first, then the conveyor belt
+// (Inbox = to-do) and the shelf (Library = ready). Feeds returns with S7;
+// Knowledge bases are parked (tags cover grouping). Search stays the ⌘K field.
 const NAV: NavItem[] = [
-  { label: "Today", icon: IconToday, active: true },
-  { label: "Inbox", icon: IconInbox },
-  { label: "Library", icon: IconLibrary },
-  { label: "Feeds", icon: IconFeeds },
-  { label: "Knowledge bases", icon: IconKnowledge },
+  { label: "Today", href: "/", icon: IconToday, active: true },
+  { label: "Inbox", href: "/inbox", icon: IconInbox },
+  { label: "Library", href: "/library", icon: IconLibrary },
 ];
 
 export async function Sidebar() {
@@ -45,10 +41,10 @@ export async function Sidebar() {
       </button>
 
       <nav className={styles.nav} aria-label="Primary">
-        {NAV.map(({ label, icon: Glyph, active }) => (
+        {NAV.map(({ label, href, icon: Glyph, active }) => (
           <a
             key={label}
-            href={label === "Inbox" ? "/inbox" : "#"}
+            href={href}
             className={`${styles.item} ${active ? styles.active : ""}`}
             aria-current={active ? "page" : undefined}
           >

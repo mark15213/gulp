@@ -33,6 +33,15 @@ export async function getInbox(): Promise<InboxOut> {
   return data;
 }
 
+export type LibraryOut =
+  paths["/library"]["get"]["responses"]["200"]["content"]["application/json"];
+
+export async function getLibrary(): Promise<LibraryOut> {
+  const { data, error } = await client.GET("/library", { cache: "no-store" });
+  if (error || !data) throw new Error("library fetch failed");
+  return data;
+}
+
 export async function getSnapshot(id: string): Promise<Snapshot> {
   const { data, error } = await client.GET("/snapshots/{snapshot_id}", {
     params: { path: { snapshot_id: id } },

@@ -97,6 +97,8 @@ Each charter is fixed-shape: **Responsibility · Scope (in / out for v1) · Vali
 
 ### S3 · Library, Knowledge Base & Review
 
+> **Amendment (2026-07-02):** S3's v1 scope was realized as the **single-gate convergence** — per-card accept/reject is the only review gate (snapshot gate parked), Library = the `ready` list with tag filters, KB parked in favor of tags, Concepts frozen pending supply. See [`superpowers/specs/2026-07-02-single-gate-lifecycle-design.md`](superpowers/specs/2026-07-02-single-gate-lifecycle-design.md) and [`2026-07-02-card-generation-and-import-design.md`](superpowers/specs/2026-07-02-card-generation-and-import-design.md). The charter below is the original full ambition — its remainder (KB entity, Concept pages, graph) stays deferred.
+
 - **Responsibility:** vet AI output and commit it into the knowledge graph (the review gate), then let the user browse, relate, and organize what they've gulped — Library, Knowledge bases, Concepts (`01 §F2` review + `§F3`, `02 §4.6/4.9`).
 - **Scope — in:** the review model (lightweight batch-confirm on mobile in `Today`; deep curation on web); "Add to library" commit; auto-approve (global, with the per-feed override landing alongside `S7`); the Library list with filter chips (form · type · KB · mastery · due); Concept pages and the concept graph; Knowledge bases and membership. **Out:** card practice (`S4`); the AI drafting itself (`S2`).
 - **Validates:** a user can vet and commit AI output; can find, relate, and organize objects; Concept pages render their connections; mastery state is legible per item.

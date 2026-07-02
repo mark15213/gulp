@@ -96,12 +96,13 @@ Navigation is organized by **intent**, not by object type. The forms of Source a
 `Today · Library · ⊕ Capture · You`
 - `⊕ Capture` is the center action (sheet, not a tab); it produces a **Snapshot**.
 - **Mobile is the consumption end** — capture, Gulp, conversation. There is no Inbox/triage tab; bulk triage and library/pack management live on web (below). So capture is never a black hole, `Today` carries a read-only **"recently captured / processing"** peek of what just landed.
-- `Today` also surfaces the daily essentials: a persistent "**N due**" badge, the **Daily digest**, and — when captures finish processing — a lightweight **"N new to confirm"** batch-review card (the mobile form of review, §F2).
+- `Today` also surfaces the daily essentials: a persistent "**N due**" badge and the **Daily digest**. *(The "N new to confirm" batch-review card is parked with the snapshot gate — §F2 amendment.)*
 - Concepts, Conversations, and Knowledge bases are **filters inside Library**; feed management lives in `You/Settings`. Power is present, not in your face.
 
 **Web — left sidebar (the power workspace):**
-`Today · Inbox · Library · Feeds · Knowledge bases · Search · Settings`
-- `Library` opens with **filter chips** — by form (Snapshots · Conversations), by derived type (Cards · Concepts), by Knowledge base, by mastery/`due` — instead of permanent sub-entries.
+`Today · Inbox · Library · Settings` *(amended 2026-07-02: Feeds returns with S7; Knowledge bases parked — tags cover grouping; Today stays the first tab)*
+- **Inbox is the to-do set** (not yet processed); **Library is the shelf** (`ready`). Both are derived queries — nothing moves between them by user action.
+- `Library` opens with **filter chips** — v1: by tag and type; form/mastery/`due` chips arrive with their subsystems.
 - A global `⌘K` command bar handles search + capture + jump-to.
 - The workspace is three-pane where useful: list ▸ reader ▸ knowledge-pack/chat panel.
 
@@ -139,34 +140,31 @@ Each flow: **trigger → steps → key screens → states → edge cases**, with
 **Steps:**
 1. On trigger (§F1), the Snapshot enters `Processing`; Gulp **re-authors the source into a report** (sections the user reads, each grounded back to the source) and extracts the **facets** over it: summary → background → key terms → people/orgs → core claims → counter-views → connections to existing Concepts. *(Pack-as-report structure: S2 design §3.)*
 2. Candidate **Cards** are drafted from the pack (not yet scheduled).
-3. On `Ready`, the Snapshot is `awaiting review` (unless auto-approve, below).
-4. User reviews (see **Review model**): edit/dismiss pack elements, promote/reject draft Cards.
-5. Commit — "**Add to library**" / "**Approve**" — moves the Snapshot, its accepted Cards, and new Concepts into the knowledge graph (Cards enter scheduling at §F7).
+3. On `Ready`, the Snapshot **is in the library** — with manual-trigger processing (S2 §2.4) the user requested and reads every pack, so a separate approval act would confirm nothing.
+4. User reads the report, edits blocks in place, and discusses blocks in the side panel (the pack is a living document).
+5. Cards arrive as `draft` (generated on demand from the pack, or imported as `cards.json`); the user **accepts/rejects per card** — accepted Cards enter scheduling at §F7.
 
-**Review model (default on, batchable, skippable):**
-- **Default = required.** Captures sit `awaiting review` until approved, so nothing enters scheduling unvetted.
-- **Batch.** Approve many at once — "approve all from these N captures" — not one Snapshot at a time.
-- **Auto-approve (opt-in).** A setting — global, with a per-Feed/source override (§F6) — that commits packs+Cards automatically on `Ready`, skipping the gate. The path for mobile-only users who don't want to curate.
-- **Two shapes, mapped to the two surfaces:**
-  - *Lightweight batch review = a consumption act → available on mobile.* Surfaces as the "**N new to confirm**" card in `Today`: approve-all, or tap through a quick accept/reject strip.
-  - *Deep curation = a management act → web only.* Full Snapshot detail (edit pack elements, split/merge Concepts, re-file into KBs) lives in the web `Inbox`/`Library`.
+**Review model (amended 2026-07-02 — single gate; see [`superpowers/specs/2026-07-02-single-gate-lifecycle-design.md`](superpowers/specs/2026-07-02-single-gate-lifecycle-design.md)):**
+- **Reading is the review.** The snapshot-level gate (`awaiting review` → "Add to library", batch confirm, auto-approve) is **parked** — under manual trigger there is no unvetted inflow to gate.
+- **The only gate is per-card accept/reject**, because it guards what enters practice/scheduling (§F4/§F7).
+- **The gate re-enters** if `auto_process` or Feeds (§F6) create packs the user never asked for: one status value + one Inbox filter + a confirm surface (both views are derived queries).
 
-**Key screens:** `Today` batch-confirm card (mobile) · Snapshot detail (reader on one side, pack on the other; web) · draft-cards review strip.
+**Key screens:** Snapshot detail (reader · original · cards; web) · per-card accept/reject in the Cards view.
 
-**States:** Snapshot = `awaiting review` → `in library` (committed) / auto-committed (auto-approve); pack element = `suggested` → `kept` / `dismissed`; Card = `draft` → `accepted` (enters queue) / `rejected`.
+**States:** Snapshot = `ready` (= in library); Card = `draft` → `accepted` (enters queue) / `rejected`.
 
-**Mobile vs web:** web shows reader + pack side-by-side (three-pane) for deep curation; mobile does lightweight batch-confirm from `Today`, and can open a single Snapshot in a stacked segmented control (`Read · Pack · Cards`) for a quick look — but bulk triage and management stay on web.
+**Mobile vs web:** web shows reader + pack side-by-side for deep curation; mobile opens a single Snapshot in a stacked segmented control (`Read · Pack · Cards`) — the mobile batch-confirm card is parked with the snapshot gate (amendment above).
 
-**Edge cases:** thin/low-confidence content → pack shows only what's reliable and says so; very long content (book/long video) → pack is section-chunked with per-section cards; **mobile-only user** → closes the loop via the `Today` batch-confirm (or auto-approve), never needing web (§F8).
+**Edge cases:** thin/low-confidence content → pack shows only what's reliable and says so; very long content (book/long video) → pack is section-chunked with per-section cards; **mobile-only user** → reads packs and accepts cards from the snapshot view (batch-confirm parked with the gate).
 
 ---
 
 ### F3 — Library & knowledge base browsing
 **Goal:** find, relate, and act on what you've gulped; make mastery legible.
 
-**Steps / entries:** browse by object type, by knowledge base, by Concept, or via global search. Open any object → see its connections (related Concepts, Sources, Cards) → act (start a focused Gulp session, open a Conversation, edit).
+**Steps / entries** *(amended 2026-07-02 — v1 scope, see [`superpowers/specs/2026-07-02-single-gate-lifecycle-design.md`](superpowers/specs/2026-07-02-single-gate-lifecycle-design.md))*: the Library lists **`ready` snapshots** (everything digested — arrival is automatic, §F2), filtered by **tag** and type; grouping is by tags (`SourceTag`) — the Knowledge-base entity is parked, Concept browsing is frozen until concept supply exists. Open any object → read / discuss / manage its cards.
 
-**Key screens:** Library list (filter by form / type / KB / mastery state / due) · Concept page (definition, mastery state, linked everything, "test me on this") · Knowledge-base home (overview + its digest + "Gulp this base").
+**Key screens:** Library list (v1 filters: tag · type; mastery/due chips arrive with S5) · Concept page *(frozen)* · Knowledge-base home *(parked — tags cover grouping)*.
 
 **States shown per item:** mastery state (§7), `due` indicator, last-reviewed, source freshness.
 

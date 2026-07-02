@@ -1,3 +1,4 @@
+import React from "react";
 import type { ObjectType } from "@/lib/mock";
 import { IconSnapshot, IconConversation, IconSubscription } from "./icons";
 import styles from "./ObjectGlyph.module.css";

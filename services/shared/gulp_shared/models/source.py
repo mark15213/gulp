@@ -16,13 +16,14 @@ class SourceKind(str, enum.Enum):
 
 
 class SnapshotStatus(str, enum.Enum):
+    """Single-gate lifecycle: `ready` IS "in the library" — the snapshot-level
+    review gate is parked (spec 2026-07-02-single-gate-lifecycle-design.md)."""
+
     queued = "queued"
     unprocessed = "unprocessed"
     processing = "processing"
     ready = "ready"
     exported = "exported"
-    awaiting_review = "awaiting_review"
-    in_library = "in_library"
     needs_attention = "needs_attention"
 
 

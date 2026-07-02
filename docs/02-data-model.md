@@ -154,8 +154,8 @@ The frozen, point-in-time item — "the everyday thing you gulped" (`01 §4.2`).
 | `emitted_by` | `→Source?` | the `Subscription` that produced it; null for ad-hoc captures (`01 §F6`) |
 | `pack` | `→KnowledgePack?` | 1–1; null until generated, and null forever for unsupported content (`01 §10.3`) |
 
-**`status` domain (the capture/review lifecycle, `01 §F1`/`§F2`):**
-`unprocessed` → `processing` → `ready` → `awaiting_review` → `in_library`, with `queued` for the offline buffer and the branch `needs_attention` (extraction failed). Processing is **manually triggered** in v1 — a captured snapshot rests at `unprocessed` until the user starts it (or imports an externally-produced result), per S2 design §2.4. `awaiting_review` is skipped when auto-approve applies (→ straight to `in_library`). Full transitions in §6.
+**`status` domain (the capture lifecycle, `01 §F1`/`§F2` — amended 2026-07-02, single gate; see [`superpowers/specs/2026-07-02-single-gate-lifecycle-design.md`](superpowers/specs/2026-07-02-single-gate-lifecycle-design.md)):**
+`unprocessed` → `processing` → `ready`, with `queued` (offline buffer), `exported` (job exported, awaiting result upload), and the branch `needs_attention` (extraction failed). Processing is **manually triggered** in v1 (S2 design §2.4). **`ready` is "in the library"** — the review states (`awaiting_review` / `in_library`) are parked with the snapshot-level gate; the only review gate is per-card `draft → accepted/rejected` (§4.5). Full transitions in §6.
 
 ---
 
@@ -321,6 +321,8 @@ The streaming form of `Source` — "a followed feed that auto-emits Snapshots" (
 
 ### 4.9 `KnowledgeBase` + membership
 
+> **Parked (2026-07-02).** KB membership is source-level many-to-many — structurally a named tag — and `SourceTag` already exists, so v1 grouping/scoping uses **tags**. KB graduates back when tags prove insufficient (description, per-KB digest). See [`superpowers/specs/2026-07-02-single-gate-lifecycle-design.md`](superpowers/specs/2026-07-02-single-gate-lifecycle-design.md).
+
 A named collection that scopes browsing, digests, and Gulp sessions (`01 §4.2`). A Source may belong to several → many-to-many.
 
 **`KnowledgeBase`**
@@ -448,7 +450,7 @@ Every `status`/`state` field, in one place. (`Source.status` is split by form, s
 
 | Entity · field | States | Transitions |
 |---|---|---|
-| **`Snapshot.status`** | `queued · unprocessed · processing · ready · awaiting_review · in_library · needs_attention` | capture lands `unprocessed`; processing is **manually triggered** (S2 §2.4): `unprocessed`→`processing`→`ready`→`awaiting_review`→`in_library`; `unprocessed`→`ready` (import external result); `ready`→`in_library` directly (auto-approve); `processing`→`needs_attention` (extraction failed) → `processing` (retry); `queued` = offline buffer |
+| **`Snapshot.status`** | `queued · unprocessed · processing · ready · exported · needs_attention` *(amended 2026-07-02 — single gate)* | capture lands `unprocessed`; processing is **manually triggered** (S2 §2.4): `unprocessed`→`processing`→`ready` (**= in library**); `unprocessed`→`exported`→`ready` (external job + import); `processing`→`needs_attention` (failed) → `processing` (retry); `queued` = offline buffer. The parked review states re-enter with unvetted inflow (auto-process / S7) |
 | **`Conversation.status`** | `active · saved · discarded` | `active`→`saved` (with sediment) · `active`→`discarded` (keeps thread) |
 | **`Subscription.status`** | `active · muted · error` | `active`↔`muted` · `active`↔`error` (fetch) |
 | **`KnowledgePack.status`** | `generating · ready` | `generating`→`ready` |

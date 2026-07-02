@@ -69,7 +69,7 @@ export default async function SnapshotPage({ params }: { params: Promise<{ id: s
         </div>
       )}
 
-      {(snap.status === "ready" || snap.status === "in_library" || snap.status === "awaiting_review") &&
+      {snap.status === "ready" &&
         (await renderPack(id, snap.content_body, snap.cards_status ?? null))}
     </div>
   );

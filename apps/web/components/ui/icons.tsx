@@ -1,4 +1,4 @@
-import type { SVGProps } from "react";
+import React, { type SVGProps } from "react";
 
 // Line icons — 24px grid, 1.5px stroke, rounded joins (docs/03 §2.5/§2.6).
 type IconProps = SVGProps<SVGSVGElement>;

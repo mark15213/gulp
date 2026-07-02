@@ -2,7 +2,6 @@ export const dynamic = "force-dynamic";
 
 import { StartGulpCard } from "@/components/today/StartGulpCard";
 import { DigestCard } from "@/components/today/DigestCard";
-import { ConfirmCard } from "@/components/today/ConfirmCard";
 import { CapturePeek } from "@/components/today/CapturePeek";
 import { today } from "@/lib/mock";
 import { getInbox } from "@gulp/api-client";
@@ -48,8 +47,6 @@ export default async function TodayPage() {
           ))}
         </div>
       </section>
-
-      <ConfirmCard count={today.newToConfirm} />
 
       <section className={styles.section}>
         <div className={styles.sectionHead}>

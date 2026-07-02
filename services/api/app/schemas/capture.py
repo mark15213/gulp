@@ -60,3 +60,8 @@ class CaptureResponse(BaseModel):
 class InboxOut(BaseModel):
     items: list[SnapshotOut]
     count: int
+
+
+class LibraryOut(BaseModel):
+    items: list[SnapshotOut]
+    count: int

@@ -175,6 +175,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/library": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Library */
+        get: operations["get_library_library_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/snapshots/{snapshot_id}/pack": {
         parameters: {
             query?: never;
@@ -483,6 +500,13 @@ export interface components {
             /** Count */
             count: number;
         };
+        /** LibraryOut */
+        LibraryOut: {
+            /** Items */
+            items: components["schemas"]["SnapshotOut"][];
+            /** Count */
+            count: number;
+        };
         /** ListBlockOut */
         ListBlockOut: {
             /**
@@ -648,9 +672,11 @@ export interface components {
         };
         /**
          * SnapshotStatus
+         * @description Single-gate lifecycle: `ready` IS "in the library" — the snapshot-level
+         *     review gate is parked (spec 2026-07-02-single-gate-lifecycle-design.md).
          * @enum {string}
          */
-        SnapshotStatus: "queued" | "unprocessed" | "processing" | "ready" | "exported" | "awaiting_review" | "in_library" | "needs_attention";
+        SnapshotStatus: "queued" | "unprocessed" | "processing" | "ready" | "exported" | "needs_attention";
         /**
          * SourceKind
          * @enum {string}
@@ -1051,6 +1077,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["InboxOut"];
+                };
+            };
+        };
+    };
+    get_library_library_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LibraryOut"];
                 };
             };
         };

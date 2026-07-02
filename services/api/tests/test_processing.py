@@ -47,7 +47,7 @@ def test_reprocessing_a_processing_snapshot_is_allowed(client: TestClient) -> No
 
 
 def test_committed_snapshot_is_not_startable(client: TestClient, db) -> None:  # type: ignore[no-untyped-def]
-    """A snapshot in a terminal / post-processing state (e.g. in_library) must 409."""
+    """A snapshot in a non-startable state (e.g. exported, awaiting upload) must 409."""
     import uuid
 
     from gulp_shared.models.source import SnapshotStatus, Source
@@ -56,7 +56,7 @@ def test_committed_snapshot_is_not_startable(client: TestClient, db) -> None:  #
     # Directly mutate the row so the client sees a non-startable status.
     # `sid` is a string; the ORM Uuid column requires a uuid.UUID object.
     source = db.query(Source).filter_by(id=uuid.UUID(sid)).one()
-    source.status = SnapshotStatus.in_library
+    source.status = SnapshotStatus.exported
     db.commit()
     r = client.post(f"/snapshots/{sid}/process")
     assert r.status_code == 409

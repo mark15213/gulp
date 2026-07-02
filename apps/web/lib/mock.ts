@@ -32,7 +32,6 @@ export interface TodayData {
   dueCount: number;
   dueConcepts: number;
   streak: number;
-  newToConfirm: number;
   resume: { detail: string; progress: string };
   digest: DigestItem[];
   recent: RecentItem[];
@@ -44,7 +43,6 @@ export const today: TodayData = {
   dueCount: 5,
   dueConcepts: 3,
   streak: 5,
-  newToConfirm: 3,
   resume: { detail: "Gulp session", progress: "4 / 12" },
   digest: [
     {
