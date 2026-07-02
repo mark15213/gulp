@@ -42,6 +42,15 @@ export async function getLibrary(): Promise<LibraryOut> {
   return data;
 }
 
+export type TodayOut =
+  paths["/today"]["get"]["responses"]["200"]["content"]["application/json"];
+
+export async function getToday(): Promise<TodayOut> {
+  const { data, error } = await client.GET("/today", { cache: "no-store" });
+  if (error || !data) throw new Error("today fetch failed");
+  return data;
+}
+
 export async function getSnapshot(id: string): Promise<Snapshot> {
   const { data, error } = await client.GET("/snapshots/{snapshot_id}", {
     params: { path: { snapshot_id: id } },

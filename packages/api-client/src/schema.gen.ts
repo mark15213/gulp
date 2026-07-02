@@ -279,6 +279,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/today": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Today */
+        get: operations["get_today_today_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/health": {
         parameters: {
             query?: never;
@@ -714,6 +731,27 @@ export interface components {
             rows: string[][];
             /** Caption */
             caption?: string | null;
+        };
+        /** TodayDigestItem */
+        TodayDigestItem: {
+            snapshot: components["schemas"]["SnapshotOut"];
+            /** Accepted Cards */
+            accepted_cards: number;
+        };
+        /** TodayOut */
+        TodayOut: {
+            /** Accepted Cards */
+            accepted_cards: number;
+            /** Card Sources */
+            card_sources: number;
+            /** Ready Count */
+            ready_count: number;
+            /** Digest */
+            digest: components["schemas"]["TodayDigestItem"][];
+            /** Inbox Count */
+            inbox_count: number;
+            /** Recent */
+            recent: components["schemas"]["SnapshotOut"][];
         };
         /** ValidationError */
         ValidationError: {
@@ -1329,6 +1367,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_today_today_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TodayOut"];
                 };
             };
         };
