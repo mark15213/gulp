@@ -46,4 +46,12 @@ describe("LibraryList", () => {
     render(<LibraryList items={[]} />);
     expect(screen.getByText(/Nothing here yet/)).toBeTruthy();
   });
+
+  it("shows per-row source badges (media_type + cards status)", () => {
+    render(
+      <LibraryList items={[item({ media_type: "video", cards_status: "generating" })]} />,
+    );
+    expect(screen.getByText("Video")).toBeTruthy();
+    expect(screen.getByText("Cards…")).toBeTruthy();
+  });
 });
