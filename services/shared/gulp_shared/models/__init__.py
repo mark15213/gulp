@@ -14,6 +14,7 @@ from gulp_shared.models.knowledge_pack import (
     PackSection,
     PackStatus,
 )
+from gulp_shared.models.pack_block_message import ChatRole, PackBlockMessage
 from gulp_shared.models.source import (
     CapturedVia,
     MediaType,
@@ -49,4 +50,6 @@ __all__ = [
     "PackSection",
     "PackBlock",
     "PackBlockType",
+    "PackBlockMessage",
+    "ChatRole",
 ]
