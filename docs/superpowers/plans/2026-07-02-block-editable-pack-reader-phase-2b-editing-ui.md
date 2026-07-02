@@ -394,8 +394,8 @@ describe("text editors", () => {
     const block: PackBlockOut = { id: "b", type: "prose", content: "old" };
     const onSave = vi.fn();
     render(<ProseEditor block={block} onSave={onSave} onCancel={vi.fn()} />);
-    const ta = screen.getByLabelText("Prose (Markdown)");
-    expect(ta).toHaveValue("old");
+    const ta = screen.getByLabelText("Prose (Markdown)") as HTMLTextAreaElement;
+    expect(ta.value).toBe("old");
     await userEvent.clear(ta);
     await userEvent.type(ta, "new text");
     await userEvent.click(screen.getByRole("button", { name: "Save" }));
@@ -421,7 +421,7 @@ describe("text editors", () => {
 });
 ```
 
-Note: `toHaveValue`/`toBeInTheDocument`-style matchers are not needed beyond `toHaveValue`; if `toHaveValue` is unavailable without `@testing-library/jest-dom`, assert `(ta as HTMLTextAreaElement).value === "old"` instead (do not add jest-dom).
+Note: do NOT add `@testing-library/jest-dom`. Use native assertions only — cast the queried element to its concrete type (`as HTMLTextAreaElement` / `HTMLInputElement`) and assert `.value`/`.checked` with `toBe`, and use `toBeTruthy()`/`toBeNull()` for presence. Ensure the test file passes `pnpm --filter @gulp/web exec tsc --noEmit`.
 
 - [ ] **Step 3: Run test to verify it fails**
 
@@ -1017,7 +1017,7 @@ describe("block controls", () => {
         canMoveDown={true}
       />,
     );
-    expect(screen.getByRole("button", { name: "Move block up" })).toBeDisabled();
+    expect((screen.getByRole("button", { name: "Move block up" }) as HTMLButtonElement).disabled).toBe(true);
     await userEvent.click(screen.getByRole("button", { name: "Delete block" }));
     expect(onDelete).toHaveBeenCalled();
   });
@@ -1032,7 +1032,7 @@ describe("block controls", () => {
 });
 ```
 
-Note: if `toBeDisabled` is unavailable without jest-dom, assert `(screen.getByRole("button", { name: "Move block up" }) as HTMLButtonElement).disabled === true` instead.
+Note: native assertions only (no `@testing-library/jest-dom`) — the disabled check uses `(... as HTMLButtonElement).disabled`. This file renders more than once, so include `import { afterEach } from "vitest"; import { cleanup } from "@testing-library/react";` and `afterEach(cleanup);` (vitest here has no auto-cleanup). Ensure `tsc --noEmit` passes.
 
 - [ ] **Step 2: Run test to verify it fails**
 
