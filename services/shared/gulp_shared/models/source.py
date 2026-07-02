@@ -37,6 +37,14 @@ class MediaType(str, enum.Enum):
     webpage = "webpage"
 
 
+class CardsStatus(str, enum.Enum):
+    """Inline card-generation job state; null = never triggered. Imports don't touch it."""
+
+    generating = "generating"
+    ready = "ready"
+    failed = "failed"
+
+
 class CapturedVia(str, enum.Enum):
     share_sheet = "share_sheet"
     wechat = "wechat"
@@ -67,5 +75,8 @@ class Source(TimestampedBase, Base):
     content_ref: Mapped[str | None] = mapped_column(String, default=None)
     captured_via: Mapped[CapturedVia | None] = mapped_column(
         Enum(CapturedVia, name="captured_via"), default=None
+    )
+    cards_status: Mapped[CardsStatus | None] = mapped_column(
+        Enum(CardsStatus, name="cards_status"), default=None
     )
     # 1–1 KnowledgePack is modeled from KnowledgePack.snapshot_id (S2). Deferred: emitted_by (S7).

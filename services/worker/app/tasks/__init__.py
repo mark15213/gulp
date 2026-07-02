@@ -6,6 +6,7 @@ import uuid
 from arq.connections import RedisSettings
 
 from app.export.jobs import run_build_export, run_import_result
+from app.pipeline.cards import generate_cards_for_source
 from app.pipeline.metadata import run_resolve_metadata
 from app.pipeline.run import process_source
 from gulp_shared.db import SessionLocal  # type: ignore[import-untyped]
@@ -53,6 +54,18 @@ async def import_result(ctx: dict, snapshot_id: str, upload_path: str) -> None:
         db.close()
 
 
+async def generate_cards(ctx: dict, snapshot_id: str) -> None:
+    db = SessionLocal()
+    try:
+        source = db.get(Source, uuid.UUID(snapshot_id))
+        if source is None:
+            logger.warning("generate_cards: snapshot %s not found", snapshot_id)
+            return
+        await generate_cards_for_source(db, source)
+    finally:
+        db.close()
+
+
 async def resolve_metadata(ctx: dict, snapshot_id: str) -> None:
     db = SessionLocal()
     try:
@@ -66,5 +79,5 @@ async def resolve_metadata(ctx: dict, snapshot_id: str) -> None:
 
 
 class WorkerSettings:
-    functions = [process_snapshot, build_export, import_result, resolve_metadata]
+    functions = [process_snapshot, build_export, import_result, resolve_metadata, generate_cards]
     redis_settings = RedisSettings.from_dsn(settings.redis_url)

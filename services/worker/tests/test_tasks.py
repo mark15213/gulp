@@ -75,3 +75,17 @@ def test_export_jobs_registered() -> None:
 def test_resolve_metadata_registered() -> None:
     from app.tasks import WorkerSettings, resolve_metadata
     assert resolve_metadata in WorkerSettings.functions
+
+
+def test_generate_cards_registered() -> None:
+    from app.tasks import WorkerSettings, generate_cards
+    assert generate_cards in WorkerSettings.functions
+
+
+async def test_generate_cards_missing_snapshot_is_a_noop(monkeypatch: Any) -> None:
+    from app.tasks import generate_cards
+    engine = create_engine("sqlite://")
+    Base.metadata.create_all(engine)
+    Local = sessionmaker(bind=engine, expire_on_commit=False)
+    monkeypatch.setattr(tasks, "SessionLocal", Local)
+    await generate_cards({}, "00000000-0000-0000-0000-0000000000ff")  # no raise

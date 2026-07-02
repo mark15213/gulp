@@ -8,6 +8,7 @@ from pydantic import BaseModel, ConfigDict, model_validator
 from gulp_shared.domain.urls import is_http_url
 from gulp_shared.models.source import (
     CapturedVia,
+    CardsStatus,
     MediaType,
     SnapshotStatus,
     SourceKind,
@@ -45,6 +46,7 @@ class SnapshotOut(BaseModel):
     origin_url: str | None
     content_body: str | None
     captured_via: CapturedVia | None
+    cards_status: CardsStatus | None
     tags: list[str]
     created_at: datetime
     updated_at: datetime

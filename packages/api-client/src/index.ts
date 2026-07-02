@@ -122,6 +122,68 @@ export async function deleteBlock(snapshotId: string, blockId: string): Promise<
   if (error) throw new Error("delete block failed");
 }
 
+export type CardOut =
+  paths["/snapshots/{snapshot_id}/cards"]["get"]["responses"]["200"]["content"]["application/json"][number];
+export type CardsImportBody =
+  paths["/snapshots/{snapshot_id}/cards/import"]["post"]["requestBody"]["content"]["application/json"];
+export type CardPatchBody =
+  paths["/snapshots/{snapshot_id}/cards/{card_id}"]["patch"]["requestBody"]["content"]["application/json"];
+
+export async function getCards(snapshotId: string): Promise<CardOut[]> {
+  const { data, error } = await client.GET("/snapshots/{snapshot_id}/cards", {
+    params: { path: { snapshot_id: snapshotId } },
+    cache: "no-store",
+  });
+  if (error || !data) throw new Error("fetch cards failed");
+  return data;
+}
+
+export async function generateCards(snapshotId: string): Promise<SnapshotOut> {
+  const { data, error } = await client.POST("/snapshots/{snapshot_id}/cards/generate", {
+    params: { path: { snapshot_id: snapshotId } },
+  });
+  if (error || !data) throw new Error("generate cards failed");
+  return data;
+}
+
+export async function importCards(
+  snapshotId: string,
+  body: CardsImportBody,
+): Promise<CardOut[]> {
+  const { data, error, response } = await client.POST(
+    "/snapshots/{snapshot_id}/cards/import",
+    { params: { path: { snapshot_id: snapshotId } }, body },
+  );
+  if (error || !data) {
+    // 422 carries field-level validation errors worth surfacing verbatim.
+    const detail = (error as { detail?: unknown } | undefined)?.detail;
+    throw new Error(
+      detail ? `import cards failed: ${JSON.stringify(detail)}` : `import cards failed (${response?.status})`,
+    );
+  }
+  return data;
+}
+
+export async function updateCard(
+  snapshotId: string,
+  cardId: string,
+  body: CardPatchBody,
+): Promise<CardOut> {
+  const { data, error } = await client.PATCH("/snapshots/{snapshot_id}/cards/{card_id}", {
+    params: { path: { snapshot_id: snapshotId, card_id: cardId } },
+    body,
+  });
+  if (error || !data) throw new Error("update card failed");
+  return data;
+}
+
+export async function deleteCard(snapshotId: string, cardId: string): Promise<void> {
+  const { error } = await client.DELETE("/snapshots/{snapshot_id}/cards/{card_id}", {
+    params: { path: { snapshot_id: snapshotId, card_id: cardId } },
+  });
+  if (error) throw new Error("delete card failed");
+}
+
 export type MessageOut =
   paths["/snapshots/{snapshot_id}/blocks/{block_id}/messages"]["get"]["responses"]["200"]["content"]["application/json"][number];
 export type MessageCreateBody =

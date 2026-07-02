@@ -137,7 +137,7 @@ Routers stay thin (`services/api/app/routers/cards.py`); logic in
 | `POST /snapshots/{id}/cards/import` | Validate + append (§④). Returns created `CardOut[]`. |
 | `GET /snapshots/{id}/cards` | All cards for the source, `created_at` order. |
 | `PATCH /snapshots/{id}/cards/{cid}` | Status transitions (`draft`/`accepted`/`rejected`, freely — nothing downstream consumes them until S5) and/or content edits, re-validated per card type. |
-| `DELETE /snapshots/{id}/cards/{cid}` | Hard delete (cleanup of bad batches). |
+| `DELETE /snapshots/{id}/cards/{cid}` | Delete (cleanup of bad batches); soft-delete per repo convention. |
 
 `SnapshotOut` gains `cards_status`. Regenerate `packages/api-client`
 (`just gen-client`).
@@ -241,7 +241,7 @@ manual-trigger relaxation:
 | API | `services/api/app/routers/cards.py` (new) | Five routes. |
 | API | `services/api/app/services/cards.py` (new) | Generation trigger, import, list, patch, delete. |
 | API | `services/api/app/schemas/cards.py` (new) | `CardOut`, patch/import DTOs. |
-| API | `services/api/app/schemas/snapshot.py` | `cards_status` on `SnapshotOut`. |
+| API | `services/api/app/schemas/capture.py` | `cards_status` on `SnapshotOut`. |
 | Client | `packages/api-client/*` | Regenerate + typed helpers. |
 | Web | `apps/web/components/snapshot/ReaderToggle.tsx` | Third segment. |
 | Web | `apps/web/components/cards/*` (new) | CardsView, CardRow, ImportDialog. |

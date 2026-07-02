@@ -1,0 +1,124 @@
+.view {
+  padding: 8px 0 48px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+}
+
+.status {
+  color: var(--text-muted, #777);
+  padding: 12px 0;
+}
+
+.empty {
+  color: var(--text-muted, #777);
+  padding: 24px 0;
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.row {
+  padding: 16px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.meta {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.type,
+.origin {
+  color: var(--text-muted, #777);
+}
+
+.accepted {
+  color: var(--blue-600, #2563eb);
+}
+
+.rejected {
+  color: var(--text-muted, #777);
+  text-decoration: line-through;
+}
+
+.prompt {
+  margin: 4px 0;
+  font-weight: 600;
+}
+
+.answer {
+  margin: 4px 0;
+}
+
+.options {
+  margin: 4px 0;
+  padding-left: 20px;
+}
+
+.correct {
+  font-weight: 600;
+}
+
+.explanation {
+  margin: 4px 0;
+  color: var(--text-muted, #777);
+  font-size: 0.9em;
+}
+
+.rowActions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.editor {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.input {
+  width: 100%;
+  font: inherit;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+.err {
+  color: var(--red-600, #dc2626);
+  padding: 8px 0;
+}
+
+.dialog {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  margin: 12px 0;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.hint {
+  color: var(--text-muted, #777);
+  margin: 0;
+  font-size: 0.9em;
+}

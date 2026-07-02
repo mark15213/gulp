@@ -19,9 +19,10 @@ class CardType(str, enum.Enum):
 
 
 class CardOrigin(str, enum.Enum):
-    pack = "pack"
+    pack = "pack"  # inline generation (worker) — regeneration's replace scope
     conversation = "conversation"
     user = "user"
+    imported = "imported"  # external cards.json (NotebookLM et al.)
 
 
 class CardStatus(str, enum.Enum):

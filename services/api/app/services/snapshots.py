@@ -32,6 +32,7 @@ def to_out(db: Session, source: Source) -> SnapshotOut:
         origin_url=source.origin_url,
         content_body=source.content_body,
         captured_via=source.captured_via,
+        cards_status=source.cards_status,
         tags=_tags_for(db, source.id),
         created_at=source.created_at,
         updated_at=source.updated_at,

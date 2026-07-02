@@ -2,7 +2,7 @@ import json
 
 from app.export.archive import find_entry, read_zip
 from app.export.builder import build_job_archive
-from app.export.templates import claude_md, pack_schema, prompt_md
+from app.export.templates import cards_schema, claude_md, pack_schema, prompt_md
 from app.pipeline.normdoc import Anchor, NormBlock, NormDoc
 
 
@@ -22,6 +22,8 @@ def test_pack_schema_prompt_and_claude_md():
         assert needle in cm
     pm = prompt_md()
     assert "expert" in pm.lower() and "core_contributions" in pm and "key_insight" in pm
+    cs = cards_schema()
+    assert "cards" in cs["properties"]  # the shared CardsPayload contract
 
 
 def test_build_job_archive_has_all_entries():
@@ -29,7 +31,8 @@ def test_build_job_archive_has_all_entries():
                              created_at="2026-06-26T00:00:00Z")
     files = read_zip(data)
     for suffix in ("CLAUDE.md", "prompt.md", "manifest.json", "input/norm_doc.json",
-                   "schema/pack.schema.json", "result/HOWTO.txt"):
+                   "schema/pack.schema.json", "schema/cards.schema.json",
+                   "result/HOWTO.txt"):
         assert find_entry(files, suffix)  # present, non-empty
     assert not any(name.endswith("README.md") for name in files)  # README dropped
     nd = json.loads(find_entry(files, "input/norm_doc.json"))

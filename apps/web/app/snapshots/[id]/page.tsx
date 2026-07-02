@@ -70,15 +70,19 @@ export default async function SnapshotPage({ params }: { params: Promise<{ id: s
       )}
 
       {(snap.status === "ready" || snap.status === "in_library" || snap.status === "awaiting_review") &&
-        (await renderPack(id, snap.content_body))}
+        (await renderPack(id, snap.content_body, snap.cards_status ?? null))}
     </div>
   );
 }
 
-async function renderPack(id: string, original: string | null) {
+async function renderPack(
+  id: string,
+  original: string | null,
+  cardsStatus: "generating" | "ready" | "failed" | null,
+) {
   const pack = await getPack(id);
   if (!pack) {
     return <p className="t-data" style={{ color: "var(--text-muted, #777)" }}>Pack not available.</p>;
   }
-  return <ReaderToggle pack={pack} original={original} />;
+  return <ReaderToggle pack={pack} original={original} snapshotId={id} cardsStatus={cardsStatus} />;
 }

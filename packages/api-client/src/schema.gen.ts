@@ -38,6 +38,75 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/snapshots/{snapshot_id}/cards/generate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Generate Cards Route */
+        post: operations["generate_cards_route_snapshots__snapshot_id__cards_generate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/snapshots/{snapshot_id}/cards/import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Import Cards Route */
+        post: operations["import_cards_route_snapshots__snapshot_id__cards_import_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/snapshots/{snapshot_id}/cards": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Cards Route */
+        get: operations["list_cards_route_snapshots__snapshot_id__cards_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/snapshots/{snapshot_id}/cards/{card_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Card Route */
+        delete: operations["delete_card_route_snapshots__snapshot_id__cards__card_id__delete"];
+        options?: never;
+        head?: never;
+        /** Update Card Route */
+        patch: operations["update_card_route_snapshots__snapshot_id__cards__card_id__patch"];
+        trace?: never;
+    };
     "/snapshots/{snapshot_id}/export": {
         parameters: {
             query?: never;
@@ -262,6 +331,88 @@ export interface components {
          * @enum {string}
          */
         CapturedVia: "share_sheet" | "wechat" | "email" | "in_app" | "paste" | "manual" | "screenshot" | "audio_memo";
+        /** CardDraft */
+        CardDraft: {
+            card_type: components["schemas"]["CardType"];
+            /** Prompt */
+            prompt: string;
+            /** Answer */
+            answer?: string | null;
+            /** Explanation */
+            explanation?: string | null;
+            /** Options */
+            options?: string[] | null;
+        };
+        /**
+         * CardOrigin
+         * @enum {string}
+         */
+        CardOrigin: "pack" | "conversation" | "user" | "imported";
+        /** CardOut */
+        CardOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            card_type: components["schemas"]["CardType"];
+            /** Prompt */
+            prompt: string;
+            /** Answer */
+            answer: string | null;
+            /** Explanation */
+            explanation: string | null;
+            /** Options */
+            options: string[] | null;
+            origin: components["schemas"]["CardOrigin"];
+            status: components["schemas"]["CardStatus"];
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /**
+         * CardPatch
+         * @description Partial update; provided content fields are re-validated per card type.
+         */
+        CardPatch: {
+            status?: components["schemas"]["CardStatus"] | null;
+            /** Prompt */
+            prompt?: string | null;
+            /** Answer */
+            answer?: string | null;
+            /** Explanation */
+            explanation?: string | null;
+            /** Options */
+            options?: string[] | null;
+        };
+        /**
+         * CardStatus
+         * @enum {string}
+         */
+        CardStatus: "draft" | "accepted" | "rejected";
+        /**
+         * CardType
+         * @enum {string}
+         */
+        CardType: "short_answer" | "mcq" | "cloze" | "explain" | "apply" | "recall";
+        /** CardsPayload */
+        CardsPayload: {
+            /** Cards */
+            cards: components["schemas"]["CardDraft"][];
+        };
+        /**
+         * CardsStatus
+         * @description Inline card-generation job state; null = never triggered. Imports don't touch it.
+         * @enum {string}
+         */
+        CardsStatus: "generating" | "ready" | "failed";
         /** FigureBlockOut */
         FigureBlockOut: {
             /**
@@ -481,6 +632,7 @@ export interface components {
             /** Content Body */
             content_body: string | null;
             captured_via: components["schemas"]["CapturedVia"] | null;
+            cards_status: components["schemas"]["CardsStatus"] | null;
             /** Tags */
             tags: string[];
             /**
@@ -610,6 +762,169 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SnapshotOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    generate_cards_route_snapshots__snapshot_id__cards_generate_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                snapshot_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SnapshotOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    import_cards_route_snapshots__snapshot_id__cards_import_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                snapshot_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CardsPayload"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CardOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_cards_route_snapshots__snapshot_id__cards_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                snapshot_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CardOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_card_route_snapshots__snapshot_id__cards__card_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                snapshot_id: string;
+                card_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_card_route_snapshots__snapshot_id__cards__card_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                snapshot_id: string;
+                card_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CardPatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CardOut"];
                 };
             };
             /** @description Validation Error */

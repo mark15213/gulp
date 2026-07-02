@@ -2,12 +2,19 @@
 
 from typing import Any
 
+from gulp_shared.contracts.cards import CardsPayload
+
 from app.pipeline.schemas import PaperReport
 from app.prompts.digest import _SYSTEM
 
 
 def pack_schema() -> dict[str, Any]:
     return PaperReport.model_json_schema()
+
+
+def cards_schema() -> dict[str, Any]:
+    """The cards.json import contract — shipped so external card authoring has it at hand."""
+    return CardsPayload.model_json_schema()
 
 
 def prompt_md() -> str:
