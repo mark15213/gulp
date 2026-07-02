@@ -31,9 +31,9 @@ describe("PackReport", () => {
   it("renders title, contributions, key insight and references", () => {
     const html = renderToStaticMarkup(<PackReport pack={pack} />);
     expect(html).toContain("BERT");
-    expect(html).toContain("Core contributions");
+    expect(html).toContain("CORE CONTRIBUTIONS");
     expect(html).toContain("<strong>bidirectionality</strong>");
-    expect(html).toContain("Key insight");
+    expect(html).toContain("KEY INSIGHT");
     expect(html).toContain("Vaswani 2017");
   });
 
@@ -55,5 +55,15 @@ describe("PackReport", () => {
     const html = renderToStaticMarkup(<PackReport pack={pack} />);
     expect(html).toContain('data-block-id="00000000-0000-0000-0000-0000000000b1"');
     expect(html).toContain('data-block-id="00000000-0000-0000-0000-0000000000b6"');
+  });
+
+  it("applies docs/03 type roles: serif/large title, mono overlines, section headings", () => {
+    const html = renderToStaticMarkup(<PackReport pack={pack} />);
+    expect(html).toContain("t-display");        // pack title in Instrument Serif
+    expect(html).toContain("t-label");          // mono uppercase overlines
+    expect(html).toContain("CORE CONTRIBUTIONS");
+    expect(html).toContain("KEY INSIGHT");
+    expect(html).toContain("t-title-m");        // section heading role
+    expect(html).toContain("FURTHER READING");
   });
 });

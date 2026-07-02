@@ -90,12 +90,12 @@ function BlockView({ block }: { block: Block }) {
 export function PackReport({ pack }: { pack: PackOut }) {
   return (
     <article className={styles.report}>
-      <h1 className={styles.title}>{pack.title}</h1>
+      <h1 className={`t-display ${styles.title}`}>{pack.title}</h1>
 
       {pack.core_contributions.length > 0 && (
-        <section className={styles.contributions}>
-          <h2 className={styles.heading}>Core contributions</h2>
-          <ul className={styles.list}>
+        <section className={styles.block}>
+          <p className={`t-label ${styles.overline}`}>CORE CONTRIBUTIONS</p>
+          <ul className={styles.contribList}>
             {pack.core_contributions.map((c, i) => (
               <li key={i}>
                 <Md>{c}</Md>
@@ -107,8 +107,8 @@ export function PackReport({ pack }: { pack: PackOut }) {
 
       {pack.key_insight && (
         <section className={styles.insight}>
-          <h2 className={styles.heading}>Key insight</h2>
-          <div className={styles.prose}>
+          <p className={`t-label ${styles.overline}`}>KEY INSIGHT</p>
+          <div className={`t-body-l ${styles.insightBody}`}>
             <Md>{pack.key_insight}</Md>
           </div>
         </section>
@@ -116,7 +116,7 @@ export function PackReport({ pack }: { pack: PackOut }) {
 
       {pack.sections.map((section) => (
         <section key={section.id} className={styles.section}>
-          {section.heading && <h2 className={styles.heading}>{section.heading}</h2>}
+          {section.heading && <h2 className={`t-title-m ${styles.heading}`}>{section.heading}</h2>}
           {section.blocks.map((block) => (
             <BlockCell key={block.id} id={block.id}>
               <BlockView block={block} />
@@ -127,11 +127,12 @@ export function PackReport({ pack }: { pack: PackOut }) {
 
       {pack.references.length > 0 && (
         <section className={styles.references}>
-          <h2 className={styles.heading}>Further reading</h2>
-          <ul className={styles.list}>
+          <p className={`t-label ${styles.overline}`}>FURTHER READING</p>
+          <ul className={styles.refList}>
             {pack.references.map((r, i) => (
               <li key={i}>
-                <strong>{r.citation}</strong> — {r.why_interesting}
+                <span className={styles.refCitation}>{r.citation}</span>
+                <span className={styles.refWhy}>{r.why_interesting}</span>
               </li>
             ))}
           </ul>
