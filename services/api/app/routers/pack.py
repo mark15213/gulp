@@ -8,7 +8,9 @@ from sqlalchemy.orm import Session
 
 from app.core.auth import get_current_user
 from app.deps import get_db
+from app.schemas.chat import MessageCreate, MessageOut
 from app.schemas.pack import BlockCreate, BlockOut, BlockUpdate, PackOut
+from app.services.chat import answer_question, list_messages
 from app.services.pack import create_block, delete_block, pack_out, update_block
 from gulp_shared.models.source import Source
 from gulp_shared.models.user import User
@@ -83,3 +85,39 @@ def create_block_route(
         return create_block(db, snapshot_id, section_id, create)
     except LookupError:
         raise HTTPException(status_code=404, detail="section not found") from None
+
+
+@router.get(
+    "/snapshots/{snapshot_id}/blocks/{block_id}/messages",
+    response_model=list[MessageOut],
+)
+def list_block_messages_route(
+    snapshot_id: uuid.UUID,
+    block_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> list[Any]:
+    _owned_snapshot(db, snapshot_id, user)
+    try:
+        return list_messages(db, snapshot_id, block_id)
+    except LookupError:
+        raise HTTPException(status_code=404, detail="block not found") from None
+
+
+@router.post(
+    "/snapshots/{snapshot_id}/blocks/{block_id}/messages",
+    response_model=MessageOut,
+    status_code=201,
+)
+async def post_block_message_route(
+    snapshot_id: uuid.UUID,
+    block_id: uuid.UUID,
+    body: MessageCreate,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> Any:
+    _owned_snapshot(db, snapshot_id, user)
+    try:
+        return await answer_question(db, snapshot_id, block_id, body.content)
+    except LookupError:
+        raise HTTPException(status_code=404, detail="block not found") from None
