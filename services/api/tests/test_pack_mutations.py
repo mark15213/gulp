@@ -117,3 +117,39 @@ def test_delete_block_404_for_block_in_another_snapshot(client, db) -> None:  # 
     # b's block is untouched
     body = client.get(f"/snapshots/{b['snap']}/pack").json()
     assert any(bl["id"] == str(b["b0"]) for bl in body["sections"][0]["blocks"])
+
+
+def test_update_block_content(client, db) -> None:  # type: ignore[no-untyped-def]
+    ids = _pack_with_blocks(db)
+    r = client.patch(
+        f"/snapshots/{ids['snap']}/blocks/{ids['b0']}",
+        json={"content": {"type": "prose", "content": "edited"}},
+    )
+    assert r.status_code == 200
+    assert r.json() == {"id": str(ids["b0"]), "type": "prose", "content": "edited"}
+    body = client.get(f"/snapshots/{ids['snap']}/pack").json()
+    assert body["sections"][0]["blocks"][0]["content"] == "edited"
+
+
+def test_update_block_changes_type(client, db) -> None:  # type: ignore[no-untyped-def]
+    ids = _pack_with_blocks(db)
+    r = client.patch(
+        f"/snapshots/{ids['snap']}/blocks/{ids['b0']}",
+        json={"content": {"type": "list", "items": ["x", "y"], "ordered": True}},
+    )
+    assert r.status_code == 200
+    assert r.json() == {"id": str(ids["b0"]), "type": "list", "items": ["x", "y"], "ordered": True}
+
+
+def test_update_block_position_reorders(client, db) -> None:  # type: ignore[no-untyped-def]
+    ids = _pack_with_blocks(db)  # b0@0, b1@1
+    r = client.patch(f"/snapshots/{ids['snap']}/blocks/{ids['b0']}", json={"position": 1})
+    assert r.status_code == 200
+    body = client.get(f"/snapshots/{ids['snap']}/pack").json()
+    assert [b["id"] for b in body["sections"][0]["blocks"]] == [str(ids["b1"]), str(ids["b0"])]
+
+
+def test_update_block_404_when_not_in_snapshot(client, db) -> None:  # type: ignore[no-untyped-def]
+    ids = _pack_with_blocks(db)
+    r = client.patch(f"/snapshots/{ids['snap']}/blocks/{uuid.uuid4()}", json={"position": 0})
+    assert r.status_code == 404

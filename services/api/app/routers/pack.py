@@ -36,6 +36,21 @@ def get_pack(
     return pack
 
 
+@router.patch("/snapshots/{snapshot_id}/blocks/{block_id}", response_model=BlockOut)
+def update_block_route(
+    snapshot_id: uuid.UUID,
+    block_id: uuid.UUID,
+    update: BlockUpdate,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> dict[str, Any]:
+    _owned_snapshot(db, snapshot_id, user)
+    try:
+        return update_block(db, snapshot_id, block_id, update)
+    except LookupError:
+        raise HTTPException(status_code=404, detail="block not found") from None
+
+
 @router.delete("/snapshots/{snapshot_id}/blocks/{block_id}", status_code=204)
 def delete_block_route(
     snapshot_id: uuid.UUID,

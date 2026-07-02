@@ -8,7 +8,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.schemas.pack import BlockCreate, BlockUpdate, PackOut, PackReferenceOut, PackSectionOut
-from gulp_shared.models.knowledge_pack import KnowledgePack, PackBlock, PackSection
+from gulp_shared.models.knowledge_pack import KnowledgePack, PackBlock, PackBlockType, PackSection
 
 
 def block_dict(b: PackBlock) -> dict[str, Any]:
@@ -91,8 +91,18 @@ def delete_block(db: Session, snapshot_id: uuid.UUID, block_id: uuid.UUID) -> No
 def update_block(
     db: Session, snapshot_id: uuid.UUID, block_id: uuid.UUID, update: BlockUpdate
 ) -> dict[str, Any]:
-    """Stub for Task 3 (PATCH block) — real signature, not yet implemented."""
-    raise NotImplementedError
+    block = load_block_scoped(db, snapshot_id, block_id)
+    if update.content is not None:
+        block.block_type = PackBlockType(update.content.type)
+        block.data = update.content.model_dump(exclude={"type"})
+    if update.position is not None:
+        others = [b for b in live_blocks_ordered(db, block.section_id) if b.id != block.id]
+        pos = max(0, min(update.position, len(others)))
+        others.insert(pos, block)
+        renumber(others)
+    db.commit()
+    db.refresh(block)
+    return block_dict(block)
 
 
 def create_block(
