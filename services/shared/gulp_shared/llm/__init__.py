@@ -1,8 +1,8 @@
 """Model/provider clients for the pipeline. Registers the default provider."""
 
-from app.llm.anthropic_provider import AnthropicProvider
-from app.llm.base import LLMError, LLMProvider, Message, ModelConfig
-from app.llm.service import (
+from gulp_shared.llm.anthropic_provider import AnthropicProvider
+from gulp_shared.llm.base import LLMError, LLMProvider, Message, ModelConfig
+from gulp_shared.llm.service import (
     complete_structured,
     get_provider,
     register_provider,

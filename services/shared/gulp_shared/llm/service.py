@@ -4,7 +4,7 @@ from typing import TypeVar
 
 from pydantic import BaseModel, ValidationError
 
-from app.llm.base import LLMError, LLMProvider, Message, ModelConfig
+from gulp_shared.llm.base import LLMError, LLMProvider, Message, ModelConfig
 
 T = TypeVar("T", bound=BaseModel)
 

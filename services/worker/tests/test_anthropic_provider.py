@@ -2,8 +2,8 @@ from typing import Any
 
 import pytest
 
-from app.llm.anthropic_provider import AnthropicProvider
-from app.llm.base import LLMError, ModelConfig
+from gulp_shared.llm.anthropic_provider import AnthropicProvider
+from gulp_shared.llm.base import LLMError, ModelConfig
 
 
 class _ToolUseBlock:

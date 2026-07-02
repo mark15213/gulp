@@ -4,8 +4,8 @@ Single-pass with a budget guard: content over MAX_DIGEST_CHARS is truncated
 before sending. Per-section map-reduce for long content is a later enhancement.
 """
 
-from app.llm import ModelConfig, complete_structured
-from app.llm.base import LLMProvider
+from gulp_shared.llm import ModelConfig, complete_structured
+from gulp_shared.llm.base import LLMProvider
 from app.pipeline.normdoc import NormDoc
 from app.pipeline.schemas import PaperReport
 from app.prompts.digest import build_digest_messages

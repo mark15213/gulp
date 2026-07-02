@@ -1,5 +1,5 @@
-import app.llm as llm
-from app.llm import AnthropicProvider, get_provider
+import gulp_shared.llm as llm
+from gulp_shared.llm import AnthropicProvider, get_provider
 from gulp_shared.settings import settings
 
 

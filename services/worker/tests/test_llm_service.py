@@ -3,8 +3,8 @@ from typing import Any
 import pytest
 from pydantic import BaseModel
 
-from app.llm.base import LLMError, Message, ModelConfig
-from app.llm.service import complete_structured, get_provider, register_provider
+from gulp_shared.llm.base import LLMError, Message, ModelConfig
+from gulp_shared.llm.service import complete_structured, get_provider, register_provider
 
 
 class Person(BaseModel):

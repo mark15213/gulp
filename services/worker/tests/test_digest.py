@@ -1,6 +1,6 @@
 from typing import Any
 
-from app.llm.base import Message, ModelConfig
+from gulp_shared.llm.base import Message, ModelConfig
 from app.pipeline.digest import MAX_DIGEST_CHARS, run_digest
 from app.pipeline.normdoc import Anchor, NormBlock, NormDoc
 from app.pipeline.schemas import PaperReport

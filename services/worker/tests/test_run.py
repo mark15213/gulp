@@ -4,7 +4,7 @@ from typing import Any
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import sessionmaker
 
-from app.llm.base import Message, ModelConfig
+from gulp_shared.llm.base import Message, ModelConfig
 from app.pipeline.adapters.fetch import FetchedDoc
 from app.pipeline.run import process_source
 from gulp_shared.db import Base  # type: ignore[import-untyped]

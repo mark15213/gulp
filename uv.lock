@@ -374,12 +374,14 @@ name = "gulp-shared"
 version = "0.0.0"
 source = { editable = "services/shared" }
 dependencies = [
+    { name = "anthropic" },
     { name = "pydantic-settings" },
     { name = "sqlalchemy" },
 ]
 
 [package.metadata]
 requires-dist = [
+    { name = "anthropic", specifier = ">=0.40" },
     { name = "pydantic-settings", specifier = ">=2.6" },
     { name = "sqlalchemy", specifier = ">=2.0" },
 ]

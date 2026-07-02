@@ -9,7 +9,7 @@ from collections.abc import Awaitable, Callable
 
 from sqlalchemy.orm import Session
 
-from app.llm.base import LLMProvider, ModelConfig
+from gulp_shared.llm.base import LLMProvider, ModelConfig
 from app.pipeline.adapters.fetch import FetchedDoc, fetch_document, is_pdf
 from app.pipeline.adapters.note import note_to_normdoc
 from app.pipeline.adapters.pdf import pdf_to_normdoc
