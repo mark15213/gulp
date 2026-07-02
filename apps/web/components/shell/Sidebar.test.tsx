@@ -8,6 +8,11 @@ vi.mock("@gulp/api-client", async (importOriginal) => {
   return { ...actual, getInbox: vi.fn() };
 });
 
+vi.mock("next/navigation", () => ({
+  usePathname: () => "/",
+  useRouter: () => ({ push: vi.fn() }),
+}));
+
 afterEach(() => {
   cleanup();
   vi.clearAllMocks();

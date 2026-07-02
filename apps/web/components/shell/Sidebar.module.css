@@ -134,6 +134,16 @@
   color: var(--blue-700);
 }
 
+/* Settings is a placeholder until there is anything to set. */
+.itemDisabled {
+  opacity: 0.55;
+  cursor: default;
+}
+.itemDisabled:hover {
+  background: none;
+  color: var(--text-2);
+}
+
 /* ── Foot ───────────────────────────────────────────────────── */
 .foot {
   margin-top: auto;
