@@ -82,3 +82,42 @@ export async function importResult(id: string, file: File): Promise<SnapshotOut>
   if (!res.ok) throw new Error(`import failed (${res.status})`);
   return (await res.json()) as SnapshotOut;
 }
+
+export type PackBlockOut = PackOut["sections"][number]["blocks"][number];
+export type BlockUpdateBody =
+  paths["/snapshots/{snapshot_id}/blocks/{block_id}"]["patch"]["requestBody"]["content"]["application/json"];
+export type BlockCreateBody =
+  paths["/snapshots/{snapshot_id}/sections/{section_id}/blocks"]["post"]["requestBody"]["content"]["application/json"];
+
+export async function updateBlock(
+  snapshotId: string,
+  blockId: string,
+  body: BlockUpdateBody,
+): Promise<PackBlockOut> {
+  const { data, error } = await client.PATCH("/snapshots/{snapshot_id}/blocks/{block_id}", {
+    params: { path: { snapshot_id: snapshotId, block_id: blockId } },
+    body,
+  });
+  if (error || !data) throw new Error("update block failed");
+  return data;
+}
+
+export async function createBlock(
+  snapshotId: string,
+  sectionId: string,
+  body: BlockCreateBody,
+): Promise<PackBlockOut> {
+  const { data, error } = await client.POST(
+    "/snapshots/{snapshot_id}/sections/{section_id}/blocks",
+    { params: { path: { snapshot_id: snapshotId, section_id: sectionId } }, body },
+  );
+  if (error || !data) throw new Error("create block failed");
+  return data;
+}
+
+export async function deleteBlock(snapshotId: string, blockId: string): Promise<void> {
+  const { error } = await client.DELETE("/snapshots/{snapshot_id}/blocks/{block_id}", {
+    params: { path: { snapshot_id: snapshotId, block_id: blockId } },
+  });
+  if (error) throw new Error("delete block failed");
+}

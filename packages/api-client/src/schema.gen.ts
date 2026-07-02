@@ -123,6 +123,41 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/snapshots/{snapshot_id}/blocks/{block_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Block Route */
+        delete: operations["delete_block_route_snapshots__snapshot_id__blocks__block_id__delete"];
+        options?: never;
+        head?: never;
+        /** Update Block Route */
+        patch: operations["update_block_route_snapshots__snapshot_id__blocks__block_id__patch"];
+        trace?: never;
+    };
+    "/snapshots/{snapshot_id}/sections/{section_id}/blocks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create Block Route */
+        post: operations["create_block_route_snapshots__snapshot_id__sections__section_id__blocks_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/snapshots/{snapshot_id}/process": {
         parameters: {
             query?: never;
@@ -161,6 +196,20 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** BlockCreate */
+        BlockCreate: {
+            /** Content */
+            content: components["schemas"]["ProseWrite"] | components["schemas"]["FormulaWrite"] | components["schemas"]["TableWrite"] | components["schemas"]["FigureWrite"] | components["schemas"]["ListWrite"];
+            /** Position */
+            position: number;
+        };
+        /** BlockUpdate */
+        BlockUpdate: {
+            /** Content */
+            content?: (components["schemas"]["ProseWrite"] | components["schemas"]["FormulaWrite"] | components["schemas"]["TableWrite"] | components["schemas"]["FigureWrite"] | components["schemas"]["ListWrite"]) | null;
+            /** Position */
+            position?: number | null;
+        };
         /** Body_import_snapshot_snapshots__snapshot_id__import_post */
         Body_import_snapshot_snapshots__snapshot_id__import_post: {
             /** File */
@@ -212,6 +261,18 @@ export interface components {
             /** Explanation */
             explanation: string;
         };
+        /** FigureWrite */
+        FigureWrite: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "figure";
+            /** Label */
+            label: string;
+            /** Explanation */
+            explanation: string;
+        };
         /** FormulaBlockOut */
         FormulaBlockOut: {
             /**
@@ -219,6 +280,18 @@ export interface components {
              * Format: uuid
              */
             id: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "formula";
+            /** Latex */
+            latex: string;
+            /** Explanation */
+            explanation: string;
+        };
+        /** FormulaWrite */
+        FormulaWrite: {
             /**
              * @description discriminator enum property added by openapi-typescript
              * @enum {string}
@@ -248,6 +321,21 @@ export interface components {
              * Format: uuid
              */
             id: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "list";
+            /** Items */
+            items: string[];
+            /**
+             * Ordered
+             * @default false
+             */
+            ordered: boolean;
+        };
+        /** ListWrite */
+        ListWrite: {
             /**
              * @description discriminator enum property added by openapi-typescript
              * @enum {string}
@@ -324,6 +412,16 @@ export interface components {
             /** Content */
             content: string;
         };
+        /** ProseWrite */
+        ProseWrite: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "prose";
+            /** Content */
+            content: string;
+        };
         /** SnapshotOut */
         SnapshotOut: {
             /**
@@ -373,6 +471,20 @@ export interface components {
              * Format: uuid
              */
             id: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "table";
+            /** Headers */
+            headers: string[];
+            /** Rows */
+            rows: string[][];
+            /** Caption */
+            caption?: string | null;
+        };
+        /** TableWrite */
+        TableWrite: {
             /**
              * @description discriminator enum property added by openapi-typescript
              * @enum {string}
@@ -606,6 +718,108 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PackOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_block_route_snapshots__snapshot_id__blocks__block_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                snapshot_id: string;
+                block_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_block_route_snapshots__snapshot_id__blocks__block_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                snapshot_id: string;
+                block_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BlockUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProseBlockOut"] | components["schemas"]["FormulaBlockOut"] | components["schemas"]["TableBlockOut"] | components["schemas"]["FigureBlockOut"] | components["schemas"]["ListBlockOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_block_route_snapshots__snapshot_id__sections__section_id__blocks_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                snapshot_id: string;
+                section_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BlockCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProseBlockOut"] | components["schemas"]["FormulaBlockOut"] | components["schemas"]["TableBlockOut"] | components["schemas"]["FigureBlockOut"] | components["schemas"]["ListBlockOut"];
                 };
             };
             /** @description Validation Error */
