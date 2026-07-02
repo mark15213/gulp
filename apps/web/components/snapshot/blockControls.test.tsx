@@ -17,6 +17,7 @@ describe("block controls", () => {
         onDelete={onDelete}
         onMoveUp={onMoveUp}
         onMoveDown={vi.fn()}
+        onDiscuss={vi.fn()}
         canMoveUp={false}
         canMoveDown={true}
       />,

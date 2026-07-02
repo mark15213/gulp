@@ -16,6 +16,7 @@ export function BlockCell({
   onDelete,
   onMoveUp,
   onMoveDown,
+  onDiscuss,
 }: {
   block: PackBlockOut;
   canMoveUp: boolean;
@@ -24,6 +25,7 @@ export function BlockCell({
   onDelete: () => void;
   onMoveUp: () => void;
   onMoveDown: () => void;
+  onDiscuss: () => void;
 }) {
   const [editing, setEditing] = useState(false);
   return (
@@ -45,6 +47,7 @@ export function BlockCell({
               onDelete={onDelete}
               onMoveUp={onMoveUp}
               onMoveDown={onMoveDown}
+              onDiscuss={onDiscuss}
               canMoveUp={canMoveUp}
               canMoveDown={canMoveDown}
             />

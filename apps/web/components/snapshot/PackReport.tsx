@@ -14,12 +14,14 @@ import {
 } from "@/lib/packEdit";
 import { BlockCell } from "./BlockCell";
 import { AddBlockMenu } from "./AddBlockMenu";
+import { ChatPanel } from "./ChatPanel";
 import { Md } from "./Md";
 import styles from "./PackReport.module.css";
 
 export function PackReport({ pack: initialPack }: { pack: PackOut }) {
   const [pack, setPack] = useState(initialPack);
   const [error, setError] = useState<string | null>(null);
+  const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
   const sid = pack.snapshot_id;
 
   function saveContent(sectionId: string, blockId: string, content: BlockWrite) {
@@ -66,71 +68,82 @@ export function PackReport({ pack: initialPack }: { pack: PackOut }) {
   }
 
   return (
-    <article className={styles.report}>
-      {error && (
-        <div className={styles.errorBar} role="alert">
-          {error} <button type="button" onClick={() => setError(null)}>Dismiss</button>
-        </div>
-      )}
-
-      <h1 className={`t-display ${styles.title}`}>{pack.title}</h1>
-
-      {pack.core_contributions.length > 0 && (
-        <section className={styles.block}>
-          <p className={`t-label ${styles.overline}`}>CORE CONTRIBUTIONS</p>
-          <ul className={styles.contribList}>
-            {pack.core_contributions.map((c, i) => (
-              <li key={i}>
-                <Md>{c}</Md>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-
-      {pack.key_insight && (
-        <section className={styles.insight}>
-          <p className={`t-label ${styles.overline}`}>KEY INSIGHT</p>
-          <div className={`t-body-l ${styles.insightBody}`}>
-            <Md>{pack.key_insight}</Md>
+    <>
+      <article className={styles.report}>
+        {error && (
+          <div className={styles.errorBar} role="alert">
+            {error} <button type="button" onClick={() => setError(null)}>Dismiss</button>
           </div>
-        </section>
-      )}
+        )}
 
-      {pack.sections.map((section) => (
-        <section key={section.id} className={styles.section}>
-          {section.heading && <h2 className={`t-title-m ${styles.heading}`}>{section.heading}</h2>}
-          <AddBlockMenu onInsert={(t) => insert(section.id, 0, t)} />
-          {section.blocks.map((block, i) => (
-            <Fragment key={block.id}>
-              <BlockCell
-                block={block}
-                canMoveUp={i > 0}
-                canMoveDown={i < section.blocks.length - 1}
-                onSaveContent={(content) => saveContent(section.id, block.id, content)}
-                onDelete={() => del(section.id, block.id)}
-                onMoveUp={() => move(section.id, block.id, -1)}
-                onMoveDown={() => move(section.id, block.id, 1)}
-              />
-              <AddBlockMenu onInsert={(t) => insert(section.id, i + 1, t)} />
-            </Fragment>
-          ))}
-        </section>
-      ))}
+        <h1 className={`t-display ${styles.title}`}>{pack.title}</h1>
 
-      {pack.references.length > 0 && (
-        <section className={styles.references}>
-          <p className={`t-label ${styles.overline}`}>FURTHER READING</p>
-          <ul className={styles.refList}>
-            {pack.references.map((r, i) => (
-              <li key={i}>
-                <span className={styles.refCitation}>{r.citation}</span>
-                <span className={styles.refWhy}>{r.why_interesting}</span>
-              </li>
+        {pack.core_contributions.length > 0 && (
+          <section className={styles.block}>
+            <p className={`t-label ${styles.overline}`}>CORE CONTRIBUTIONS</p>
+            <ul className={styles.contribList}>
+              {pack.core_contributions.map((c, i) => (
+                <li key={i}>
+                  <Md>{c}</Md>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+
+        {pack.key_insight && (
+          <section className={styles.insight}>
+            <p className={`t-label ${styles.overline}`}>KEY INSIGHT</p>
+            <div className={`t-body-l ${styles.insightBody}`}>
+              <Md>{pack.key_insight}</Md>
+            </div>
+          </section>
+        )}
+
+        {pack.sections.map((section) => (
+          <section key={section.id} className={styles.section}>
+            {section.heading && <h2 className={`t-title-m ${styles.heading}`}>{section.heading}</h2>}
+            <AddBlockMenu onInsert={(t) => insert(section.id, 0, t)} />
+            {section.blocks.map((block, i) => (
+              <Fragment key={block.id}>
+                <BlockCell
+                  block={block}
+                  canMoveUp={i > 0}
+                  canMoveDown={i < section.blocks.length - 1}
+                  onSaveContent={(content) => saveContent(section.id, block.id, content)}
+                  onDelete={() => del(section.id, block.id)}
+                  onMoveUp={() => move(section.id, block.id, -1)}
+                  onMoveDown={() => move(section.id, block.id, 1)}
+                  onDiscuss={() => setSelectedBlockId(block.id)}
+                />
+                <AddBlockMenu onInsert={(t) => insert(section.id, i + 1, t)} />
+              </Fragment>
             ))}
-          </ul>
-        </section>
+          </section>
+        ))}
+
+        {pack.references.length > 0 && (
+          <section className={styles.references}>
+            <p className={`t-label ${styles.overline}`}>FURTHER READING</p>
+            <ul className={styles.refList}>
+              {pack.references.map((r, i) => (
+                <li key={i}>
+                  <span className={styles.refCitation}>{r.citation}</span>
+                  <span className={styles.refWhy}>{r.why_interesting}</span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+      </article>
+      {selectedBlockId && (
+        <ChatPanel
+          key={selectedBlockId}
+          snapshotId={sid}
+          blockId={selectedBlockId}
+          onClose={() => setSelectedBlockId(null)}
+        />
       )}
-    </article>
+    </>
   );
 }

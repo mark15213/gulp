@@ -9,7 +9,14 @@ import { PackReport } from "./PackReport";
 
 vi.mock("@gulp/api-client", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@gulp/api-client")>();
-  return { ...actual, updateBlock: vi.fn(), createBlock: vi.fn(), deleteBlock: vi.fn() };
+  return {
+    ...actual,
+    updateBlock: vi.fn(),
+    createBlock: vi.fn(),
+    deleteBlock: vi.fn(),
+    getBlockMessages: vi.fn(),
+    postBlockMessage: vi.fn(),
+  };
 });
 
 afterEach(cleanup);
@@ -129,5 +136,20 @@ describe("PackReport editing", () => {
     await userEvent.click(screen.getAllByRole("button", { name: "Add block" })[0]!);
     await userEvent.click(screen.getAllByRole("button", { name: "Add prose block" })[0]!);
     expect(api.createBlock).toHaveBeenCalled();
+  });
+});
+
+describe("PackReport chat", () => {
+  it("opens the ChatPanel for a block when its Discuss button is clicked", async () => {
+    (api.getBlockMessages as ReturnType<typeof vi.fn>).mockResolvedValue([]);
+    render(<PackReport pack={pack} />);
+    const cell = document.querySelector('[data-block-id="00000000-0000-0000-0000-0000000000b1"]')!;
+    await userEvent.click(cell.querySelector('[aria-label="Discuss block"]') as HTMLElement);
+    // the panel mounts and loads this block's messages
+    expect(await screen.findByLabelText("Ask about this block")).toBeTruthy();
+    expect(api.getBlockMessages).toHaveBeenCalledWith(
+      pack.snapshot_id,
+      "00000000-0000-0000-0000-0000000000b1",
+    );
   });
 });
