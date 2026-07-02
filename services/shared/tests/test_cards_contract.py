@@ -7,7 +7,7 @@ from pydantic import ValidationError
 
 def _draft(**overrides):
     base = {
-        "card_type": "short_answer",
+        "card_type": "flashcard",
         "prompt": "What does BERT stand for?",
         "answer": "Bidirectional Encoder Representations from Transformers",
         "explanation": "Stated in the abstract.",
@@ -32,7 +32,10 @@ def test_valid_mixed_payload_round_trips():
                     prompt="BERT uses a ____ encoder.",
                     answer="bidirectional",
                 ),
-                _draft(card_type="explain", answer=None),
+                _draft(
+                    prompt="Explain masked language modeling.",
+                    answer="Key points: mask tokens, predict them from bidirectional context.",
+                ),
             ]
         }
     )
@@ -73,15 +76,9 @@ def test_cloze_prompt_must_contain_blank():
         CardDraft.model_validate(_draft(card_type="cloze", prompt="No blank here."))
 
 
-def test_short_answer_requires_answer():
+def test_flashcard_requires_answer():
     with pytest.raises(ValidationError, match="answer"):
         CardDraft.model_validate(_draft(answer=None))
-
-
-def test_free_response_types_allow_missing_answer():
-    for card_type in ("explain", "apply", "recall"):
-        draft = CardDraft.model_validate(_draft(card_type=card_type, answer=None))
-        assert draft.answer is None
 
 
 def test_prompt_must_be_non_empty():

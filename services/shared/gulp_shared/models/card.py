@@ -10,12 +10,12 @@ from gulp_shared.db import Base, TimestampedBase
 
 
 class CardType(enum.StrEnum):
-    short_answer = "short_answer"
+    # type = review-interaction contract (docs/03 review UI, deferred to S5):
+    # flashcard — front → flip → self-grade; the home for free-recall cards.
+    # mcq — pick one option, auto-graded. cloze — fill a ____ blank.
+    flashcard = "flashcard"
     mcq = "mcq"
     cloze = "cloze"
-    explain = "explain"
-    apply = "apply"
-    recall = "recall"
 
 
 class CardOrigin(enum.StrEnum):

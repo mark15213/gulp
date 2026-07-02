@@ -116,7 +116,7 @@ def _pack(s, snap, *, status=PackStatus.ready):  # type: ignore[no-untyped-def]
 _PAYLOAD = {
     "cards": [
         {
-            "card_type": "short_answer",
+            "card_type": "flashcard",
             "prompt": "What objective does BERT use?",
             "answer": "Masked language modeling",
             "explanation": "Stated in Approach.",
@@ -157,15 +157,15 @@ def test_persist_cards_replaces_only_pack_origin_drafts():
     s = _session()
     snap = _snapshot(s)
     keep_accepted = Card(
-        source_id=snap.id, card_type=CardType.short_answer, prompt="old accepted",
+        source_id=snap.id, card_type=CardType.flashcard, prompt="old accepted",
         answer="a", origin=CardOrigin.pack, status=CardStatus.accepted,
     )
     keep_imported = Card(
-        source_id=snap.id, card_type=CardType.short_answer, prompt="imported draft",
+        source_id=snap.id, card_type=CardType.flashcard, prompt="imported draft",
         answer="a", origin=CardOrigin.imported,
     )
     stale_draft = Card(
-        source_id=snap.id, card_type=CardType.short_answer, prompt="old draft",
+        source_id=snap.id, card_type=CardType.flashcard, prompt="old draft",
         answer="a", origin=CardOrigin.pack,
     )
     s.add_all([keep_accepted, keep_imported, stale_draft])

@@ -11,20 +11,23 @@ Write everything in English.
 
 ## What to produce
 6-12 cards. Each card:
-- card_type — one of: short_answer, mcq, cloze, explain, apply, recall.
-- prompt — the question shown to the learner.
-- answer — the canonical answer (or a short grading rubric for explain/apply/recall).
+- card_type — one of: flashcard, mcq, cloze.
+- prompt — the question (front) shown to the learner.
+- answer — the back the learner checks against: a canonical answer, or a short \
+list of the key points a good answer must cover for open-ended cards.
 - explanation — one or two sentences grounding the answer in the report.
 - options — mcq only: 3-6 choices, exactly one of which equals `answer`.
 
-## Choosing card types (by content affinity)
-- Definitional facts, named methods, key terms -> cloze or short_answer.
-- Claims and results -> short_answer or explain.
-- Clear facts with plausible wrong alternatives -> mcq (distractors must be \
-plausible-but-wrong, grounded in the report's domain).
-- Transferable ideas / trade-offs -> apply or recall ("say it in your own words").
+## Choosing card types (by review interaction)
+- flashcard — the default. Front asks, learner recalls, flips, self-grades. Use \
+for definitions, named methods, claims, results, and open-ended \
+understanding/transfer questions (where `answer` is the key points to hit).
+- mcq — a clear fact with plausible-but-wrong alternatives. Distractors must be \
+grounded in the report's domain, never obviously wrong.
+- cloze — a single salient term or phrase worth recalling in context.
 
 ## Rules
+- flashcard `answer` must be non-empty (there is always a back to reveal).
 - cloze prompts mark the blank with ____ (four underscores).
 - Test understanding, not trivia: prefer the core contributions, the key \
 insight, mechanisms, and results over incidental numbers.

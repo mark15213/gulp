@@ -46,7 +46,7 @@ def _ready_pack(db, sid: str) -> KnowledgePack:  # type: ignore[no-untyped-def]
 _IMPORT = {
     "cards": [
         {
-            "card_type": "short_answer",
+            "card_type": "flashcard",
             "prompt": "Q1?",
             "answer": "A1",
             "explanation": "e",
@@ -137,7 +137,7 @@ def test_list_returns_all_cards(client: TestClient, db) -> None:  # type: ignore
     db.add(
         Card(
             source_id=uuid.UUID(sid),
-            card_type=CardType.short_answer,
+            card_type=CardType.flashcard,
             prompt="gen",
             answer="a",
             origin=CardOrigin.pack,
@@ -171,7 +171,7 @@ def test_list_foreign_snapshot_404(client: TestClient, db) -> None:  # type: ign
 def _one_card_id(client: TestClient, sid: str) -> str:
     client.post(
         f"/snapshots/{sid}/cards/import",
-        json={"cards": [{"card_type": "short_answer", "prompt": "Q?", "answer": "A"}]},
+        json={"cards": [{"card_type": "flashcard", "prompt": "Q?", "answer": "A"}]},
     )
     return client.get(f"/snapshots/{sid}/cards").json()[0]["id"]
 
@@ -190,7 +190,7 @@ def test_patch_content_is_revalidated_per_type(client: TestClient) -> None:
     ok = client.patch(f"/snapshots/{sid}/cards/{cid}", json={"prompt": "New Q?"})
     assert ok.status_code == 200 and ok.json()["prompt"] == "New Q?"
     bad = client.patch(f"/snapshots/{sid}/cards/{cid}", json={"answer": None})
-    assert bad.status_code == 422  # short_answer requires an answer
+    assert bad.status_code == 422  # flashcard requires an answer
 
 
 def test_patch_card_of_other_snapshot_404(client: TestClient) -> None:

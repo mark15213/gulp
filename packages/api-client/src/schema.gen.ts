@@ -435,7 +435,7 @@ export interface components {
          * CardType
          * @enum {string}
          */
-        CardType: "short_answer" | "mcq" | "cloze" | "explain" | "apply" | "recall";
+        CardType: "flashcard" | "mcq" | "cloze";
         /** CardsPayload */
         CardsPayload: {
             /** Cards */

@@ -33,7 +33,7 @@ const getSnapshotMock = () => api.getSnapshot as ReturnType<typeof vi.fn>;
 function card(overrides: Partial<api.CardOut> = {}): api.CardOut {
   return {
     id: "c1",
-    card_type: "short_answer",
+    card_type: "flashcard",
     prompt: "What objective does BERT use?",
     answer: "Masked LM",
     explanation: "From the report.",
@@ -104,7 +104,7 @@ describe("CardsView", () => {
     await userEvent.click(await screen.findByRole("button", { name: "Import cards" }));
     const box = await screen.findByLabelText("Paste cards.json");
     await userEvent.click(box);
-    await userEvent.paste(JSON.stringify({ cards: [{ card_type: "short_answer", prompt: "From NotebookLM?", answer: "a" }] }));
+    await userEvent.paste(JSON.stringify({ cards: [{ card_type: "flashcard", prompt: "From NotebookLM?", answer: "a" }] }));
     await userEvent.click(screen.getByRole("button", { name: "Import" }));
     await waitFor(() => expect(importMock()).toHaveBeenCalled());
     expect(await screen.findByText("From NotebookLM?")).toBeTruthy();

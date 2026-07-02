@@ -34,7 +34,7 @@ def test_imported_card_persists():
     s.add(
         Card(
             source_id=snap.id,
-            card_type=CardType.short_answer,
+            card_type=CardType.flashcard,
             prompt="Q?",
             answer="A",
             origin=CardOrigin.imported,

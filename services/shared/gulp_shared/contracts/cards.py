@@ -44,8 +44,8 @@ class CardDraft(BaseModel):
             raise ValueError(f"options are mcq-only, not for {self.card_type.value}")
         if self.card_type is CardType.cloze and "____" not in self.prompt:
             raise ValueError("cloze prompt must contain a ____ blank")
-        if self.card_type is CardType.short_answer and not (self.answer or "").strip():
-            raise ValueError("short_answer requires an answer")
+        if self.card_type is CardType.flashcard and not (self.answer or "").strip():
+            raise ValueError("flashcard requires an answer (the back)")
         return self
 
 
