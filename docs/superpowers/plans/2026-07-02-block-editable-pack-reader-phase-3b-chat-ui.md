@@ -455,6 +455,7 @@ Wrap the return in a fragment and render the panel after the `</article>`:
       </article>
       {selectedBlockId && (
         <ChatPanel
+          key={selectedBlockId}
           snapshotId={sid}
           blockId={selectedBlockId}
           onClose={() => setSelectedBlockId(null)}
@@ -464,7 +465,7 @@ Wrap the return in a fragment and render the panel after the `</article>`:
   );
 ```
 
-(Keep the entire existing `<article>` body exactly as-is — only wrap it in the fragment and append the `ChatPanel`.)
+(Keep the entire existing `<article>` body exactly as-is — only wrap it in the fragment and append the `ChatPanel`.) The `key={selectedBlockId}` is load-bearing: it remounts `ChatPanel` when the selected block changes, so a send still in flight from a previous block can't bleed its reply into the newly-selected block's state.
 
 - [ ] **Step 6: Run tests to verify they pass**
 
