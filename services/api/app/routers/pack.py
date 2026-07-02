@@ -47,5 +47,5 @@ def delete_block_route(
     try:
         delete_block(db, snapshot_id, block_id)
     except LookupError:
-        raise HTTPException(status_code=404, detail="block not found")
+        raise HTTPException(status_code=404, detail="block not found") from None
     return Response(status_code=204)

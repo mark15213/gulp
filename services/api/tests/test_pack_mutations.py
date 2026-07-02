@@ -2,6 +2,7 @@ import uuid
 
 import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy import select
 
 from app.deps import get_db
 from app.main import app
@@ -87,6 +88,10 @@ def test_delete_block_soft_deletes_and_renumbers(client, db) -> None:  # type: i
     body = client.get(f"/snapshots/{ids['snap']}/pack").json()
     blocks = body["sections"][0]["blocks"]
     assert [b["id"] for b in blocks] == [str(ids["b1"])]
+    survivor = db.scalar(
+        select(PackBlock).where(PackBlock.id == ids["b1"], PackBlock.deleted_at.is_(None))
+    )
+    assert survivor is not None and survivor.position == 0
 
 
 def test_delete_block_404_for_foreign_snapshot(client, db) -> None:  # type: ignore[no-untyped-def]
@@ -102,3 +107,13 @@ def test_delete_block_404_when_block_not_in_snapshot(client, db) -> None:  # typ
     ids = _pack_with_blocks(db)
     r = client.delete(f"/snapshots/{ids['snap']}/blocks/{uuid.uuid4()}")
     assert r.status_code == 404
+
+
+def test_delete_block_404_for_block_in_another_snapshot(client, db) -> None:  # type: ignore[no-untyped-def]
+    a = _pack_with_blocks(db)
+    b = _pack_with_blocks(db)  # a second owned snapshot + pack + blocks
+    r = client.delete(f"/snapshots/{a['snap']}/blocks/{b['b0']}")
+    assert r.status_code == 404
+    # b's block is untouched
+    body = client.get(f"/snapshots/{b['snap']}/pack").json()
+    assert any(bl["id"] == str(b["b0"]) for bl in body["sections"][0]["blocks"])
