@@ -22,10 +22,9 @@ def _delete_existing(db: Session, snapshot_id: object) -> None:
     pack = db.scalar(select(KnowledgePack).where(KnowledgePack.snapshot_id == snapshot_id))
     if pack is None:
         return
-    for section in db.scalars(select(PackSection).where(PackSection.pack_id == pack.id)):
-        for block in db.scalars(select(PackBlock).where(PackBlock.section_id == section.id)):
-            db.delete(block)
-        db.delete(section)
+    # cascade="all, delete-orphan" on KnowledgePack.sections -> PackSection.blocks
+    # deletes children before the pack, so the flush can't hit the
+    # pack_sections/pack_blocks foreign keys in the wrong order.
     db.delete(pack)
     db.flush()
 

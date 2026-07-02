@@ -45,6 +45,27 @@ def test_normdoc_sanitizes_lone_surrogates_and_stays_json_serializable() -> None
         assert doc.content_body[b.anchor.start : b.anchor.end] == b.text
 
 
+def test_normdoc_sanitizes_lone_surrogates_in_section_label() -> None:
+    # pdf.py and webpage.py both set section_label from extracted headings, which
+    # can carry the same lone surrogates as body text. section_label is serialized
+    # by model_dump_json (the export builder), so an unsanitized surrogate there
+    # crashes the export with the same UnicodeEncodeError as content_body did.
+    hi, lo = chr(0xD83D), chr(0xDE09)
+    doc = NormDoc(
+        title="t",
+        media_type="pdf",
+        content_body="ok",
+        blocks=[NormBlock(text="ok", section_label=f"Sec {hi}{lo}", anchor=Anchor(start=0, end=2))],
+    )
+
+    # Serialization must not raise and must be UTF-8 encodable.
+    doc.model_dump_json().encode("utf-8")
+
+    label = doc.blocks[0].section_label or ""
+    assert hi not in label and lo not in label
+    assert "�" in label
+
+
 def test_normdoc_strips_nul_bytes() -> None:
     # pypdf also emits NUL (0x00) bytes from broken PDF encodings. UTF-8/JSON
     # accept them, but PostgreSQL text fields reject them, so content_body must

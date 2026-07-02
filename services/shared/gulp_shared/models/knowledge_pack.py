@@ -5,7 +5,7 @@ import uuid
 from typing import Any
 
 from sqlalchemy import JSON, Enum, ForeignKey, Integer, String, Text
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from gulp_shared.db import Base, TimestampedBase
 
@@ -35,19 +35,36 @@ class KnowledgePack(TimestampedBase, Base):
     references: Mapped[list[dict[str, Any]]] = mapped_column(JSON, default=list)
     status: Mapped[PackStatus] = mapped_column(Enum(PackStatus, name="pack_status"))
 
+    # delete-orphan so replacing a pack (re-import) removes its sections/blocks in
+    # child-first order; ON DELETE CASCADE on the FK is the DB-level backstop.
+    sections: Mapped[list["PackSection"]] = relationship(
+        back_populates="pack", cascade="all, delete-orphan"
+    )
+
 
 class PackSection(TimestampedBase, Base):
     __tablename__ = "pack_sections"
 
-    pack_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("knowledge_packs.id"), index=True)
+    pack_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("knowledge_packs.id", ondelete="CASCADE"), index=True
+    )
     heading: Mapped[str | None] = mapped_column(String, default=None)
     position: Mapped[int] = mapped_column(Integer, default=0)
+
+    pack: Mapped["KnowledgePack"] = relationship(back_populates="sections")
+    blocks: Mapped[list["PackBlock"]] = relationship(
+        back_populates="section", cascade="all, delete-orphan"
+    )
 
 
 class PackBlock(TimestampedBase, Base):
     __tablename__ = "pack_blocks"
 
-    section_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("pack_sections.id"), index=True)
+    section_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("pack_sections.id", ondelete="CASCADE"), index=True
+    )
     block_type: Mapped[PackBlockType] = mapped_column(Enum(PackBlockType, name="pack_block_type"))
     data: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
     position: Mapped[int] = mapped_column(Integer, default=0)
+
+    section: Mapped["PackSection"] = relationship(back_populates="blocks")

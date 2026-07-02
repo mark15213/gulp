@@ -57,4 +57,6 @@ class NormDoc(BaseModel):
         self.content_body = _clean_text(self.content_body)
         for block in self.blocks:
             block.text = _clean_text(block.text)
+            if block.section_label is not None:
+                block.section_label = _clean_text(block.section_label)
         return self
