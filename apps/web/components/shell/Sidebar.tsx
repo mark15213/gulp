@@ -1,7 +1,8 @@
 import React from "react";
-import { IconSearch, IconSettings } from "@/components/ui/icons";
+import { IconSettings } from "@/components/ui/icons";
 import { getInbox } from "@gulp/api-client";
 import { SidebarNav } from "./SidebarNav";
+import { SearchCommand } from "./SearchCommand";
 import styles from "./Sidebar.module.css";
 
 export async function Sidebar() {
@@ -13,11 +14,7 @@ export async function Sidebar() {
         <span className={styles.wordmark}>Gulp</span>
       </div>
 
-      <button type="button" className={styles.search}>
-        <IconSearch className={styles.searchIcon} />
-        <span>Search</span>
-        <kbd className={styles.kbd}>⌘K</kbd>
-      </button>
+      <SearchCommand />
 
       <SidebarNav inboxCount={count} />
 
