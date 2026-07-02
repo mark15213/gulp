@@ -1,8 +1,18 @@
 import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { cleanup, render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import * as api from "@gulp/api-client";
 import type { PackOut } from "@gulp/api-client";
 import { PackReport } from "./PackReport";
+
+vi.mock("@gulp/api-client", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@gulp/api-client")>();
+  return { ...actual, updateBlock: vi.fn(), createBlock: vi.fn(), deleteBlock: vi.fn() };
+});
+
+afterEach(cleanup);
 
 const pack: PackOut = {
   snapshot_id: "00000000-0000-0000-0000-000000000001",
@@ -65,5 +75,55 @@ describe("PackReport", () => {
     expect(html).toContain("KEY INSIGHT");
     expect(html).toContain("t-title-m");        // section heading role
     expect(html).toContain("FURTHER READING");
+  });
+});
+
+describe("PackReport editing", () => {
+  it("edits a prose block and calls updateBlock with the new content", async () => {
+    (api.updateBlock as ReturnType<typeof vi.fn>).mockResolvedValue({
+      id: "00000000-0000-0000-0000-0000000000b1",
+      type: "prose",
+      content: "changed",
+    });
+    render(<PackReport pack={pack} />);
+    // block b1 is the prose block in the fixture's section
+    const cell = document.querySelector('[data-block-id="00000000-0000-0000-0000-0000000000b1"]')!;
+    await userEvent.click(cell.querySelector('[aria-label="Edit block"]') as HTMLElement);
+    const ta = screen.getByLabelText("Prose (Markdown)");
+    await userEvent.clear(ta);
+    await userEvent.type(ta, "changed");
+    await userEvent.click(screen.getByRole("button", { name: "Save" }));
+    expect(api.updateBlock).toHaveBeenCalledWith(
+      pack.snapshot_id,
+      "00000000-0000-0000-0000-0000000000b1",
+      { content: { type: "prose", content: "changed" } },
+    );
+  });
+
+  it("deletes a block optimistically via deleteBlock", async () => {
+    (api.deleteBlock as ReturnType<typeof vi.fn>).mockResolvedValue(undefined);
+    render(<PackReport pack={pack} />);
+    const cell = document.querySelector('[data-block-id="00000000-0000-0000-0000-0000000000b1"]')!;
+    await userEvent.click(cell.querySelector('[aria-label="Delete block"]') as HTMLElement);
+    expect(api.deleteBlock).toHaveBeenCalledWith(
+      pack.snapshot_id,
+      "00000000-0000-0000-0000-0000000000b1",
+    );
+    expect(
+      document.querySelector('[data-block-id="00000000-0000-0000-0000-0000000000b1"]'),
+    ).toBeNull();
+  });
+
+  it("inserts a new block via createBlock and renders it", async () => {
+    (api.createBlock as ReturnType<typeof vi.fn>).mockResolvedValue({
+      id: "new-block-id",
+      type: "prose",
+      content: "",
+    });
+    render(<PackReport pack={pack} />);
+    // use the first Add-block menu in the section
+    await userEvent.click(screen.getAllByRole("button", { name: "Add block" })[0]!);
+    await userEvent.click(screen.getAllByRole("button", { name: "Add prose block" })[0]!);
+    expect(api.createBlock).toHaveBeenCalled();
   });
 });

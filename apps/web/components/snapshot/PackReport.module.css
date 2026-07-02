@@ -101,3 +101,11 @@
   margin-bottom: var(--space-1);
 }
 .list { line-height: 24px; margin: 0; padding-left: var(--space-5); }
+
+.errorBar {
+  display: flex; align-items: center; gap: var(--space-2);
+  padding: var(--space-2) var(--space-3); margin-bottom: var(--space-4);
+  background: var(--state-risk-tint); color: var(--state-risk-on);
+  border-radius: var(--radius-md); font-size: 13px;
+}
+.errorBar button { text-decoration: underline; color: inherit; }
