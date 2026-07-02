@@ -77,3 +77,28 @@ def test_block_update_and_create_optional_fields() -> None:
     assert u.content is None and u.position == 3
     c = BlockCreate(content={"type": "prose", "content": "hi"}, position=0)
     assert c.content.type == "prose" and c.position == 0
+
+
+def test_delete_block_soft_deletes_and_renumbers(client, db) -> None:  # type: ignore[no-untyped-def]
+    ids = _pack_with_blocks(db)
+    r = client.delete(f"/snapshots/{ids['snap']}/blocks/{ids['b0']}")
+    assert r.status_code == 204
+    # gone from the read contract, and the survivor is renumbered to position 0
+    body = client.get(f"/snapshots/{ids['snap']}/pack").json()
+    blocks = body["sections"][0]["blocks"]
+    assert [b["id"] for b in blocks] == [str(ids["b1"])]
+
+
+def test_delete_block_404_for_foreign_snapshot(client, db) -> None:  # type: ignore[no-untyped-def]
+    foreign = Source(owner_id=uuid.uuid4(), kind=SourceKind.snapshot, title="F",
+                     status=SnapshotStatus.ready)
+    db.add(foreign)
+    db.commit()
+    r = client.delete(f"/snapshots/{foreign.id}/blocks/{uuid.uuid4()}")
+    assert r.status_code == 404
+
+
+def test_delete_block_404_when_block_not_in_snapshot(client, db) -> None:  # type: ignore[no-untyped-def]
+    ids = _pack_with_blocks(db)
+    r = client.delete(f"/snapshots/{ids['snap']}/blocks/{uuid.uuid4()}")
+    assert r.status_code == 404

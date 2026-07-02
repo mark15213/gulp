@@ -1,12 +1,13 @@
 """Serialize a snapshot's KnowledgePack into the PackOut contract."""
 
 import uuid
+from datetime import UTC, datetime
 from typing import Any
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.schemas.pack import PackOut, PackReferenceOut, PackSectionOut
+from app.schemas.pack import BlockCreate, BlockUpdate, PackOut, PackReferenceOut, PackSectionOut
 from gulp_shared.models.knowledge_pack import KnowledgePack, PackBlock, PackSection
 
 
@@ -57,3 +58,45 @@ def pack_out(db: Session, snapshot_id: uuid.UUID) -> PackOut | None:
         sections=sections,
         references=[PackReferenceOut(**r) for r in (pack.references or [])],
     )
+
+
+def load_block_scoped(db: Session, snapshot_id: uuid.UUID, block_id: uuid.UUID) -> PackBlock:
+    """Load a live block that belongs to the given snapshot's pack, or raise LookupError."""
+    block = db.scalar(
+        select(PackBlock)
+        .join(PackSection, PackBlock.section_id == PackSection.id)
+        .join(KnowledgePack, PackSection.pack_id == KnowledgePack.id)
+        .where(
+            PackBlock.id == block_id,
+            PackBlock.deleted_at.is_(None),
+            PackSection.deleted_at.is_(None),
+            KnowledgePack.deleted_at.is_(None),
+            KnowledgePack.snapshot_id == snapshot_id,
+        )
+    )
+    if block is None:
+        raise LookupError("block not found")
+    return block
+
+
+def delete_block(db: Session, snapshot_id: uuid.UUID, block_id: uuid.UUID) -> None:
+    block = load_block_scoped(db, snapshot_id, block_id)
+    section_id = block.section_id
+    block.deleted_at = datetime.now(UTC)
+    db.flush()
+    renumber(live_blocks_ordered(db, section_id))
+    db.commit()
+
+
+def update_block(
+    db: Session, snapshot_id: uuid.UUID, block_id: uuid.UUID, update: BlockUpdate
+) -> dict[str, Any]:
+    """Stub for Task 3 (PATCH block) — real signature, not yet implemented."""
+    raise NotImplementedError
+
+
+def create_block(
+    db: Session, snapshot_id: uuid.UUID, section_id: uuid.UUID, create: BlockCreate
+) -> dict[str, Any]:
+    """Stub for Task 4 (POST create block) — real signature, not yet implemented."""
+    raise NotImplementedError
