@@ -8,7 +8,7 @@ from fastapi.testclient import TestClient
 from app.deps import get_db
 from app.main import app
 from app.services.chat import answer_question, list_messages
-from gulp_shared.llm import register_provider
+from gulp_shared.llm import AnthropicProvider, register_provider
 from gulp_shared.models.knowledge_pack import (
     KnowledgePack,
     PackBlock,
@@ -84,6 +84,7 @@ def client(db):  # type: ignore[no-untyped-def]
     c = TestClient(app)
     yield c
     app.dependency_overrides.clear()
+    register_provider("anthropic", AnthropicProvider())
 
 
 def test_post_then_get_messages(client, db) -> None:  # type: ignore[no-untyped-def]

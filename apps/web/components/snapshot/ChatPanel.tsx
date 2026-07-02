@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { getBlockMessages, postBlockMessage, type MessageOut } from "@gulp/api-client";
 import { Button } from "@/components/ui/Button";
 import styles from "./ChatPanel.module.css";
@@ -18,6 +18,7 @@ export function ChatPanel({
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const tmpIdRef = useRef(0);
 
   useEffect(() => {
     let active = true;
@@ -41,7 +42,7 @@ export function ChatPanel({
     setError(null);
     setSending(true);
     setDraft("");
-    const optimistic: MessageOut = { id: `tmp-${q}`, role: "user", content: q, created_at: "" };
+    const optimistic: MessageOut = { id: `tmp-${tmpIdRef.current++}`, role: "user", content: q, created_at: "" };
     setMessages((m) => [...m, optimistic]);
     try {
       const answer = await postBlockMessage(snapshotId, blockId, { content: q });
