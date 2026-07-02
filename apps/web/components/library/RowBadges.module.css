@@ -1,0 +1,42 @@
+.badges {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2, 8px);
+  flex: none;
+}
+
+.media,
+.cards {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px var(--space-2, 8px);
+  border-radius: var(--radius-pill, 999px);
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* media_type — quiet grayscale metadata pill */
+.media {
+  background: var(--fill, #f1f5f9);
+  color: var(--text-2, #64748b);
+}
+
+/* cards states — grayscale + blue accent; red only for the error */
+.generating {
+  background: var(--blue-50, #eff5ff);
+  color: var(--blue-700, #1d4ed8);
+}
+
+.ready {
+  background: transparent;
+  color: var(--muted, #94a3b8);
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.failed {
+  background: var(--state-risk-tint, #fee2e2);
+  color: var(--state-risk-on, #991b1b);
+}
