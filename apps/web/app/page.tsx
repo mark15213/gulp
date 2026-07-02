@@ -1,61 +1,85 @@
 export const dynamic = "force-dynamic";
 
+import React from "react";
+import Link from "next/link";
 import { StartGulpCard } from "@/components/today/StartGulpCard";
 import { DigestCard } from "@/components/today/DigestCard";
-import { CapturePeek } from "@/components/today/CapturePeek";
-import { today } from "@/lib/mock";
-import { getInbox } from "@gulp/api-client";
+import { CapturePeek, type RecentItem } from "@/components/today/CapturePeek";
+import { getToday } from "@gulp/api-client";
+import { timeAgo } from "@/lib/time";
 import styles from "./page.module.css";
 
 // Today — the web "what should I do right now?" landing (docs/03 §7.9).
 export default async function TodayPage() {
-  const inbox = await getInbox();
-  const recent = inbox.items.slice(0, 3).map((s) => ({
+  const today = await getToday();
+  const date = new Date().toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+  });
+  const recent: RecentItem[] = today.recent.map((s) => ({
     id: s.id,
-    type: "snapshot" as const,
+    type: "snapshot",
     title: s.title,
     source: s.origin_url ? new URL(s.origin_url).host : "Note",
-    time: "just now",
-    status: (s.status === "needs_attention"
-      ? "attention"
-      : s.status === "ready"
-        ? "ready"
-        : "processing") as "ready" | "processing" | "attention",
+    time: timeAgo(s.created_at),
+    status:
+      s.status === "needs_attention"
+        ? "attention"
+        : s.status === "ready"
+          ? "ready"
+          : "processing",
   }));
+
   return (
     <div className={styles.page}>
       <header className={styles.header}>
         <div>
           <h1 className="t-title-l">Today</h1>
-          <p className={styles.greeting}>{today.greeting}</p>
+          <p className={styles.greeting}>
+            Here&apos;s what&apos;s worth your 5 minutes.
+          </p>
         </div>
-        <span className={`t-data ${styles.dateChip}`}>{today.date}</span>
+        <span className={`t-data ${styles.dateChip}`}>{date}</span>
       </header>
 
-      <StartGulpCard data={today} />
+      <StartGulpCard
+        acceptedCards={today.accepted_cards}
+        cardSources={today.card_sources}
+      />
 
       <section className={styles.section}>
         <div className={styles.sectionHead}>
-          <p className="t-label">Daily digest</p>
-          <a href="#" className={styles.seeAll}>
+          <p className="t-label">Recently ready</p>
+          <Link href="/library" className={styles.seeAll}>
             See all
-          </a>
+          </Link>
         </div>
-        <div className={styles.digestGrid}>
-          {today.digest.map((item) => (
-            <DigestCard key={item.id} item={item} />
-          ))}
-        </div>
+        {today.digest.length > 0 ? (
+          <div className={styles.digestGrid}>
+            {today.digest.map((item) => (
+              <DigestCard key={item.snapshot.id} item={item} />
+            ))}
+          </div>
+        ) : (
+          <p className={styles.empty}>
+            Nothing ready yet — process a capture from your Inbox.
+          </p>
+        )}
       </section>
 
       <section className={styles.section}>
         <div className={styles.sectionHead}>
           <p className="t-label">Recently captured</p>
-          <a href="/inbox" className={styles.seeAll}>
+          <Link href="/inbox" className={styles.seeAll}>
             Open Inbox
-          </a>
+          </Link>
         </div>
-        <CapturePeek items={recent} />
+        {recent.length > 0 ? (
+          <CapturePeek items={recent} />
+        ) : (
+          <p className={styles.empty}>Inbox is clear.</p>
+        )}
       </section>
     </div>
   );

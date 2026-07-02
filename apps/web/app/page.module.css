@@ -48,3 +48,11 @@
   grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
   gap: var(--space-3);
 }
+
+.empty {
+  padding: var(--space-4);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text-2);
+  font-size: 13px;
+}

@@ -1,7 +1,16 @@
-import { ObjectGlyph } from "@/components/ui/ObjectGlyph";
+import React from "react";
+import { ObjectGlyph, type ObjectType } from "@/components/ui/ObjectGlyph";
 import { IconAlert } from "@/components/ui/icons";
-import type { RecentItem } from "@/lib/mock";
 import styles from "./CapturePeek.module.css";
+
+export interface RecentItem {
+  id: string;
+  type: ObjectType;
+  title: string;
+  source: string;
+  time: string;
+  status: "ready" | "processing" | "attention";
+}
 
 // Read-only "recently captured / processing" peek (docs/03 §7.9), exercising
 // the Processing skeleton and Needs-attention states (§8).

@@ -19,6 +19,12 @@
   flex: none;
 }
 
+.btn:disabled {
+  opacity: 0.55;
+  cursor: default;
+  pointer-events: none;
+}
+
 /* Sizes — web 32 / 36 tall (docs/03 §7.4). */
 .md {
   height: 32px;

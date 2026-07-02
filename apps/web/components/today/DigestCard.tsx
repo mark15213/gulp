@@ -1,34 +1,36 @@
+import React from "react";
+import Link from "next/link";
 import { ObjectGlyph } from "@/components/ui/ObjectGlyph";
-import { StateChip } from "@/components/ui/StateChip";
-import type { DigestItem } from "@/lib/mock";
+import { timeAgo } from "@/lib/time";
+import type { TodayOut } from "@gulp/api-client";
 import styles from "./DigestCard.module.css";
 
-// Object card (docs/03 §7.1): type glyph · title · summary · mono meta · state
-// chip. Digest variant adds the per-item "why it connects" reason (§7.11).
-export function DigestCard({ item }: { item: DigestItem }) {
+type TodayDigestItem = TodayOut["digest"][number];
+
+// Object card (docs/03 §7.1): type glyph · title · optional note · mono meta.
+// The mastery chip and "why it connects" line return when scheduling lands (S5).
+export function DigestCard({ item }: { item: TodayDigestItem }) {
+  const { snapshot } = item;
+  const source = snapshot.origin_url ? new URL(snapshot.origin_url).host : "Note";
   return (
-    <article className={styles.card}>
+    <Link href={`/snapshots/${snapshot.id}`} className={styles.card}>
       <div className={styles.top}>
-        <ObjectGlyph type={item.type} />
-        <StateChip
-          state={item.state}
-          count={item.state === "due" ? item.cards : undefined}
-        />
+        <ObjectGlyph type="snapshot" />
       </div>
 
-      <h3 className={`t-title-s ${styles.title}`}>{item.title}</h3>
-      <p className={`t-body-s ${styles.summary}`}>{item.summary}</p>
-
-      <p className={styles.reason}>{item.reason}</p>
+      <h3 className={`t-title-s ${styles.title}`}>{snapshot.title}</h3>
+      {snapshot.note && (
+        <p className={`t-body-s ${styles.summary}`}>{snapshot.note}</p>
+      )}
 
       <div className={styles.meta}>
-        <span className="t-data">{item.source}</span>
+        <span className="t-data">{source}</span>
         <span className={styles.dot}>·</span>
-        <span className="t-data">{item.time}</span>
+        <span className="t-data">{timeAgo(snapshot.created_at)}</span>
         <span className={styles.cards}>
-          <span className="t-data">+{item.cards}</span> cards
+          <span className="t-data">+{item.accepted_cards}</span> cards
         </span>
       </div>
-    </article>
+    </Link>
   );
 }

@@ -1,5 +1,7 @@
-import type { MasteryState } from "@/lib/mock";
 import styles from "./StateChip.module.css";
+
+// Mastery states (docs/03 §7.2) — real scheduling lands with S5.
+export type MasteryState = "new" | "learning" | "known" | "due" | "at-risk";
 
 // Mastery-state chip — the product's most-repeated component (docs/03 §7.2).
 // Tinted pill + on-tint label + dot; label always present, never color-only.
