@@ -64,3 +64,22 @@ def delete_block_route(
     except LookupError:
         raise HTTPException(status_code=404, detail="block not found") from None
     return Response(status_code=204)
+
+
+@router.post(
+    "/snapshots/{snapshot_id}/sections/{section_id}/blocks",
+    response_model=BlockOut,
+    status_code=201,
+)
+def create_block_route(
+    snapshot_id: uuid.UUID,
+    section_id: uuid.UUID,
+    create: BlockCreate,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> dict[str, Any]:
+    _owned_snapshot(db, snapshot_id, user)
+    try:
+        return create_block(db, snapshot_id, section_id, create)
+    except LookupError:
+        raise HTTPException(status_code=404, detail="section not found") from None

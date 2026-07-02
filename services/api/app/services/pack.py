@@ -105,8 +105,39 @@ def update_block(
     return block_dict(block)
 
 
+def load_section_scoped(db: Session, snapshot_id: uuid.UUID, section_id: uuid.UUID) -> PackSection:
+    """Load a live section that belongs to the given snapshot's pack, or raise LookupError."""
+    section = db.scalar(
+        select(PackSection)
+        .join(KnowledgePack, PackSection.pack_id == KnowledgePack.id)
+        .where(
+            PackSection.id == section_id,
+            PackSection.deleted_at.is_(None),
+            KnowledgePack.deleted_at.is_(None),
+            KnowledgePack.snapshot_id == snapshot_id,
+        )
+    )
+    if section is None:
+        raise LookupError("section not found")
+    return section
+
+
 def create_block(
     db: Session, snapshot_id: uuid.UUID, section_id: uuid.UUID, create: BlockCreate
 ) -> dict[str, Any]:
-    """Stub for Task 4 (POST create block) — real signature, not yet implemented."""
-    raise NotImplementedError
+    load_section_scoped(db, snapshot_id, section_id)
+    block = PackBlock(
+        section_id=section_id,
+        block_type=PackBlockType(create.content.type),
+        data=create.content.model_dump(exclude={"type"}),
+        position=0,
+    )
+    db.add(block)
+    db.flush()
+    blocks = [b for b in live_blocks_ordered(db, section_id) if b.id != block.id]
+    pos = max(0, min(create.position, len(blocks)))
+    blocks.insert(pos, block)
+    renumber(blocks)
+    db.commit()
+    db.refresh(block)
+    return block_dict(block)

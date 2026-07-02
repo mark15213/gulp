@@ -153,3 +153,37 @@ def test_update_block_404_when_not_in_snapshot(client, db) -> None:  # type: ign
     ids = _pack_with_blocks(db)
     r = client.patch(f"/snapshots/{ids['snap']}/blocks/{uuid.uuid4()}", json={"position": 0})
     assert r.status_code == 404
+
+
+def test_create_block_inserts_at_position(client, db) -> None:  # type: ignore[no-untyped-def]
+    ids = _pack_with_blocks(db)  # b0@0, b1@1
+    r = client.post(
+        f"/snapshots/{ids['snap']}/sections/{ids['sec']}/blocks",
+        json={"content": {"type": "prose", "content": "mid"}, "position": 1},
+    )
+    assert r.status_code == 201
+    new_id = r.json()["id"]
+    assert r.json()["content"] == "mid"
+    body = client.get(f"/snapshots/{ids['snap']}/pack").json()
+    order = [b["id"] for b in body["sections"][0]["blocks"]]
+    assert order == [str(ids["b0"]), new_id, str(ids["b1"])]
+
+
+def test_create_block_position_clamped_to_end(client, db) -> None:  # type: ignore[no-untyped-def]
+    ids = _pack_with_blocks(db)
+    r = client.post(
+        f"/snapshots/{ids['snap']}/sections/{ids['sec']}/blocks",
+        json={"content": {"type": "figure", "label": "F1", "explanation": "e"}, "position": 99},
+    )
+    assert r.status_code == 201
+    body = client.get(f"/snapshots/{ids['snap']}/pack").json()
+    assert body["sections"][0]["blocks"][-1]["id"] == r.json()["id"]
+
+
+def test_create_block_404_when_section_not_in_snapshot(client, db) -> None:  # type: ignore[no-untyped-def]
+    ids = _pack_with_blocks(db)
+    r = client.post(
+        f"/snapshots/{ids['snap']}/sections/{uuid.uuid4()}/blocks",
+        json={"content": {"type": "prose", "content": "x"}, "position": 0},
+    )
+    assert r.status_code == 404
