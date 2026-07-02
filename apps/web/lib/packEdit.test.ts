@@ -27,31 +27,40 @@ function pack(): PackOut {
   };
 }
 
+function ids(p: PackOut): string[] {
+  return (p.sections[0]?.blocks ?? []).map((b) => b.id);
+}
+
 describe("packEdit", () => {
   it("replaceBlock swaps the matching block, immutably", () => {
     const p0 = pack();
     const p1 = replaceBlock(p0, S, B0, { id: B0, type: "prose", content: "edited" });
     expect(p1).not.toBe(p0);
-    expect(p1.sections[0].blocks[0]).toEqual({ id: B0, type: "prose", content: "edited" });
-    expect(p0.sections[0].blocks[0].content).toBe("b0"); // original untouched
+    expect(p1.sections[0]?.blocks[0]).toEqual({ id: B0, type: "prose", content: "edited" });
+    const orig = p0.sections[0]?.blocks[0];
+    expect(orig && orig.type === "prose" ? orig.content : null).toBe("b0"); // original untouched
   });
 
-  it("removeBlock drops the matching block", () => {
-    const p1 = removeBlock(pack(), S, B0);
-    expect(p1.sections[0].blocks.map((b) => b.id)).toEqual([B1]);
+  it("removeBlock drops the matching block, immutably", () => {
+    const p0 = pack();
+    const p1 = removeBlock(p0, S, B0);
+    expect(ids(p1)).toEqual([B1]);
+    expect(ids(p0)).toEqual([B0, B1]); // original untouched
   });
 
   it("insertBlockAt inserts at the index", () => {
     const nb = { id: "new", type: "prose", content: "mid" } as const;
     const p1 = insertBlockAt(pack(), S, 1, nb);
-    expect(p1.sections[0].blocks.map((b) => b.id)).toEqual([B0, "new", B1]);
+    expect(ids(p1)).toEqual([B0, "new", B1]);
   });
 
-  it("moveBlock reorders within the section (clamped)", () => {
-    const p1 = moveBlock(pack(), S, B0, 1);
-    expect(p1.sections[0].blocks.map((b) => b.id)).toEqual([B1, B0]);
+  it("moveBlock reorders within the section (clamped), immutably", () => {
+    const p0 = pack();
+    const p1 = moveBlock(p0, S, B0, 1);
+    expect(ids(p1)).toEqual([B1, B0]);
+    expect(ids(p0)).toEqual([B0, B1]); // original untouched
     const p2 = moveBlock(pack(), S, B0, 99);
-    expect(p2.sections[0].blocks.map((b) => b.id)).toEqual([B1, B0]);
+    expect(ids(p2)).toEqual([B1, B0]);
   });
 
   it("emptyContent returns a valid fresh write payload per type", () => {
