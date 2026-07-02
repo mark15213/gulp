@@ -187,3 +187,13 @@ def test_create_block_404_when_section_not_in_snapshot(client, db) -> None:  # t
         json={"content": {"type": "prose", "content": "x"}, "position": 0},
     )
     assert r.status_code == 404
+
+
+def test_create_block_404_for_section_in_another_snapshot(client, db) -> None:  # type: ignore[no-untyped-def]
+    a = _pack_with_blocks(db)
+    b = _pack_with_blocks(db)  # a second owned snapshot + pack + section
+    r = client.post(
+        f"/snapshots/{a['snap']}/sections/{b['sec']}/blocks",
+        json={"content": {"type": "prose", "content": "x"}, "position": 0},
+    )
+    assert r.status_code == 404

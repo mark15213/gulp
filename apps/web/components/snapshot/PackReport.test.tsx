@@ -1,6 +1,6 @@
 import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import * as api from "@gulp/api-client";
@@ -13,6 +13,10 @@ vi.mock("@gulp/api-client", async (importOriginal) => {
 });
 
 afterEach(cleanup);
+
+beforeEach(() => {
+  vi.clearAllMocks();
+});
 
 const pack: PackOut = {
   snapshot_id: "00000000-0000-0000-0000-000000000001",

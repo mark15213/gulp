@@ -23,6 +23,7 @@ export function PackReport({ pack: initialPack }: { pack: PackOut }) {
   const sid = pack.snapshot_id;
 
   function saveContent(sectionId: string, blockId: string, content: BlockWrite) {
+    setError(null);
     const prev = pack;
     const edited = { ...content, id: blockId } as PackBlockOut;
     setPack(replaceBlock(pack, sectionId, blockId, edited));
@@ -33,6 +34,7 @@ export function PackReport({ pack: initialPack }: { pack: PackOut }) {
   }
 
   function del(sectionId: string, blockId: string) {
+    setError(null);
     const prev = pack;
     setPack(removeBlock(pack, sectionId, blockId));
     deleteBlock(sid, blockId).catch(() => {
@@ -42,6 +44,7 @@ export function PackReport({ pack: initialPack }: { pack: PackOut }) {
   }
 
   function move(sectionId: string, blockId: string, dir: -1 | 1) {
+    setError(null);
     const section = pack.sections.find((s) => s.id === sectionId);
     if (!section) return;
     const i = section.blocks.findIndex((b) => b.id === blockId);
@@ -56,6 +59,7 @@ export function PackReport({ pack: initialPack }: { pack: PackOut }) {
   }
 
   function insert(sectionId: string, index: number, type: BlockType) {
+    setError(null);
     createBlock(sid, sectionId, { content: emptyContent(type), position: index })
       .then((block) => setPack((p) => insertBlockAt(p, sectionId, index, block)))
       .catch(() => setError("Couldn't add a block — try again."));

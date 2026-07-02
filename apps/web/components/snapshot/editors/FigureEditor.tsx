@@ -33,7 +33,6 @@ export function FigureEditor({
         <label htmlFor="figure-exp">Explanation</label>
         <textarea
           id="figure-exp"
-          aria-label="Figure explanation"
           className={styles.textarea}
           value={explanation}
           onChange={(e) => setExplanation(e.target.value)}
