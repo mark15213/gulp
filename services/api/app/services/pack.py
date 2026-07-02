@@ -26,14 +26,14 @@ def pack_out(db: Session, snapshot_id: uuid.UUID) -> PackOut | None:
         .order_by(PackSection.position)
     ):
         blocks = [
-            {"type": b.block_type.value, **(b.data or {})}
+            {"id": b.id, "type": b.block_type.value, **(b.data or {})}
             for b in db.scalars(
                 select(PackBlock)
                 .where(PackBlock.section_id == section.id, PackBlock.deleted_at.is_(None))
                 .order_by(PackBlock.position)
             )
         ]
-        sections.append(PackSectionOut(heading=section.heading, blocks=blocks))
+        sections.append(PackSectionOut(id=section.id, heading=section.heading, blocks=blocks))
 
     return PackOut(
         snapshot_id=snapshot_id,

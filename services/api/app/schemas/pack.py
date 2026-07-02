@@ -8,17 +8,20 @@ from pydantic import BaseModel, Field
 
 
 class ProseBlockOut(BaseModel):
+    id: uuid.UUID
     type: Literal["prose"] = "prose"
     content: str
 
 
 class FormulaBlockOut(BaseModel):
+    id: uuid.UUID
     type: Literal["formula"] = "formula"
     latex: str
     explanation: str
 
 
 class TableBlockOut(BaseModel):
+    id: uuid.UUID
     type: Literal["table"] = "table"
     headers: list[str]
     rows: list[list[str]]
@@ -26,12 +29,14 @@ class TableBlockOut(BaseModel):
 
 
 class FigureBlockOut(BaseModel):
+    id: uuid.UUID
     type: Literal["figure"] = "figure"
     label: str
     explanation: str
 
 
 class ListBlockOut(BaseModel):
+    id: uuid.UUID
     type: Literal["list"] = "list"
     items: list[str]
     ordered: bool = False
@@ -44,6 +49,7 @@ BlockOut = Annotated[
 
 
 class PackSectionOut(BaseModel):
+    id: uuid.UUID
     heading: str | None
     blocks: list[BlockOut]
 

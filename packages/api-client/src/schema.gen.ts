@@ -198,6 +198,11 @@ export interface components {
         /** FigureBlockOut */
         FigureBlockOut: {
             /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
              * @description discriminator enum property added by openapi-typescript
              * @enum {string}
              */
@@ -209,6 +214,11 @@ export interface components {
         };
         /** FormulaBlockOut */
         FormulaBlockOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
             /**
              * @description discriminator enum property added by openapi-typescript
              * @enum {string}
@@ -233,6 +243,11 @@ export interface components {
         };
         /** ListBlockOut */
         ListBlockOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
             /**
              * @description discriminator enum property added by openapi-typescript
              * @enum {string}
@@ -279,6 +294,11 @@ export interface components {
         };
         /** PackSectionOut */
         PackSectionOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
             /** Heading */
             heading: string | null;
             /** Blocks */
@@ -291,6 +311,11 @@ export interface components {
         PackStatus: "generating" | "ready";
         /** ProseBlockOut */
         ProseBlockOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
             /**
              * @description discriminator enum property added by openapi-typescript
              * @enum {string}
@@ -343,6 +368,11 @@ export interface components {
         SourceKind: "snapshot" | "conversation" | "subscription";
         /** TableBlockOut */
         TableBlockOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
             /**
              * @description discriminator enum property added by openapi-typescript
              * @enum {string}

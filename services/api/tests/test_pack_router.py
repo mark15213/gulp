@@ -75,3 +75,29 @@ def test_get_pack_404_for_foreign_snapshot(client, db) -> None:  # type: ignore[
     db.commit()
     r = client.get(f"/snapshots/{foreign_snap.id}/pack")
     assert r.status_code == 404
+
+
+def test_get_pack_exposes_section_and_block_ids(client, db) -> None:  # type: ignore[no-untyped-def]
+    snap = Source(owner_id=DEV_USER_ID, kind=SourceKind.snapshot, title="T",
+                  status=SnapshotStatus.ready)
+    db.add(snap)
+    db.flush()
+    pack = KnowledgePack(snapshot_id=snap.id, title="BERT", key_insight="ki",
+                         core_contributions=["c1"], references=[], status=PackStatus.ready)
+    db.add(pack)
+    db.flush()
+    sec = PackSection(pack_id=pack.id, heading="H", position=0)
+    db.add(sec)
+    db.flush()
+    block = PackBlock(section_id=sec.id, block_type=PackBlockType.prose,
+                      data={"content": "hello"}, position=0)
+    db.add(block)
+    db.commit()
+    sec_id, block_id = str(sec.id), str(block.id)
+
+    r = client.get(f"/snapshots/{snap.id}/pack")
+    assert r.status_code == 200
+    body = r.json()
+    assert body["sections"][0]["id"] == sec_id
+    assert body["sections"][0]["blocks"][0]["id"] == block_id
+    assert body["sections"][0]["blocks"][0]["type"] == "prose"
