@@ -9,7 +9,7 @@ from typing import Any, cast
 from anthropic import AsyncAnthropic
 
 from gulp_shared.llm.base import LLMError, Message, ModelConfig
-from gulp_shared.settings import settings  # type: ignore[import-untyped]
+from gulp_shared.settings import settings
 
 _TOOL_NAME = "emit"
 

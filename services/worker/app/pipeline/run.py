@@ -7,9 +7,15 @@ Testable in isolation: pass an injected `fetch` and `provider`. The arq entry
 import logging
 from collections.abc import Awaitable, Callable
 
+from gulp_shared.llm.base import LLMProvider, ModelConfig
+from gulp_shared.models.source import (
+    MediaType,
+    SnapshotStatus,
+    Source,
+)
+from gulp_shared.urls import host_of
 from sqlalchemy.orm import Session
 
-from gulp_shared.llm.base import LLMProvider, ModelConfig
 from app.pipeline.adapters.fetch import FetchedDoc, fetch_document, is_pdf
 from app.pipeline.adapters.note import note_to_normdoc
 from app.pipeline.adapters.pdf import pdf_to_normdoc
@@ -17,8 +23,6 @@ from app.pipeline.adapters.webpage import webpage_to_normdoc
 from app.pipeline.digest import run_digest
 from app.pipeline.normdoc import NormDoc
 from app.pipeline.persist import persist_pack
-from gulp_shared.models.source import MediaType, SnapshotStatus, Source  # type: ignore[import-untyped]
-from gulp_shared.urls import host_of  # type: ignore[import-untyped]
 
 logger = logging.getLogger("gulp.worker")
 

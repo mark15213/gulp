@@ -6,10 +6,11 @@ before sending. Per-section map-reduce for long content is a later enhancement.
 
 from gulp_shared.llm import ModelConfig, complete_structured
 from gulp_shared.llm.base import LLMProvider
+from gulp_shared.settings import settings
+
 from app.pipeline.normdoc import NormDoc
 from app.pipeline.schemas import PaperReport
 from app.prompts.digest import build_digest_messages
-from gulp_shared.settings import settings  # type: ignore[import-untyped]
 
 # ~12k tokens of input; tunable. Over this, we digest a prefix.
 MAX_DIGEST_CHARS = 48_000

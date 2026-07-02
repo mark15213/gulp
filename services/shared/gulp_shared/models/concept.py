@@ -9,14 +9,14 @@ from sqlalchemy.orm import Mapped, mapped_column
 from gulp_shared.db import Base, TimestampedBase
 
 
-class ConceptType(str, enum.Enum):
+class ConceptType(enum.StrEnum):
     idea = "idea"
     term = "term"
     person = "person"
     org = "org"
 
 
-class ConceptRelation(str, enum.Enum):
+class ConceptRelation(enum.StrEnum):
     related = "related"
     part_of = "part_of"
     contrasts = "contrasts"

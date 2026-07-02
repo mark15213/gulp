@@ -4,14 +4,13 @@ import sys
 # Both gulp-api and gulp-worker expose a top-level `app`; put services/api first.
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 
+import gulp_shared.models  # noqa: F401
 import pytest
+from gulp_shared.db import Base
+from gulp_shared.models.user import DEV_USER_ID, User
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
-
-from gulp_shared.db import Base
-import gulp_shared.models  # noqa: F401
-from gulp_shared.models.user import DEV_USER_ID, User
 
 
 @pytest.fixture

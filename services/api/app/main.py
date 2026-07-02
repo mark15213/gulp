@@ -2,9 +2,9 @@
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from gulp_shared.settings import settings
 
 from app.routers import capture, cards, export, inbox, library, pack, processing
-from gulp_shared.settings import settings
 
 app = FastAPI(title="Gulp API")
 app.add_middleware(

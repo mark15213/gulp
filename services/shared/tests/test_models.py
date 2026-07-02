@@ -1,10 +1,7 @@
 import uuid
 
-from sqlalchemy import create_engine, select
-from sqlalchemy.orm import sessionmaker
-
-from gulp_shared.db import Base
 import gulp_shared.models  # noqa: F401  (registers tables)
+from gulp_shared.db import Base
 from gulp_shared.models.source import (
     CapturedVia,
     MediaType,
@@ -14,6 +11,8 @@ from gulp_shared.models.source import (
 )
 from gulp_shared.models.source_tag import SourceTag
 from gulp_shared.models.user import DEV_USER_ID, User
+from sqlalchemy import create_engine, select
+from sqlalchemy.orm import sessionmaker
 
 
 def _session():

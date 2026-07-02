@@ -1,7 +1,6 @@
 from typing import Any
 
 import pytest
-
 from gulp_shared.llm.anthropic_provider import AnthropicProvider
 from gulp_shared.llm.base import LLMError, ModelConfig
 

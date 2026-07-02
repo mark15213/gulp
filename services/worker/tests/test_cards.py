@@ -2,7 +2,7 @@
 
 from typing import Any
 
-import gulp_shared.models  # type: ignore[import-untyped]  # noqa: F401
+import gulp_shared.models  # noqa: F401
 from app.pipeline.cards import (
     generate_cards_for_source,
     persist_cards,
@@ -10,28 +10,28 @@ from app.pipeline.cards import (
     run_cards,
 )
 from gulp_shared.contracts.cards import CardsPayload
-from gulp_shared.db import Base  # type: ignore[import-untyped]
-from gulp_shared.llm.base import Message, ModelConfig  # type: ignore[import-untyped]
-from gulp_shared.models.card import (  # type: ignore[import-untyped]
+from gulp_shared.db import Base
+from gulp_shared.llm.base import Message, ModelConfig
+from gulp_shared.models.card import (
     Card,
     CardOrigin,
     CardStatus,
     CardType,
 )
-from gulp_shared.models.knowledge_pack import (  # type: ignore[import-untyped]
+from gulp_shared.models.knowledge_pack import (
     KnowledgePack,
     PackBlock,
     PackBlockType,
     PackSection,
     PackStatus,
 )
-from gulp_shared.models.source import (  # type: ignore[import-untyped]
+from gulp_shared.models.source import (
     CardsStatus,
     SnapshotStatus,
     Source,
     SourceKind,
 )
-from gulp_shared.models.user import DEV_USER_ID, User  # type: ignore[import-untyped]
+from gulp_shared.models.user import DEV_USER_ID, User
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import sessionmaker
 

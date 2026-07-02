@@ -1,6 +1,4 @@
-from sqlalchemy import create_engine, event, select
-from sqlalchemy.orm import sessionmaker
-
+import gulp_shared.models  # noqa: F401
 from app.pipeline.persist import persist_pack
 from app.pipeline.schemas import (
     FormulaBlock,
@@ -9,17 +7,22 @@ from app.pipeline.schemas import (
     Reference,
     Section,
 )
-from gulp_shared.db import Base  # type: ignore[import-untyped]
-import gulp_shared.models  # type: ignore[import-untyped]  # noqa: F401
-from gulp_shared.models.knowledge_pack import (  # type: ignore[import-untyped]
+from gulp_shared.db import Base
+from gulp_shared.models.knowledge_pack import (
     KnowledgePack,
     PackBlock,
     PackBlockType,
     PackSection,
     PackStatus,
 )
-from gulp_shared.models.source import Source, SnapshotStatus, SourceKind  # type: ignore[import-untyped]
-from gulp_shared.models.user import DEV_USER_ID, User  # type: ignore[import-untyped]
+from gulp_shared.models.source import (
+    SnapshotStatus,
+    Source,
+    SourceKind,
+)
+from gulp_shared.models.user import DEV_USER_ID, User
+from sqlalchemy import create_engine, event, select
+from sqlalchemy.orm import sessionmaker
 
 
 def _session():  # type: ignore[no-untyped-def]

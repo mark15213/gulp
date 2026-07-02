@@ -9,7 +9,9 @@ from app.export.templates import cards_schema, claude_md, pack_schema, prompt_md
 from app.pipeline.normdoc import NormDoc
 
 
-def build_job_archive(*, snapshot_id: str, owner_id: str, normdoc: NormDoc, created_at: str) -> bytes:
+def build_job_archive(
+    *, snapshot_id: str, owner_id: str, normdoc: NormDoc, created_at: str
+) -> bytes:
     norm_doc_bytes = normdoc.model_dump_json(indent=2).encode()
     manifest = build_manifest(
         snapshot_id=snapshot_id,

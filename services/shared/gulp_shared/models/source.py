@@ -9,13 +9,13 @@ from sqlalchemy.orm import Mapped, mapped_column
 from gulp_shared.db import Base, TimestampedBase
 
 
-class SourceKind(str, enum.Enum):
+class SourceKind(enum.StrEnum):
     snapshot = "snapshot"
     conversation = "conversation"
     subscription = "subscription"
 
 
-class SnapshotStatus(str, enum.Enum):
+class SnapshotStatus(enum.StrEnum):
     """Single-gate lifecycle: `ready` IS "in the library" — the snapshot-level
     review gate is parked (spec 2026-07-02-single-gate-lifecycle-design.md)."""
 
@@ -27,7 +27,7 @@ class SnapshotStatus(str, enum.Enum):
     needs_attention = "needs_attention"
 
 
-class MediaType(str, enum.Enum):
+class MediaType(enum.StrEnum):
     article = "article"
     pdf = "pdf"
     video = "video"
@@ -38,7 +38,7 @@ class MediaType(str, enum.Enum):
     webpage = "webpage"
 
 
-class CardsStatus(str, enum.Enum):
+class CardsStatus(enum.StrEnum):
     """Inline card-generation job state; null = never triggered. Imports don't touch it."""
 
     generating = "generating"
@@ -46,7 +46,7 @@ class CardsStatus(str, enum.Enum):
     failed = "failed"
 
 
-class CapturedVia(str, enum.Enum):
+class CapturedVia(enum.StrEnum):
     share_sheet = "share_sheet"
     wechat = "wechat"
     email = "email"

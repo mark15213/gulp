@@ -1,6 +1,4 @@
 import pytest
-from pydantic import ValidationError
-
 from app.pipeline.schemas import (
     FormulaBlock,
     PaperReport,
@@ -9,6 +7,7 @@ from app.pipeline.schemas import (
     Section,
     TableBlock,
 )
+from pydantic import ValidationError
 
 
 def _report() -> PaperReport:
@@ -26,7 +25,9 @@ def _report() -> PaperReport:
                 ],
             )
         ],
-        references=[Reference(citation="Vaswani et al. (2017)", why_interesting="The Transformer.")],
+        references=[
+            Reference(citation="Vaswani et al. (2017)", why_interesting="The Transformer.")
+        ],
     )
 
 

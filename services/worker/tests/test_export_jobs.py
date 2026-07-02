@@ -1,18 +1,19 @@
 import json
-from typing import Any
 
-from sqlalchemy import create_engine, select
-from sqlalchemy.orm import sessionmaker
-
+import gulp_shared.models  # noqa: F401
 from app.export.archive import write_zip
 from app.export.jobs import run_build_export, run_import_result
-from gulp_shared.db import Base  # type: ignore[import-untyped]
-import gulp_shared.models  # type: ignore[import-untyped]  # noqa: F401
-from gulp_shared.models.knowledge_pack import KnowledgePack  # type: ignore[import-untyped]
-from gulp_shared.models.source import (  # type: ignore[import-untyped]
-    MediaType, SnapshotStatus, Source, SourceKind,
+from gulp_shared.db import Base
+from gulp_shared.models.knowledge_pack import KnowledgePack
+from gulp_shared.models.source import (
+    MediaType,
+    SnapshotStatus,
+    Source,
+    SourceKind,
 )
-from gulp_shared.models.user import DEV_USER_ID, User  # type: ignore[import-untyped]
+from gulp_shared.models.user import DEV_USER_ID, User
+from sqlalchemy import create_engine, select
+from sqlalchemy.orm import sessionmaker
 
 
 def _session():  # type: ignore[no-untyped-def]

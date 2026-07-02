@@ -1,4 +1,3 @@
-import pytest
 
 from app.pipeline.adapters.arxiv import arxiv_abs_url, arxiv_title
 from app.pipeline.adapters.fetch import FetchedDoc
@@ -30,7 +29,8 @@ async def test_arxiv_title_reads_citation_title():
         assert url == "https://arxiv.org/abs/1706.03762"
         return FetchedDoc(content=_ABS_HTML.encode(), content_type="text/html")
 
-    assert await arxiv_title("https://arxiv.org/pdf/1706.03762", fetch=_fetch) == "Attention Is All You Need"
+    title = await arxiv_title("https://arxiv.org/pdf/1706.03762", fetch=_fetch)
+    assert title == "Attention Is All You Need"
 
 
 async def test_arxiv_title_non_arxiv_returns_none_without_fetching():

@@ -2,10 +2,6 @@
 
 import uuid
 
-from sqlalchemy import select
-from sqlalchemy.orm import Session
-
-from app.schemas.capture import CaptureRequest
 from gulp_shared.domain.urls import normalize_url
 from gulp_shared.models.source import (
     CapturedVia,
@@ -16,6 +12,10 @@ from gulp_shared.models.source import (
 )
 from gulp_shared.models.source_tag import SourceTag
 from gulp_shared.urls import host_of
+from sqlalchemy import select
+from sqlalchemy.orm import Session
+
+from app.schemas.capture import CaptureRequest
 
 
 def create_snapshot(

@@ -2,9 +2,8 @@
 
 from collections.abc import Callable
 
-from sqlalchemy.orm import Session
-
 from gulp_shared.models.source import SnapshotStatus, Source
+from sqlalchemy.orm import Session
 
 _STARTABLE = {
     SnapshotStatus.unprocessed,

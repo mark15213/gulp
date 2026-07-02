@@ -1,8 +1,7 @@
 import pytest
-from fastapi.testclient import TestClient
-
 from app.deps import get_db, get_enqueue
 from app.main import app
+from fastapi.testclient import TestClient
 
 
 @pytest.fixture

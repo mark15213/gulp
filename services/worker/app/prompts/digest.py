@@ -1,7 +1,7 @@
 """The digest prompt — turn a NormDoc into a deep, structured paper report."""
 
-from gulp_shared.llm.base import Message
 from app.pipeline.normdoc import NormDoc
+from gulp_shared.llm.base import Message
 
 _SYSTEM = """You are an expert researcher and paper reviewer. Read the paper \
 carefully and produce a comprehensive, technically deep research report as \

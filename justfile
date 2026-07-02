@@ -42,7 +42,12 @@ worker:
 lint:
     pnpm turbo run lint
     uv run ruff check .
-    uv run mypy .
+    # mypy runs per service: api and worker both expose a top-level `app`
+    # package, and each service has a tests/conftest.py (same reason pytest
+    # runs per package).
+    uv run mypy services/shared
+    uv run mypy services/api
+    uv run mypy services/worker
 format:
     pnpm exec prettier --write .
     uv run ruff format .

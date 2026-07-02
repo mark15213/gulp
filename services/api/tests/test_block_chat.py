@@ -3,11 +3,10 @@ import uuid
 from typing import Any
 
 import pytest
-from fastapi.testclient import TestClient
-
 from app.deps import get_db
 from app.main import app
 from app.services.chat import answer_question, list_messages
+from fastapi.testclient import TestClient
 from gulp_shared.llm import AnthropicProvider, register_provider
 from gulp_shared.models.knowledge_pack import (
     KnowledgePack,
@@ -17,7 +16,7 @@ from gulp_shared.models.knowledge_pack import (
     PackStatus,
 )
 from gulp_shared.models.pack_block_message import ChatRole
-from gulp_shared.models.source import Source, SnapshotStatus, SourceKind
+from gulp_shared.models.source import SnapshotStatus, Source, SourceKind
 from gulp_shared.models.user import DEV_USER_ID
 
 

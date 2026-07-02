@@ -1,4 +1,3 @@
-import React from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { cleanup, render, screen } from "@testing-library/react";
 import * as api from "@gulp/api-client";

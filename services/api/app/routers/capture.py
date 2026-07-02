@@ -4,6 +4,8 @@ import uuid
 from collections.abc import Callable
 
 from fastapi import APIRouter, Depends, HTTPException
+from gulp_shared.models.source import Source
+from gulp_shared.models.user import User
 from sqlalchemy.orm import Session
 
 from app.core.auth import get_current_user
@@ -11,8 +13,6 @@ from app.deps import get_db, get_enqueue
 from app.schemas.capture import CaptureRequest, CaptureResponse, SnapshotOut
 from app.services.capture import create_snapshot
 from app.services.snapshots import to_out
-from gulp_shared.models.source import Source
-from gulp_shared.models.user import User
 
 router = APIRouter()
 

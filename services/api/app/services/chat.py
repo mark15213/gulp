@@ -2,16 +2,16 @@
 
 import uuid
 
-from pydantic import BaseModel
-from sqlalchemy import select
-from sqlalchemy.orm import Session
-
-from app.services.pack import load_block_scoped
 from gulp_shared.llm import LLMProvider, ModelConfig, complete_structured
 from gulp_shared.models.knowledge_pack import KnowledgePack, PackBlock, PackSection
 from gulp_shared.models.pack_block_message import ChatRole, PackBlockMessage
 from gulp_shared.models.source import Source
 from gulp_shared.settings import settings
+from pydantic import BaseModel
+from sqlalchemy import select
+from sqlalchemy.orm import Session
+
+from app.services.pack import load_block_scoped
 
 _MAX_SOURCE_CHARS = 6000
 

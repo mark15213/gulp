@@ -2,21 +2,22 @@
 
 import logging
 import uuid
+from typing import Any
 
 from arq.connections import RedisSettings
+from gulp_shared.db import SessionLocal
+from gulp_shared.models.source import Source
+from gulp_shared.settings import settings
 
 from app.export.jobs import run_build_export, run_import_result
 from app.pipeline.cards import generate_cards_for_source
 from app.pipeline.metadata import run_resolve_metadata
 from app.pipeline.run import process_source
-from gulp_shared.db import SessionLocal  # type: ignore[import-untyped]
-from gulp_shared.models.source import Source  # type: ignore[import-untyped]
-from gulp_shared.settings import settings  # type: ignore[import-untyped]
 
 logger = logging.getLogger("gulp.worker")
 
 
-async def process_snapshot(ctx: dict, snapshot_id: str) -> None:
+async def process_snapshot(ctx: dict[str, Any], snapshot_id: str) -> None:
     db = SessionLocal()
     try:
         source = db.get(Source, uuid.UUID(snapshot_id))
@@ -28,7 +29,7 @@ async def process_snapshot(ctx: dict, snapshot_id: str) -> None:
         db.close()
 
 
-async def build_export(ctx: dict, snapshot_id: str) -> None:
+async def build_export(ctx: dict[str, Any], snapshot_id: str) -> None:
     db = SessionLocal()
     try:
         source = db.get(Source, uuid.UUID(snapshot_id))
@@ -40,7 +41,7 @@ async def build_export(ctx: dict, snapshot_id: str) -> None:
         db.close()
 
 
-async def import_result(ctx: dict, snapshot_id: str, upload_path: str) -> None:
+async def import_result(ctx: dict[str, Any], snapshot_id: str, upload_path: str) -> None:
     db = SessionLocal()
     try:
         source = db.get(Source, uuid.UUID(snapshot_id))
@@ -54,7 +55,7 @@ async def import_result(ctx: dict, snapshot_id: str, upload_path: str) -> None:
         db.close()
 
 
-async def generate_cards(ctx: dict, snapshot_id: str) -> None:
+async def generate_cards(ctx: dict[str, Any], snapshot_id: str) -> None:
     db = SessionLocal()
     try:
         source = db.get(Source, uuid.UUID(snapshot_id))
@@ -66,7 +67,7 @@ async def generate_cards(ctx: dict, snapshot_id: str) -> None:
         db.close()
 
 
-async def resolve_metadata(ctx: dict, snapshot_id: str) -> None:
+async def resolve_metadata(ctx: dict[str, Any], snapshot_id: str) -> None:
     db = SessionLocal()
     try:
         source = db.get(Source, uuid.UUID(snapshot_id))

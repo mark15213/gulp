@@ -1,9 +1,8 @@
+import gulp_shared.models  # noqa: F401  (registers all tables on Base.metadata)
 from alembic import context
-from sqlalchemy import engine_from_config, pool
-
 from gulp_shared.db import Base
 from gulp_shared.settings import settings
-import gulp_shared.models  # noqa: F401  (registers all tables on Base.metadata)
+from sqlalchemy import engine_from_config, pool
 
 config = context.config
 config.set_main_option("sqlalchemy.url", settings.database_url)

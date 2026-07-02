@@ -2,12 +2,12 @@
 
 import uuid
 
+from gulp_shared.models.source import Source
+from gulp_shared.models.source_tag import SourceTag
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.schemas.capture import SnapshotOut
-from gulp_shared.models.source import Source
-from gulp_shared.models.source_tag import SourceTag
 
 
 def _tags_for(db: Session, source_id: uuid.UUID) -> list[str]:

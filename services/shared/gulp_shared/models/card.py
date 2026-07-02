@@ -9,7 +9,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 from gulp_shared.db import Base, TimestampedBase
 
 
-class CardType(str, enum.Enum):
+class CardType(enum.StrEnum):
     short_answer = "short_answer"
     mcq = "mcq"
     cloze = "cloze"
@@ -18,14 +18,14 @@ class CardType(str, enum.Enum):
     recall = "recall"
 
 
-class CardOrigin(str, enum.Enum):
+class CardOrigin(enum.StrEnum):
     pack = "pack"  # inline generation (worker) — regeneration's replace scope
     conversation = "conversation"
     user = "user"
     imported = "imported"  # external cards.json (NotebookLM et al.)
 
 
-class CardStatus(str, enum.Enum):
+class CardStatus(enum.StrEnum):
     draft = "draft"
     accepted = "accepted"
     rejected = "rejected"

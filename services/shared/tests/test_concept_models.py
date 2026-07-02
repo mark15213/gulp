@@ -1,8 +1,5 @@
-from sqlalchemy import create_engine, select
-from sqlalchemy.orm import sessionmaker
-
-from gulp_shared.db import Base
 import gulp_shared.models  # noqa: F401  (registers tables)
+from gulp_shared.db import Base
 from gulp_shared.models.card import Card, CardOrigin, CardType
 from gulp_shared.models.concept import (
     CardConcept,
@@ -12,8 +9,10 @@ from gulp_shared.models.concept import (
     ConceptType,
     SourceConcept,
 )
-from gulp_shared.models.source import Source, SnapshotStatus, SourceKind
+from gulp_shared.models.source import SnapshotStatus, Source, SourceKind
 from gulp_shared.models.user import DEV_USER_ID, User
+from sqlalchemy import create_engine, select
+from sqlalchemy.orm import sessionmaker
 
 
 def _session():

@@ -4,18 +4,18 @@ Idempotent: a re-run drops the snapshot's existing pack and rebuilds it, so
 re-Start cleanly regenerates. source.status is the caller's responsibility.
 """
 
-from sqlalchemy import select
-from sqlalchemy.orm import Session
-
-from app.pipeline.schemas import PaperReport
-from gulp_shared.models.knowledge_pack import (  # type: ignore[import-untyped]
+from gulp_shared.models.knowledge_pack import (
     KnowledgePack,
     PackBlock,
     PackBlockType,
     PackSection,
     PackStatus,
 )
-from gulp_shared.models.source import Source  # type: ignore[import-untyped]
+from gulp_shared.models.source import Source
+from sqlalchemy import select
+from sqlalchemy.orm import Session
+
+from app.pipeline.schemas import PaperReport
 
 
 def _delete_existing(db: Session, snapshot_id: object) -> None:

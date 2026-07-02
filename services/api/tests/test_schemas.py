@@ -1,7 +1,6 @@
 import pytest
-from pydantic import ValidationError
-
 from app.schemas.capture import CaptureRequest
+from pydantic import ValidationError
 
 
 def test_accepts_a_url_only_request():

@@ -1,6 +1,7 @@
 """Inbox endpoint — the derived view (spec C4)."""
 
 from fastapi import APIRouter, Depends
+from gulp_shared.models.user import User
 from sqlalchemy.orm import Session
 
 from app.core.auth import get_current_user
@@ -8,7 +9,6 @@ from app.deps import get_db
 from app.schemas.capture import InboxOut
 from app.services.inbox import list_inbox
 from app.services.snapshots import to_out
-from gulp_shared.models.user import User
 
 router = APIRouter()
 

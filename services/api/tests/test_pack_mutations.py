@@ -1,13 +1,11 @@
 import uuid
 
 import pytest
-from fastapi.testclient import TestClient
-from sqlalchemy import select
-
 from app.deps import get_db
 from app.main import app
 from app.schemas.pack import BlockCreate, BlockUpdate, BlockWriteAdapter
 from app.services.pack import block_dict, renumber
+from fastapi.testclient import TestClient
 from gulp_shared.models.knowledge_pack import (
     KnowledgePack,
     PackBlock,
@@ -15,8 +13,9 @@ from gulp_shared.models.knowledge_pack import (
     PackSection,
     PackStatus,
 )
-from gulp_shared.models.source import Source, SnapshotStatus, SourceKind
+from gulp_shared.models.source import SnapshotStatus, Source, SourceKind
 from gulp_shared.models.user import DEV_USER_ID
+from sqlalchemy import select
 
 
 @pytest.fixture

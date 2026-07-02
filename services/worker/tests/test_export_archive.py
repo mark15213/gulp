@@ -1,7 +1,6 @@
 import json
 
 import pytest
-
 from app.export.archive import find_entry, read_zip, write_zip
 from app.export.manifest import FORMAT_VERSION, build_manifest, parse_manifest
 
@@ -26,7 +25,8 @@ def test_read_zip_rejects_oversize():
 
 
 def test_manifest_round_trip_and_validation():
-    m = build_manifest(snapshot_id="s1", owner_id="o1", input_sha256="abc", created_at="2026-06-26T00:00:00Z")
+    m = build_manifest(snapshot_id="s1", owner_id="o1", input_sha256="abc",
+                       created_at="2026-06-26T00:00:00Z")
     assert m["format_version"] == FORMAT_VERSION and m["job_kind"] == "digest"
     parsed = parse_manifest(json.dumps(m).encode())
     assert parsed["snapshot_id"] == "s1"

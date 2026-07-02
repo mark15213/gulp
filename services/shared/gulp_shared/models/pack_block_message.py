@@ -9,7 +9,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 from gulp_shared.db import Base, TimestampedBase
 
 
-class ChatRole(str, enum.Enum):
+class ChatRole(enum.StrEnum):
     user = "user"
     assistant = "assistant"
 

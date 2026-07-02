@@ -1,12 +1,15 @@
 """The job manifest — identity + integrity for a job/result archive."""
 
 import json
+from typing import Any
 
 FORMAT_VERSION = 1
 _REQUIRED = ("format_version", "job_kind", "snapshot_id", "owner_id")
 
 
-def build_manifest(*, snapshot_id: str, owner_id: str, input_sha256: str, created_at: str) -> dict:
+def build_manifest(
+    *, snapshot_id: str, owner_id: str, input_sha256: str, created_at: str
+) -> dict[str, Any]:
     return {
         "format_version": FORMAT_VERSION,
         "job_kind": "digest",
@@ -17,7 +20,7 @@ def build_manifest(*, snapshot_id: str, owner_id: str, input_sha256: str, create
     }
 
 
-def parse_manifest(data: bytes) -> dict:
+def parse_manifest(data: bytes) -> dict[str, Any]:
     try:
         m = json.loads(data)
     except json.JSONDecodeError as exc:

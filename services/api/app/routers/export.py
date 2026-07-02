@@ -6,6 +6,8 @@ from collections.abc import Callable
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from fastapi.responses import FileResponse
+from gulp_shared.models.source import Source
+from gulp_shared.models.user import User
 from sqlalchemy.orm import Session
 
 from app.core.auth import get_current_user
@@ -13,8 +15,6 @@ from app.deps import get_db, get_enqueue
 from app.schemas.capture import SnapshotOut
 from app.services.export import job_path, shallow_check, stash_result
 from app.services.snapshots import to_out
-from gulp_shared.models.source import Source
-from gulp_shared.models.user import User
 
 router = APIRouter()
 
@@ -48,7 +48,9 @@ def download_job(
     path = job_path(str(snapshot_id))
     if not os.path.exists(path):
         raise HTTPException(status_code=404, detail="job not built yet")
-    return FileResponse(path, media_type="application/zip", filename=f"gulp-job-{str(snapshot_id)[:8]}.zip")
+    return FileResponse(
+        path, media_type="application/zip", filename=f"gulp-job-{str(snapshot_id)[:8]}.zip"
+    )
 
 
 @router.post("/snapshots/{snapshot_id}/import", response_model=SnapshotOut)

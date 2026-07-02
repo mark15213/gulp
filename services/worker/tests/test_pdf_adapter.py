@@ -26,6 +26,7 @@ def test_pdf_title_falls_back_to_first_line_when_metadata_missing(tmp_path):
     p = tmp_path / "untitled.pdf"
     c = canvas.Canvas(str(p))
     c.drawString(72, 720, "An Untitled Born-Digital Document")
-    c.showPage(); c.save()
+    c.showPage()
+    c.save()
     nd = pdf_to_normdoc(p.read_bytes(), fallback_title="fallback", url="https://x/z.pdf")
     assert nd.title == "An Untitled Born-Digital Document"

@@ -1,12 +1,9 @@
 """Provider registry + the validated `complete_structured` entry point."""
 
-from typing import TypeVar
 
 from pydantic import BaseModel, ValidationError
 
 from gulp_shared.llm.base import LLMError, LLMProvider, Message, ModelConfig
-
-T = TypeVar("T", bound=BaseModel)
 
 _PROVIDERS: dict[str, LLMProvider] = {}
 
@@ -22,7 +19,7 @@ def get_provider(name: str) -> LLMProvider:
         raise LLMError(f"no LLM provider registered as {name!r}") from exc
 
 
-async def complete_structured(
+async def complete_structured[T: BaseModel](
     *,
     response_model: type[T],
     messages: list[Message],

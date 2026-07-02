@@ -4,11 +4,11 @@ import uuid
 from datetime import UTC, datetime
 from typing import Any
 
+from gulp_shared.models.knowledge_pack import KnowledgePack, PackBlock, PackBlockType, PackSection
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.schemas.pack import BlockCreate, BlockUpdate, PackOut, PackReferenceOut, PackSectionOut
-from gulp_shared.models.knowledge_pack import KnowledgePack, PackBlock, PackBlockType, PackSection
 
 
 def block_dict(b: PackBlock) -> dict[str, Any]:
@@ -47,7 +47,12 @@ def pack_out(db: Session, snapshot_id: uuid.UUID) -> PackOut | None:
         .order_by(PackSection.position)
     ):
         blocks = [block_dict(b) for b in live_blocks_ordered(db, section.id)]
-        sections.append(PackSectionOut(id=section.id, heading=section.heading, blocks=blocks))
+        sections.append(
+            # model_validate parses the raw block dicts into the typed union.
+            PackSectionOut.model_validate(
+                {"id": section.id, "heading": section.heading, "blocks": blocks}
+            )
+        )
 
     return PackOut(
         snapshot_id=snapshot_id,

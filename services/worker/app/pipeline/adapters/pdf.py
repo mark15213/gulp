@@ -44,10 +44,14 @@ def pdf_to_normdoc(data: bytes, *, fallback_title: str, url: str) -> NormDoc:
     for label, text in paragraphs:
         start = pos
         end = start + len(text)
-        blocks.append(NormBlock(text=text, section_label=label, anchor=Anchor(start=start, end=end)))
+        blocks.append(
+            NormBlock(text=text, section_label=label, anchor=Anchor(start=start, end=end))
+        )
         parts.append(text)
         pos = end + 2  # the "\n\n" join separator
 
     content_body = "\n\n".join(parts)
     title = _pdf_title(reader, page1_text, fallback_title)
-    return NormDoc(title=title, lang="en", media_type="pdf", content_body=content_body, blocks=blocks)
+    return NormDoc(
+        title=title, lang="en", media_type="pdf", content_body=content_body, blocks=blocks
+    )

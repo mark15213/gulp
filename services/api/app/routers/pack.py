@@ -4,6 +4,8 @@ import uuid
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Response
+from gulp_shared.models.source import Source
+from gulp_shared.models.user import User
 from sqlalchemy.orm import Session
 
 from app.core.auth import get_current_user
@@ -12,8 +14,6 @@ from app.schemas.chat import MessageCreate, MessageOut
 from app.schemas.pack import BlockCreate, BlockOut, BlockUpdate, PackOut
 from app.services.chat import answer_question, list_messages
 from app.services.pack import create_block, delete_block, pack_out, update_block
-from gulp_shared.models.source import Source
-from gulp_shared.models.user import User
 
 router = APIRouter()
 

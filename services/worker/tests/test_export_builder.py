@@ -18,7 +18,8 @@ def test_pack_schema_prompt_and_claude_md():
     assert "sections" in props and "core_contributions" in props and "key_insight" in props
     assert "facets" not in props and "summary" not in props
     cm = claude_md()
-    for needle in ("result/pack.json", "input/norm_doc.json", "schema/pack.schema.json", "prompt.md"):
+    for needle in ("result/pack.json", "input/norm_doc.json",
+                   "schema/pack.schema.json", "prompt.md"):
         assert needle in cm
     pm = prompt_md()
     assert "expert" in pm.lower() and "core_contributions" in pm and "key_insight" in pm

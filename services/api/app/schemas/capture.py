@@ -3,8 +3,6 @@
 import uuid
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict, model_validator
-
 from gulp_shared.domain.urls import is_http_url
 from gulp_shared.models.source import (
     CapturedVia,
@@ -13,6 +11,7 @@ from gulp_shared.models.source import (
     SnapshotStatus,
     SourceKind,
 )
+from pydantic import BaseModel, ConfigDict, model_validator
 
 
 class CaptureRequest(BaseModel):

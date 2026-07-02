@@ -1,16 +1,16 @@
 from typing import Any
 
 import app.tasks as tasks
+import gulp_shared.models  # noqa: F401
 from app.tasks import WorkerSettings, process_snapshot
-from gulp_shared.db import Base  # type: ignore[import-untyped]
-import gulp_shared.models  # type: ignore[import-untyped]  # noqa: F401
-from gulp_shared.models.source import (  # type: ignore[import-untyped]
+from gulp_shared.db import Base
+from gulp_shared.models.source import (
     MediaType,
     SnapshotStatus,
     Source,
     SourceKind,
 )
-from gulp_shared.models.user import DEV_USER_ID, User  # type: ignore[import-untyped]
+from gulp_shared.models.user import DEV_USER_ID, User
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 

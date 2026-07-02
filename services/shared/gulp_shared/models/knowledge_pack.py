@@ -10,12 +10,12 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from gulp_shared.db import Base, TimestampedBase
 
 
-class PackStatus(str, enum.Enum):
+class PackStatus(enum.StrEnum):
     generating = "generating"
     ready = "ready"
 
 
-class PackBlockType(str, enum.Enum):
+class PackBlockType(enum.StrEnum):
     prose = "prose"
     formula = "formula"
     table = "table"

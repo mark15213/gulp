@@ -1,9 +1,9 @@
 from typing import Any
 
-from gulp_shared.llm.base import Message, ModelConfig
 from app.pipeline.digest import MAX_DIGEST_CHARS, run_digest
 from app.pipeline.normdoc import Anchor, NormBlock, NormDoc
 from app.pipeline.schemas import PaperReport
+from gulp_shared.llm.base import Message, ModelConfig
 
 
 class FakeProvider:

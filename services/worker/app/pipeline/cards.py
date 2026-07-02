@@ -8,18 +8,18 @@ edits), never re-runs it. Replace semantics: a re-run replaces this source's
 
 import logging
 
-from gulp_shared.contracts.cards import CardsPayload  # type: ignore[import-untyped]
-from gulp_shared.llm import ModelConfig, complete_structured  # type: ignore[import-untyped]
-from gulp_shared.llm.base import LLMProvider  # type: ignore[import-untyped]
-from gulp_shared.models.card import Card, CardOrigin, CardStatus  # type: ignore[import-untyped]
-from gulp_shared.models.knowledge_pack import (  # type: ignore[import-untyped]
+from gulp_shared.contracts.cards import CardsPayload
+from gulp_shared.llm import ModelConfig, complete_structured
+from gulp_shared.llm.base import LLMProvider
+from gulp_shared.models.card import Card, CardOrigin, CardStatus
+from gulp_shared.models.knowledge_pack import (
     KnowledgePack,
     PackBlock,
     PackBlockType,
     PackStatus,
 )
-from gulp_shared.models.source import CardsStatus, Source  # type: ignore[import-untyped]
-from gulp_shared.settings import settings  # type: ignore[import-untyped]
+from gulp_shared.models.source import CardsStatus, Source
+from gulp_shared.settings import settings
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 

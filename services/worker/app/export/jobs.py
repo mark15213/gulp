@@ -5,6 +5,13 @@ import os
 from collections.abc import Awaitable, Callable
 from datetime import UTC, datetime
 
+from gulp_shared.models.source import (
+    MediaType,
+    SnapshotStatus,
+    Source,
+)
+from gulp_shared.settings import settings
+from gulp_shared.urls import host_of
 from sqlalchemy.orm import Session
 
 from app.export.builder import build_job_archive
@@ -12,9 +19,6 @@ from app.export.importer import import_result_archive
 from app.pipeline.adapters.fetch import FetchedDoc, fetch_document
 from app.pipeline.persist import persist_pack
 from app.pipeline.run import _to_normdoc
-from gulp_shared.models.source import MediaType, SnapshotStatus, Source  # type: ignore[import-untyped]
-from gulp_shared.settings import settings  # type: ignore[import-untyped]
-from gulp_shared.urls import host_of  # type: ignore[import-untyped]
 
 logger = logging.getLogger("gulp.worker")
 

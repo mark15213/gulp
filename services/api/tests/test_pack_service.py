@@ -8,7 +8,7 @@ from gulp_shared.models.knowledge_pack import (
     PackSection,
     PackStatus,
 )
-from gulp_shared.models.source import Source, SnapshotStatus, SourceKind
+from gulp_shared.models.source import SnapshotStatus, Source, SourceKind
 from gulp_shared.models.user import DEV_USER_ID
 
 

@@ -3,11 +3,10 @@ import json
 import zipfile
 
 import pytest
-from fastapi.testclient import TestClient
-
 from app.deps import get_db, get_enqueue
 from app.main import app
-from gulp_shared.models.source import Source, SnapshotStatus, SourceKind
+from fastapi.testclient import TestClient
+from gulp_shared.models.source import SnapshotStatus, Source, SourceKind
 from gulp_shared.models.user import DEV_USER_ID
 
 
@@ -34,9 +33,11 @@ def _result_zip(snapshot_id: str, *, with_pack=True, owner=str(DEV_USER_ID)) -> 
     buf = io.BytesIO()
     with zipfile.ZipFile(buf, "w") as zf:
         zf.writestr("manifest.json", json.dumps(
-            {"format_version": 1, "job_kind": "digest", "snapshot_id": snapshot_id, "owner_id": owner}))
+            {"format_version": 1, "job_kind": "digest",
+             "snapshot_id": snapshot_id, "owner_id": owner}))
         if with_pack:
-            zf.writestr("result/pack.json", json.dumps({"summary": "s", "sections": [], "facets": []}))
+            zf.writestr("result/pack.json",
+                        json.dumps({"summary": "s", "sections": [], "facets": []}))
     return buf.getvalue()
 
 
@@ -76,6 +77,7 @@ def test_import_wrong_snapshot_id_422(client, db):  # type: ignore[no-untyped-de
 
 def test_job_streams_file(client, db, tmp_path, monkeypatch):  # type: ignore[no-untyped-def]
     import os
+
     from app.services import export as export_svc
     monkeypatch.setattr(export_svc.settings, "export_dir", str(tmp_path))
     sid = _snap(db, status=SnapshotStatus.exported)

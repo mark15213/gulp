@@ -1,14 +1,18 @@
 from pathlib import Path
 
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-
+import gulp_shared.models  # noqa: F401
 from app.pipeline.adapters.fetch import FetchedDoc
 from app.pipeline.metadata import run_resolve_metadata
-from gulp_shared.db import Base  # type: ignore[import-untyped]
-import gulp_shared.models  # type: ignore[import-untyped]  # noqa: F401
-from gulp_shared.models.source import MediaType, SnapshotStatus, Source, SourceKind  # type: ignore[import-untyped]
-from gulp_shared.models.user import DEV_USER_ID, User  # type: ignore[import-untyped]
+from gulp_shared.db import Base
+from gulp_shared.models.source import (
+    MediaType,
+    SnapshotStatus,
+    Source,
+    SourceKind,
+)
+from gulp_shared.models.user import DEV_USER_ID, User
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 
 
 def _session():  # type: ignore[no-untyped-def]
@@ -32,7 +36,8 @@ async def test_resolve_sets_real_title_and_pdf_type_over_host_placeholder() -> N
     snap = Source(owner_id=DEV_USER_ID, kind=SourceKind.snapshot, title="arxiv.org",
                   status=SnapshotStatus.unprocessed, media_type=MediaType.webpage,
                   origin_url="https://arxiv.org/pdf/x")
-    s.add(snap); s.flush()
+    s.add(snap)
+    s.flush()
     await run_resolve_metadata(s, snap, fetch=_pdf_fetch())
     assert snap.title == "The Spacing Effect"
     assert snap.media_type == MediaType.pdf
@@ -44,7 +49,8 @@ async def test_resolve_keeps_a_user_supplied_title() -> None:
     snap = Source(owner_id=DEV_USER_ID, kind=SourceKind.snapshot, title="My own title",
                   status=SnapshotStatus.unprocessed, media_type=MediaType.webpage,
                   origin_url="https://arxiv.org/pdf/x")
-    s.add(snap); s.flush()
+    s.add(snap)
+    s.flush()
     await run_resolve_metadata(s, snap, fetch=_pdf_fetch())
     assert snap.title == "My own title"  # not the host placeholder -> untouched
     assert snap.media_type == MediaType.pdf  # type still refined
@@ -56,7 +62,8 @@ async def test_resolve_uses_arxiv_abstract_title_for_a_pdf_link() -> None:
     snap = Source(owner_id=DEV_USER_ID, kind=SourceKind.snapshot, title="arxiv.org",
                   status=SnapshotStatus.unprocessed, media_type=MediaType.webpage,
                   origin_url="https://arxiv.org/pdf/1706.03762")
-    s.add(snap); s.flush()
+    s.add(snap)
+    s.flush()
 
     pdf = (Path(__file__).parent / "fixtures" / "sample.pdf").read_bytes()
     abs_html = ('<html><head><meta name="citation_title" '
@@ -68,5 +75,6 @@ async def test_resolve_uses_arxiv_abstract_title_for_a_pdf_link() -> None:
         return FetchedDoc(content=pdf, content_type="application/pdf")
 
     await run_resolve_metadata(s, snap, fetch=_fetch)
-    assert snap.title == "Attention Is All You Need"  # from the abstract page, not the PDF first line
+    # from the abstract page, not the PDF first line
+    assert snap.title == "Attention Is All You Need"
     assert snap.media_type == MediaType.pdf            # still from the real (PDF) fetch

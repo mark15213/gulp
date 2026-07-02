@@ -1,10 +1,9 @@
 import json
 
 import pytest
-from pydantic import ValidationError
-
 from app.export.archive import write_zip
 from app.export.importer import import_result_archive
+from pydantic import ValidationError
 
 _VALID = {
     "title": "T",

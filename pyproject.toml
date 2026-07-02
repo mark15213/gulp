@@ -20,9 +20,22 @@ target-version = "py313"
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]
 
+[tool.ruff.lint.flake8-bugbear]
+# FastAPI's dependency-injection idiom: Depends()/Query() in defaults is by design.
+extend-immutable-calls = ["fastapi.Depends", "fastapi.Query", "fastapi.File"]
+
+[tool.ruff.lint.per-file-ignores]
+# Alembic migrations favor literal fidelity over line-width.
+"services/api/alembic/versions/*" = ["E501"]
+
 [tool.mypy]
 python_version = "3.13"
 strict = true
+# api and worker both expose a top-level `app` package, and every service has a
+# tests/conftest.py — mypy must run per service (see justfile), like pytest.
+# Tests and alembic scripts are excluded: tests are exercised by pytest and use
+# fixtures/dynamic patterns that fight strict typing; migrations are operational.
+exclude = ['alembic/', '/tests/']
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

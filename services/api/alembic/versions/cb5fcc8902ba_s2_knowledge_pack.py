@@ -3,9 +3,8 @@
 Revision ID: cb5fcc8902ba
 Revises: 00371ef138ba
 """
-from alembic import op
 import sqlalchemy as sa
-
+from alembic import op
 
 revision = 'cb5fcc8902ba'
 down_revision = '00371ef138ba'

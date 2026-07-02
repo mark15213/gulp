@@ -1,10 +1,9 @@
 import uuid
 from datetime import datetime
 
+from gulp_shared.db import Base, TimestampedBase
 from sqlalchemy import String
 from sqlalchemy.orm import Mapped, mapped_column
-
-from gulp_shared.db import Base, TimestampedBase
 
 
 class _Widget(TimestampedBase, Base):
