@@ -69,7 +69,7 @@ The entity set, grouped by the spine step it serves:
 | Spine step | Entities |
 |---|---|
 | **Save** | `Source` → `Snapshot` · `Conversation` · `Subscription` |
-| **Digest** | `KnowledgePack`, `PackElement` |
+| **Digest** | `KnowledgePack` (+ `PackSection` / `PackBlock`) |
 | **Practice** | `Card`, `GulpSession`, `ReviewEvent` |
 | **Master** | `MasteryState` (vo), `SchedulingState` (vo), `Concept`, `ConceptEdge` |
 | **Organize** | `KnowledgeBase`, `Digest` / `DigestItem` |
@@ -80,7 +80,7 @@ The entity set, grouped by the spine step it serves:
 erDiagram
     User ||--o{ Source : owns
     Source ||--o| KnowledgePack : "snapshot has"
-    KnowledgePack ||--o{ PackElement : contains
+    KnowledgePack ||--o{ PackSection : "report body"
     Source ||--o{ Card : "drafted from"
     Card }o--o{ Concept : "tests (link)"
     Source }o--o{ Concept : "about (link)"
@@ -94,7 +94,6 @@ erDiagram
     GulpSession ||--o{ ReviewEvent : logs
     Card ||--o{ ReviewEvent : graded-by
     Digest ||--o{ DigestItem : ranks
-    PackElement }o--o| Concept : "may reference"
 ```
 
 > `Snapshot`, `Conversation`, and `Subscription` are the three **forms of `Source`** (one entity, `kind` discriminator — §4.2). The diagram draws them as `Source` to keep the umbrella visible; the self-reference *"subscription emits snapshot"* is one `Source` row pointing at another.
@@ -111,7 +110,7 @@ The account. Holds the few settings the flows reference; everything else hangs o
 |---|---|---|
 | `display_name` | `string?` | |
 | `locale` | `enum{zh·en}` | v1 languages (`01 §11`) |
-| `auto_approve_default` | `bool` | global review-gate skip (`01 §F2`); per-feed override lives on `Subscription` |
+| `auto_approve_default` | `bool` | *(parked with the snapshot gate — `01 §F2` amendment 2026-07-02; re-enters with auto-process/feeds)* |
 | `gulp_session_minutes` | `int` | default session length (default 5; `01 §F4`) |
 | `daily_reminder_at` | `string?` | local time-of-day for the Gulp reminder (`01 §F9`) |
 | `notification_prefs` | *value object* | per-type opt-in + quiet mode (`01 §F9`) |
@@ -159,21 +158,22 @@ The frozen, point-in-time item — "the everyday thing you gulped" (`01 §4.2`).
 
 ---
 
-### 4.4 `KnowledgePack` + `PackSection` / `PackBlock` + `PackElement`
+### 4.4 `KnowledgePack` + `PackSection` / `PackBlock`
 
-The AI-generated **digest, authored as a readable report** — not a flat summary. Exists **only** for a `Snapshot` (invariant, §9). *Structure resolved in S2 design ([`subsystems/S2-processing-design.md §3`](subsystems/S2-processing-design.md)).*
+The AI-generated **digest, authored as a structured paper report** — not a flat summary. Exists **only** for a `Snapshot` (invariant, §9). *(Amended 2026-06-28/07-02 — the original facet layer (`PackElement`), `summary`/`background`/`confidence`, and source anchoring were dropped with the paper-report contract; see [`superpowers/specs/2026-06-28-paper-report-contract-design.md`](superpowers/specs/2026-06-28-paper-report-contract-design.md) and [`superpowers/specs/2026-07-02-block-editable-pack-reader-design.md`](superpowers/specs/2026-07-02-block-editable-pack-reader-design.md).)*
 
 **`KnowledgePack`**
 
 | Field | Type | Notes |
 |---|---|---|
 | `snapshot` | `→Source` | the `kind=snapshot` it digests (1–1) |
-| `summary` | `text` | pack-level abstract |
-| `background` | `text?` | |
-| `confidence` | `float?` | low/thin-content signal — drives "only what's reliable, and says so" (`01 §F2`) |
+| `title` | `text` | report title |
+| `key_insight` | `text` | the single most transferable idea — highlighted lead |
+| `core_contributions` | `string[]` (1–5) | concise standalone statements; the primary skim entry |
+| `references` | `{citation, why_interesting}[]?` | follow-up references |
 | `status` | `enum{generating·ready}` | |
 
-**`PackSection` / `PackBlock`** — the **report the user reads** (the spine). A pack has ordered `PackSection`s, each holding ordered `PackBlock`s; every block anchors back to the source for grounding / "open original".
+**`PackSection` / `PackBlock`** — the **report the user reads**: ordered sections of ordered, typed blocks.
 
 | `PackSection` field | Type | Notes |
 |---|---|---|
@@ -184,28 +184,27 @@ The AI-generated **digest, authored as a readable report** — not a flat summar
 | `PackBlock` field | Type | Notes |
 |---|---|---|
 | `section` | `→PackSection` | parent |
-| `block_type` | `enum{prose·figure·callout·quote}` | `figure` = mermaid source (text) or a blob ref |
-| `content` | `text?` | prose body / figure source |
-| `content_ref` | `string?` | blob pointer for raster figures (deferred) |
-| `source_anchor` | *value object*`?` | coordinate back into the source — `{kind: char_range·page·timestamp, …}` |
-| `anchor_id` | `string` | stable id; chat, annotations, and Cards attach here |
+| `block_type` | `enum{prose·formula·table·figure·list}` | |
+| `data` | `json` | the variant fields per type (below) |
 | `position` | `int` | order within the section |
 
-**`PackElement`** — the reviewable **facet-annotations** layered on the report (terms, people, claims, counter-views, connections). One entity with a discriminator keeps the `suggested → kept/dismissed` review state uniform; each hangs on the report block it annotates.
+| `block_type` | `data` shape | Use |
+|---|---|---|
+| `prose` | `{content}` | Markdown; `**bold**`, inline `$math$` |
+| `formula` | `{latex, explanation}` | display equation + one-line explanation |
+| `table` | `{headers, rows, caption?}` | results / baseline comparisons |
+| `figure` | `{label, explanation}` | no image stored — the figure described in words |
+| `list` | `{items, ordered?}` | hyperparameters, sub-points |
+
+**`PackBlockMessage`** — the per-block conversation (the web reader's "Discuss" panel; the S6 anchor made concrete).
 
 | Field | Type | Notes |
 |---|---|---|
-| `pack` | `→KnowledgePack` | parent |
-| `element_type` | `enum{key_term·person_org·claim·counter_view·connection}` | |
-| `text` | `text?` | the gloss/claim/counter-view body |
-| `concept` | `→Concept?` | set for `key_term`, `person_org`, and `connection` (the linked Concept) |
-| `block` | `→PackBlock?` | the report block this annotation hangs on (`anchor_id`) |
-| `section_label` | `string?` | for section-chunked long content (`01 §F2`) |
-| `state` | `enum{suggested·kept·dismissed}` | `01 §F2` |
+| `block` | `→PackBlock` | cascade-deletes with the block |
+| `role` | `enum{user·assistant}` | |
+| `content` | `text` | grounded on the block + section + pack + source body |
 
-> The **report (`PackSection`/`PackBlock`) is the reading deliverable** — read/editable, not reviewed block-by-block. The **facets (`PackElement`) are reviewed** `suggested → kept/dismissed`. *Key terms*/*people/orgs* become links to `Concept`; *connections* become `ConceptEdge`s (both created/normalized on commit, S3); *claims*/*counter-views* can be promoted to a `Card`. The pack is a **living document** — user-triggered figures and accepted conversation sediment append new blocks after generation.
-
----
+> The pack is a **living document**: blocks are editable in place, and can be added / deleted / reordered in the web reader (block ids are stable API objects). **Re-running processing replaces the pack wholesale** — manual edits and block chats are discarded (confirmed in the UI). Cards are drafted *from* the pack on demand (§4.5, cards spec) — there is no intermediate facet layer.
 
 ### 4.5 `Card`
 
@@ -287,7 +286,7 @@ A Conversation is itself a **form of `Source`** (`01 §F5`) — an interactive o
 |---|---|---|
 | `conversation` | `→Source` | |
 
-**`SedimentItem`** — same `suggested → kept/dismissed` shape as `PackElement`, different source.
+**`SedimentItem`** — carries the `suggested → kept/dismissed` review shape (per-item accept, like Cards).
 
 | Field | Type | Notes |
 |---|---|---|
@@ -454,7 +453,6 @@ Every `status`/`state` field, in one place. (`Source.status` is split by form, s
 | **`Conversation.status`** | `active · saved · discarded` | `active`→`saved` (with sediment) · `active`→`discarded` (keeps thread) |
 | **`Subscription.status`** | `active · muted · error` | `active`↔`muted` · `active`↔`error` (fetch) |
 | **`KnowledgePack.status`** | `generating · ready` | `generating`→`ready` |
-| **`PackElement.state`** | `suggested · kept · dismissed` | `suggested`→`kept`/`dismissed` |
 | **`SedimentItem.state`** | `suggested · kept · dismissed` | `suggested`→`kept`/`dismissed` |
 | **`Card.status`** | `draft · accepted · rejected` | `draft`→`accepted` (enters scheduling) / `rejected` |
 | **`GulpSession.status`** | `building · active · complete · abandoned` | `building`→`active`→`complete`/`abandoned`; `abandoned`→`active` (resume) |
@@ -472,8 +470,8 @@ These realize the cross-cutting states in `01 §7` (Loading/Empty/Processing/Err
 | `Source(snapshot)` | `KnowledgePack` | 1 — 0..1 | `Snapshot.pack` | pack only for snapshots |
 | `KnowledgePack` | `PackSection` | 1 — N | `PackSection.pack` | the report spine |
 | `PackSection` | `PackBlock` | 1 — N | `PackBlock.section` | ordered blocks |
-| `KnowledgePack` | `PackElement` | 1 — N | `PackElement.pack` | facet-annotations |
-| `PackElement` | `PackBlock` | N — 0..1 | `PackElement.block` | annotation hangs on a block |
+| `KnowledgePack` | `PackSection` → `PackBlock` | 1 — N — N | `PackSection.pack` / `PackBlock.section` | the report body (ordered) |
+| `PackBlock` | `PackBlockMessage` | 1 — N | `PackBlockMessage.block` | per-block conversation |
 | `Source` | `Card` | 1 — N | `Card.source` | a Card may be sourceless (`user` takeaway) |
 | `Card` | `Concept` | N — M | `CardConcept` | what a Card tests |
 | `Source` | `Concept` | N — M | `SourceConcept` | what a Source is about |
@@ -500,9 +498,9 @@ Each resolves an open question from `01 §11` (or a modeling fork). **Reversible
 | D2 | **Snapshot stores full extracted `content_body` *and* `origin_url`/`content_ref`.** | Link-rot protection is core to what a Snapshot *is* (`01 §4.2`). Resolves the `01 §11` open question. | **Yes** — `content_body` can move to a blob store via `content_ref` later; a physical concern (§9 deferred). |
 | D3 | **Inbox is a derived view, not an entity.** Inbox = `Snapshot` where `status = awaiting_review` **and** no `KBMembership`. | Resolves `01 §11`'s "pinned entry vs. filter" question — modeling it as a query means mobile (`Today` peek) and web (`Inbox`/Library filter) are the same underlying set, no duplicated state. | Yes — UI may present it either way; the model doesn't care. |
 | D4 | **Mastery stores the 7-rung ladder; the 3-state view and `due`/`at_risk` are derived.** | `01 §F7` explicitly wants both granularities without "seven badges" in daily UI. One stored source of truth → no drift. | Yes — mapping table (§5.1) is the only thing to change. |
-| D5 | **No `Insight`/`Claim`/`Question` entities.** Takeaways are `Card(origin=user)`; claims/counter-views are `PackElement`s; questions are `Card`s. | Follows `01 §4.2`'s pruning of `00`'s longer list. | Yes — could promote any to a first-class entity later. |
+| D5 | **No `Insight`/`Claim`/`Question` entities.** Takeaways are `Card(origin=user)`; claims/counter-views live in the report prose; questions are `Card`s. | Follows `01 §4.2`'s pruning of `00`'s longer list. | Yes — could promote any to a first-class entity later. |
 | D6 | **`Card.scheduling` is a fold over append-only `ReviewEvent`s.** | Keeps history immutable and makes the FSRS swap (`01 §11`) a pure recompute, not a migration. | Yes. |
-| D7 | **The pack is a readable, re-authored report** (`PackSection`/`PackBlock` spine) with facets (`PackElement`) as annotations; v1 processing is **manual-trigger** (relaxes `01` principle 2) and reports are authored in English. | Reading-first digestion is the product thesis (`00`); manual trigger controls API cost. Resolved in S2 design (`subsystems/S2-processing-design.md`, `04 §6`). | Yes — structure/triggers can evolve per `04 §6`. |
+| D7 | **The pack is a readable, re-authored report** (`PackSection`/`PackBlock` spine, typed blocks, block-editable); the facet layer was dropped with the paper-report contract (2026-06-28); v1 processing is **manual-trigger** (relaxes `01` principle 2) and reports are authored in English. | Reading-first digestion is the product thesis (`00`); manual trigger controls API cost. Resolved in S2 design + `superpowers/specs/2026-06-28-paper-report-contract-design.md`. | Yes — structure/triggers can evolve per `04 §6`. |
 
 ---
 

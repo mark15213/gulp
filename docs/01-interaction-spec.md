@@ -138,8 +138,8 @@ Each flow: **trigger → steps → key screens → states → edge cases**, with
 **Goal:** turn a Snapshot into a **readable, re-authored knowledge pack** (a report the user pages through), then commit it (and its Cards) into the library — reviewed by default, but never as a hard blocker.
 
 **Steps:**
-1. On trigger (§F1), the Snapshot enters `Processing`; Gulp **re-authors the source into a report** (sections the user reads, each grounded back to the source) and extracts the **facets** over it: summary → background → key terms → people/orgs → core claims → counter-views → connections to existing Concepts. *(Pack-as-report structure: S2 design §3.)*
-2. Candidate **Cards** are drafted from the pack (not yet scheduled).
+1. On trigger (§F1), the Snapshot enters `Processing`; Gulp **re-authors the source into a structured report**: title, 1–5 **core contributions** (the skim entry), the single **key insight**, the sectioned body (prose · formula · table · figure · list blocks), and follow-up **references**. *(Amended 2026-06-28 — the facet layer was dropped with the paper-report contract; see [`superpowers/specs/2026-06-28-paper-report-contract-design.md`](superpowers/specs/2026-06-28-paper-report-contract-design.md).)*
+2. Candidate **Cards** are drafted from the pack **on demand** (generate or import, §F2 step 5 — not yet scheduled).
 3. On `Ready`, the Snapshot **is in the library** — with manual-trigger processing (S2 §2.4) the user requested and reads every pack, so a separate approval act would confirm nothing.
 4. User reads the report, edits blocks in place, and discusses blocks in the side panel (the pack is a living document).
 5. Cards arrive as `draft` (generated on demand from the pack, or imported as `cards.json`); the user **accepts/rejects per card** — accepted Cards enter scheduling at §F7.
