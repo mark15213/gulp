@@ -5,6 +5,7 @@ import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
 import "katex/dist/katex.min.css";
 import type { PackOut } from "@gulp/api-client";
+import { BlockCell } from "./BlockCell";
 import styles from "./PackReport.module.css";
 
 type Block = PackOut["sections"][number]["blocks"][number];
@@ -113,11 +114,13 @@ export function PackReport({ pack }: { pack: PackOut }) {
         </section>
       )}
 
-      {pack.sections.map((section, i) => (
-        <section key={i} className={styles.section}>
+      {pack.sections.map((section) => (
+        <section key={section.id} className={styles.section}>
           {section.heading && <h2 className={styles.heading}>{section.heading}</h2>}
-          {section.blocks.map((block, j) => (
-            <BlockView key={j} block={block} />
+          {section.blocks.map((block) => (
+            <BlockCell key={block.id} id={block.id}>
+              <BlockView block={block} />
+            </BlockCell>
           ))}
         </section>
       ))}
