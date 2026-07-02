@@ -1,0 +1,76 @@
+/* Slide-over chat for one block (docs/03: right panel, hairline, tokens only). */
+.panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 100vh;
+  width: 380px;
+  background: var(--surface);
+  border-left: 1px solid var(--border);
+  box-shadow: var(--shadow-overlay);
+  display: flex;
+  flex-direction: column;
+  z-index: 50;
+}
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--border);
+}
+.close {
+  color: var(--text-2);
+  font-size: 15px;
+}
+.messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.user {
+  align-self: flex-end;
+  background: var(--blue-50);
+  color: var(--blue-700);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  max-width: 85%;
+}
+.assistant {
+  align-self: flex-start;
+  background: var(--fill);
+  color: var(--text-1);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  max-width: 85%;
+  white-space: pre-wrap;
+}
+.thinking {
+  align-self: flex-start;
+  color: var(--text-2);
+  font-size: 13px;
+}
+.err {
+  padding: var(--space-2) var(--space-4);
+  background: var(--state-risk-tint);
+  color: var(--state-risk-on);
+  font-size: 13px;
+}
+.composer {
+  display: flex;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border-top: 1px solid var(--border);
+}
+.input {
+  flex: 1;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--space-2);
+  font: inherit;
+  resize: none;
+  min-height: 40px;
+}
