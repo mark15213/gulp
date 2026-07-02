@@ -350,7 +350,7 @@ def delete_block_route(
     try:
         delete_block(db, snapshot_id, block_id)
     except LookupError:
-        raise HTTPException(status_code=404, detail="block not found")
+        raise HTTPException(status_code=404, detail="block not found") from None
     return Response(status_code=204)
 ```
 
@@ -473,7 +473,7 @@ def update_block_route(
     try:
         return update_block(db, snapshot_id, block_id, update)
     except LookupError:
-        raise HTTPException(status_code=404, detail="block not found")
+        raise HTTPException(status_code=404, detail="block not found") from None
 ```
 
 - [ ] **Step 5: Run tests to verify they pass**
@@ -610,7 +610,7 @@ def create_block_route(
     try:
         return create_block(db, snapshot_id, section_id, create)
     except LookupError:
-        raise HTTPException(status_code=404, detail="section not found")
+        raise HTTPException(status_code=404, detail="section not found") from None
 ```
 
 - [ ] **Step 5: Run the full mutation + router suites**
