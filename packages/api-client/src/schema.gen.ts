@@ -158,6 +158,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/snapshots/{snapshot_id}/blocks/{block_id}/messages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Block Messages Route */
+        get: operations["list_block_messages_route_snapshots__snapshot_id__blocks__block_id__messages_get"];
+        put?: never;
+        /** Post Block Message Route */
+        post: operations["post_block_message_route_snapshots__snapshot_id__blocks__block_id__messages_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/snapshots/{snapshot_id}/process": {
         parameters: {
             query?: never;
@@ -354,6 +372,28 @@ export interface components {
          * @enum {string}
          */
         MediaType: "article" | "pdf" | "video" | "podcast" | "note" | "screenshot" | "audio" | "webpage";
+        /** MessageCreate */
+        MessageCreate: {
+            /** Content */
+            content: string;
+        };
+        /** MessageOut */
+        MessageOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Role */
+            role: string;
+            /** Content */
+            content: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
         /** PackOut */
         PackOut: {
             /**
@@ -820,6 +860,74 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ProseBlockOut"] | components["schemas"]["FormulaBlockOut"] | components["schemas"]["TableBlockOut"] | components["schemas"]["FigureBlockOut"] | components["schemas"]["ListBlockOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_block_messages_route_snapshots__snapshot_id__blocks__block_id__messages_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                snapshot_id: string;
+                block_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MessageOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_block_message_route_snapshots__snapshot_id__blocks__block_id__messages_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                snapshot_id: string;
+                block_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MessageCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MessageOut"];
                 };
             };
             /** @description Validation Error */
