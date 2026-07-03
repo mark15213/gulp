@@ -87,3 +87,26 @@ def test_job_streams_file(client, db, tmp_path, monkeypatch):  # type: ignore[no
     r = client.get(f"/snapshots/{sid}/job")
     assert r.status_code == 200
     assert r.headers["content-type"] == "application/zip"
+
+
+# The web client probes cards-job readiness with an HTTP HEAD (cardsJobReady):
+# it must reflect the file's existence (200 vs 404), not 405 Method Not Allowed.
+def test_cards_job_head_ready_when_built(client, db, tmp_path, monkeypatch):  # type: ignore[no-untyped-def]
+    import os
+
+    from app.services import export as export_svc
+    monkeypatch.setattr(export_svc.settings, "export_dir", str(tmp_path))
+    sid = _snap(db, status=SnapshotStatus.ready)
+    os.makedirs(str(tmp_path), exist_ok=True)
+    with open(export_svc.cards_job_path(sid), "wb") as f:
+        f.write(b"PK\x03\x04 fake cards zip")
+    r = client.head(f"/snapshots/{sid}/cards/job")
+    assert r.status_code == 200
+
+
+def test_cards_job_head_404_when_not_built(client, db, tmp_path, monkeypatch):  # type: ignore[no-untyped-def]
+    from app.services import export as export_svc
+    monkeypatch.setattr(export_svc.settings, "export_dir", str(tmp_path))
+    sid = _snap(db, status=SnapshotStatus.ready)
+    r = client.head(f"/snapshots/{sid}/cards/job")
+    assert r.status_code == 404
