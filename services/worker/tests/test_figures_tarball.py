@@ -37,3 +37,16 @@ def test_resolve_by_extension_and_graphicspath() -> None:
     # basename fallback
     assert resolve_member("sub/arch", [], members).name == "figs/arch.pdf"
     assert resolve_member("missing", [], members) is None
+
+
+def test_corrupt_gzip_returns_empty() -> None:
+    blob = b"\x1f\x8b" + b"not actually gzip data, just garbage bytes"
+    assert read_tar_gz(blob, max_total=1_000_000) == []
+
+
+def test_oversized_member_excluded_by_proactive_cap() -> None:
+    blob = _targz({"small.png": b"x" * 10, "big.png": b"y" * 1000})
+    members = read_tar_gz(blob, max_total=100)
+    names = {m.name for m in members}
+    assert "small.png" in names
+    assert "big.png" not in names

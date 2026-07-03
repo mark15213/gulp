@@ -7,6 +7,7 @@ import gzip
 import io
 import posixpath
 import tarfile
+import zlib
 from dataclasses import dataclass
 
 _CANDIDATE_EXTS = (".pdf", ".png", ".jpg", ".jpeg", ".gif", ".webp", ".eps")
@@ -26,7 +27,10 @@ def _is_safe(name: str) -> bool:
 
 def read_tar_gz(blob: bytes, *, max_total: int) -> list[TarMember]:
     if blob[:2] == b"\x1f\x8b":
-        blob = gzip.decompress(blob)
+        try:
+            blob = gzip.decompress(blob)
+        except (OSError, EOFError, zlib.error):
+            return []
     members: list[TarMember] = []
     total = 0
     try:
@@ -34,13 +38,13 @@ def read_tar_gz(blob: bytes, *, max_total: int) -> list[TarMember]:
             for info in tar.getmembers():
                 if not info.isfile() or not _is_safe(info.name):
                     continue
+                if total + info.size > max_total:
+                    break
                 f = tar.extractfile(info)
                 if f is None:
                     continue
                 data = f.read()
                 total += len(data)
-                if total > max_total:
-                    break
                 members.append(TarMember(name=info.name, data=data))
     except tarfile.TarError:
         return []
