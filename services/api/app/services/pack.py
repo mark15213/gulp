@@ -99,7 +99,7 @@ def update_block(
     block = load_block_scoped(db, snapshot_id, block_id)
     if update.content is not None:
         block.block_type = PackBlockType(update.content.type)
-        block.data = update.content.model_dump(exclude={"type"})
+        block.data = update.content.model_dump(exclude={"type"}, mode="json")
     if update.position is not None:
         others = [b for b in live_blocks_ordered(db, block.section_id) if b.id != block.id]
         pos = max(0, min(update.position, len(others)))
@@ -134,7 +134,7 @@ def create_block(
     block = PackBlock(
         section_id=section_id,
         block_type=PackBlockType(create.content.type),
-        data=create.content.model_dump(exclude={"type"}),
+        data=create.content.model_dump(exclude={"type"}, mode="json"),
         position=0,
     )
     db.add(block)

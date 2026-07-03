@@ -33,6 +33,7 @@ class FigureBlockOut(BaseModel):
     type: Literal["figure"] = "figure"
     label: str
     explanation: str
+    figure_id: uuid.UUID | None = None
 
 
 class ListBlockOut(BaseModel):
@@ -64,6 +65,7 @@ class FigureWrite(BaseModel):
     type: Literal["figure"] = "figure"
     label: str
     explanation: str
+    figure_id: uuid.UUID | None = None
 
 
 class ListWrite(BaseModel):

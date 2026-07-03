@@ -14,6 +14,7 @@ from gulp_shared.models.knowledge_pack import (
     PackStatus,
 )
 from gulp_shared.models.source import SnapshotStatus, Source, SourceKind
+from gulp_shared.models.source_figure import SourceFigure
 from gulp_shared.models.user import DEV_USER_ID
 from sqlalchemy import select
 
@@ -46,6 +47,62 @@ def _pack_with_blocks(db):  # type: ignore[no-untyped-def]
     db.add_all([b0, b1])
     db.commit()
     return {"snap": snap.id, "sec": sec.id, "b0": b0.id, "b1": b1.id}
+
+
+def _figure_block(db):  # type: ignore[no-untyped-def]
+    """snapshot -> pack -> section -> one figure block, plus a SourceFigure on the snapshot."""
+    snap = Source(owner_id=DEV_USER_ID, kind=SourceKind.snapshot, title="T",
+                  status=SnapshotStatus.ready)
+    db.add(snap)
+    db.flush()
+    pack = KnowledgePack(snapshot_id=snap.id, title="T", key_insight="ki",
+                         core_contributions=[], references=[], status=PackStatus.ready)
+    db.add(pack)
+    db.flush()
+    sec = PackSection(pack_id=pack.id, heading="H", position=0)
+    db.add(sec)
+    db.flush()
+    block = PackBlock(section_id=sec.id, block_type=PackBlockType.figure,
+                      data={"label": "F1", "explanation": "e"}, position=0)
+    db.add(block)
+    fig = SourceFigure(source_id=snap.id, ext="png", mime_type="image/png")
+    db.add(fig)
+    db.commit()
+    return {"snap": snap.id, "block": block.id, "figure_id": fig.id}
+
+
+def test_update_figure_block_stores_figure_id(db) -> None:  # type: ignore[no-untyped-def]
+    from app.services.pack import update_block
+    ids = _figure_block(db)
+    out = update_block(db, ids["snap"], ids["block"], BlockUpdate.model_validate(
+        {"content": {"type": "figure", "label": "F1", "explanation": "e",
+                     "figure_id": str(ids["figure_id"])}}))
+    assert str(out["figure_id"]) == str(ids["figure_id"])
+
+
+def test_figure_id_round_trips_through_pack_out(db) -> None:  # type: ignore[no-untyped-def]
+    """After update, the read path serializes figure_id back through FigureBlockOut."""
+    from app.services.pack import pack_out, update_block
+    ids = _figure_block(db)
+    update_block(db, ids["snap"], ids["block"], BlockUpdate.model_validate(
+        {"content": {"type": "figure", "label": "F1", "explanation": "e",
+                     "figure_id": str(ids["figure_id"])}}))
+    pack = pack_out(db, ids["snap"])
+    assert pack is not None
+    fig_block = pack.sections[0].blocks[0]
+    assert fig_block.type == "figure"
+    assert str(fig_block.figure_id) == str(ids["figure_id"])
+
+
+def test_figure_block_without_figure_id_defaults_to_none(db) -> None:  # type: ignore[no-untyped-def]
+    """A figure block that never set figure_id reads back as None (optional field)."""
+    from app.services.pack import pack_out
+    ids = _figure_block(db)  # helper builds the block with no figure_id in data
+    pack = pack_out(db, ids["snap"])
+    assert pack is not None
+    fig_block = pack.sections[0].blocks[0]
+    assert fig_block.type == "figure"
+    assert fig_block.figure_id is None
 
 
 def test_block_dict_shape(db) -> None:  # type: ignore[no-untyped-def]
