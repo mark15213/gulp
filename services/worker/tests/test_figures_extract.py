@@ -35,3 +35,23 @@ def test_file_scan_fallback_when_no_tex_refs() -> None:
 
 def test_no_images_returns_empty() -> None:
     assert extract_figures(_targz({"main.tex": b"text only"})) == []
+
+
+def test_same_member_referenced_twice_is_deduped() -> None:
+    tex = r"\includegraphics{a.png}\includegraphics{a.png}"
+    figs = extract_figures(_targz({"main.tex": tex.encode(), "a.png": _PNG}))
+    assert len(figs) == 1
+
+
+def test_oversized_image_is_skipped(monkeypatch) -> None:  # type: ignore[no-untyped-def]
+    monkeypatch.setattr("app.pipeline.figures.extract.MAX_IMAGE_BYTES", 4)
+    tex = r"\includegraphics{a.png}"
+    figs = extract_figures(_targz({"main.tex": tex.encode(), "a.png": _PNG}))  # _PNG is >4 bytes
+    assert figs == []
+
+
+def test_respects_max_figures_cap(monkeypatch) -> None:  # type: ignore[no-untyped-def]
+    monkeypatch.setattr("app.pipeline.figures.extract.MAX_FIGURES", 1)
+    tex = r"\includegraphics{a.png}\includegraphics{b.png}"
+    figs = extract_figures(_targz({"main.tex": tex.encode(), "a.png": _PNG, "b.png": _PNG}))
+    assert len(figs) == 1
