@@ -22,6 +22,7 @@ from gulp_shared.models.source import (
     Source,
     SourceKind,
 )
+from gulp_shared.models.source_figure import SourceFigure
 from gulp_shared.models.source_tag import SourceTag
 from gulp_shared.models.user import DEV_USER_ID, Locale, User
 
@@ -34,6 +35,7 @@ __all__ = [
     "SnapshotStatus",
     "MediaType",
     "CapturedVia",
+    "SourceFigure",
     "SourceTag",
     "Card",
     "CardType",

@@ -14,6 +14,7 @@ class Settings(BaseSettings):
     llm_provider: str = "anthropic"
     llm_model: str = "claude-sonnet-4-6"
     export_dir: str = "/tmp/gulp-exports"
+    media_dir: str = "/tmp/gulp-media"
 
 
 settings = Settings()
