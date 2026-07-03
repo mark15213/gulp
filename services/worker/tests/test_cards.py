@@ -4,8 +4,10 @@ from typing import Any
 
 import gulp_shared.models  # noqa: F401
 from app.pipeline.cards import (
+    CardGeneration,
     generate_cards_for_source,
     persist_cards,
+    render_conversation,
     render_pack_text,
     run_cards,
 )
@@ -25,6 +27,7 @@ from gulp_shared.models.knowledge_pack import (
     PackSection,
     PackStatus,
 )
+from gulp_shared.models.pack_block_message import ChatRole, PackBlockMessage
 from gulp_shared.models.source import (
     CardsStatus,
     SnapshotStatus,
@@ -114,6 +117,7 @@ def _pack(s, snap, *, status=PackStatus.ready):  # type: ignore[no-untyped-def]
 
 
 _PAYLOAD = {
+    "curriculum": "Master the MLM objective and layer count; the learner asked about layers.",
     "cards": [
         {
             "card_type": "flashcard",
@@ -145,12 +149,60 @@ def test_render_pack_text_covers_root_fields_and_blocks():
     assert "110M params" in text
 
 
-async def test_run_cards_returns_validated_payload():
+async def test_run_cards_returns_generation_with_curriculum_and_cards():
     prov = FakeProvider(_PAYLOAD)
     out = await run_cards("PACK TEXT", provider=prov)
-    assert isinstance(out, CardsPayload)
+    assert isinstance(out, CardGeneration)
+    assert out.curriculum
     assert len(out.cards) == 2
     assert prov.last_body is not None and "PACK TEXT" in prov.last_body
+
+
+def test_render_conversation_groups_turns_by_block():
+    s = _session()
+    snap = _snapshot(s)
+    pack = _pack(s, snap)
+    block = pack.sections[0].blocks[0]
+    s.add_all(
+        [
+            PackBlockMessage(
+                block_id=block.id, role=ChatRole.user, content="Why masked LM?"
+            ),
+            PackBlockMessage(
+                block_id=block.id,
+                role=ChatRole.assistant,
+                content="Because bidirectional context.",
+            ),
+        ]
+    )
+    s.flush()
+    text = render_conversation(s, pack)
+    assert "Why masked LM?" in text
+    assert "Because bidirectional context." in text
+
+
+def test_render_conversation_empty_when_no_messages():
+    s = _session()
+    snap = _snapshot(s)
+    pack = _pack(s, snap)
+    assert render_conversation(s, pack) == ""
+
+
+async def test_generate_feeds_conversation_into_prompt():
+    s = _session()
+    snap = _snapshot(s)
+    pack = _pack(s, snap)
+    s.add(
+        PackBlockMessage(
+            block_id=pack.sections[0].blocks[0].id,
+            role=ChatRole.user,
+            content="Why masked LM?",
+        )
+    )
+    s.commit()
+    prov = FakeProvider(_PAYLOAD)
+    await generate_cards_for_source(s, snap, provider=prov)
+    assert prov.last_body is not None and "Why masked LM?" in prov.last_body
 
 
 def test_persist_cards_replaces_only_pack_origin_drafts():
@@ -171,7 +223,7 @@ def test_persist_cards_replaces_only_pack_origin_drafts():
     s.add_all([keep_accepted, keep_imported, stale_draft])
     s.commit()
 
-    persist_cards(s, snap, CardsPayload.model_validate(_PAYLOAD))
+    persist_cards(s, snap, CardsPayload.model_validate({"cards": _PAYLOAD["cards"]}))
     s.commit()
 
     prompts = set(s.scalars(select(Card.prompt).where(Card.source_id == snap.id)))

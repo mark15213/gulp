@@ -7,8 +7,13 @@ edits), never re-runs it. Replace semantics: a re-run replaces this source's
 """
 
 import logging
+import uuid
 
-from gulp_shared.contracts.cards import CardsPayload
+from gulp_shared.contracts.cards import (
+    MAX_CARDS_PER_PAYLOAD,
+    CardDraft,
+    CardsPayload,
+)
 from gulp_shared.llm import ModelConfig, complete_structured
 from gulp_shared.llm.base import LLMProvider
 from gulp_shared.models.card import Card, CardOrigin, CardStatus
@@ -18,14 +23,25 @@ from gulp_shared.models.knowledge_pack import (
     PackBlockType,
     PackStatus,
 )
+from gulp_shared.models.pack_block_message import PackBlockMessage
 from gulp_shared.models.source import CardsStatus, Source
 from gulp_shared.settings import settings
+from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.prompts.cards import build_cards_messages
 
 logger = logging.getLogger("gulp.worker")
+
+
+class CardGeneration(BaseModel):
+    """The generation turn's output: a transient curriculum (the model's
+    chain-of-thought, **not persisted**) plus the cards it yields. Only `cards`
+    are kept — `curriculum` exists so the model reasons before emitting."""
+
+    curriculum: str
+    cards: list[CardDraft] = Field(min_length=1, max_length=MAX_CARDS_PER_PAYLOAD)
 
 
 class CardsError(Exception):
@@ -67,16 +83,44 @@ def render_pack_text(pack: KnowledgePack) -> str:
     return "\n".join(parts)
 
 
+def render_conversation(db: Session, pack: KnowledgePack) -> str:
+    """The learner's per-block chat, grouped by block in reading order — a signal
+    of what confused or interested them. Empty when there is no conversation."""
+    block_ids = [b.id for s in pack.sections for b in s.blocks]
+    if not block_ids:
+        return ""
+    messages = db.scalars(
+        select(PackBlockMessage)
+        .where(PackBlockMessage.block_id.in_(block_ids))
+        .order_by(PackBlockMessage.created_at, PackBlockMessage.id)
+    ).all()
+    if not messages:
+        return ""
+    by_block: dict[uuid.UUID, list[PackBlockMessage]] = {}
+    for m in messages:
+        by_block.setdefault(m.block_id, []).append(m)
+    parts: list[str] = []
+    for section in sorted(pack.sections, key=lambda s: s.position):
+        for block in sorted(section.blocks, key=lambda b: b.position):
+            turns = by_block.get(block.id)
+            if not turns:
+                continue
+            parts.append(f"[On: {_render_block(block)[:120]}]")
+            parts += [f"{t.role.value}: {t.content}" for t in turns]
+    return "\n".join(parts)
+
+
 async def run_cards(
     pack_text: str,
+    conversation_text: str = "",
     *,
     provider: LLMProvider | None = None,
     config: ModelConfig | None = None,
-) -> CardsPayload:
+) -> CardGeneration:
     cfg = config or ModelConfig(provider=settings.llm_provider, model=settings.llm_model)
-    system, messages = build_cards_messages(pack_text)
+    system, messages = build_cards_messages(pack_text, conversation_text)
     return await complete_structured(
-        response_model=CardsPayload,
+        response_model=CardGeneration,
         system=system,
         messages=messages,
         config=cfg,
@@ -127,8 +171,13 @@ async def generate_cards_for_source(
         )
         if pack is None or pack.status is not PackStatus.ready:
             raise CardsError("no ready pack to draft cards from")
-        payload = await run_cards(render_pack_text(pack), provider=provider, config=config)
-        persist_cards(db, source, payload)
+        generation = await run_cards(
+            render_pack_text(pack),
+            render_conversation(db, pack),
+            provider=provider,
+            config=config,
+        )
+        persist_cards(db, source, CardsPayload(cards=generation.cards))
         source.cards_status = CardsStatus.ready
         db.commit()
     except Exception:
