@@ -107,6 +107,7 @@ export function PackReport({ pack: initialPack }: { pack: PackOut }) {
             {section.blocks.map((block, i) => (
               <Fragment key={block.id}>
                 <BlockCell
+                  snapshotId={sid}
                   block={block}
                   canMoveUp={i > 0}
                   canMoveDown={i < section.blocks.length - 1}

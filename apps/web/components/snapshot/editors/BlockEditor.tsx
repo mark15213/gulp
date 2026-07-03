@@ -8,10 +8,12 @@ import { ListEditor } from "./ListEditor";
 import { TableEditor } from "./TableEditor";
 
 export function BlockEditor({
+  snapshotId,
   block,
   onSave,
   onCancel,
 }: {
+  snapshotId: string;
   block: PackBlockOut;
   onSave: (content: BlockWrite) => void;
   onCancel: () => void;
@@ -22,7 +24,7 @@ export function BlockEditor({
     case "formula":
       return <FormulaEditor block={block} onSave={onSave} onCancel={onCancel} />;
     case "figure":
-      return <FigureEditor block={block} onSave={onSave} onCancel={onCancel} />;
+      return <FigureEditor snapshotId={snapshotId} block={block} onSave={onSave} onCancel={onCancel} />;
     case "list":
       return <ListEditor block={block} onSave={onSave} onCancel={onCancel} />;
     case "table":

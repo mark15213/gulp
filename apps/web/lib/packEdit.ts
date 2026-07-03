@@ -70,7 +70,7 @@ export function emptyContent(type: BlockType): BlockWrite {
     case "table":
       return { type: "table", headers: ["Column 1", "Column 2"], rows: [["", ""]], caption: null };
     case "figure":
-      return { type: "figure", label: "", explanation: "" };
+      return { type: "figure", label: "", explanation: "", figure_id: null };
     case "list":
       return { type: "list", items: [""], ordered: false };
   }
