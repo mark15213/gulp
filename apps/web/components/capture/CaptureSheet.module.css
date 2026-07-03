@@ -39,3 +39,8 @@
 .textarea { min-height: 120px; resize: vertical; }
 .actions { display: flex; align-items: center; justify-content: space-between; }
 .target { font-size: 13px; color: var(--text-muted, #777); }
+.error {
+  margin: 0;
+  font-size: 13px;
+  color: var(--danger, #d33);
+}

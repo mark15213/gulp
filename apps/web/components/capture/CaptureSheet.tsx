@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { capture } from "@gulp/api-client";
 import { enqueuePending } from "@/lib/captureQueue";
@@ -14,6 +14,7 @@ export function CaptureSheet({ onClose }: { onClose: () => void }) {
   const [url, setUrl] = useState("");
   const [text, setText] = useState("");
   const [title, setTitle] = useState("");
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
   const canSave = mode === "link" ? url.trim().length > 0 : text.trim().length > 0;
@@ -24,18 +25,27 @@ export function CaptureSheet({ onClose }: { onClose: () => void }) {
       mode === "link"
         ? { url, title: title || undefined, tags, captured_via: "paste" as const }
         : { text, title: title || undefined, tags, captured_via: "manual" as const };
-    onClose();
+    setError(null);
     try {
       await capture(body);
     } catch {
-      enqueuePending({
-        localId: crypto.randomUUID(),
-        ...(mode === "link" ? { url } : { text }),
-        title: title || undefined,
-        tags,
-        captured_via: mode === "link" ? "paste" : "manual",
-      });
+      // Only a genuinely-offline browser is safe to buffer optimistically. Any
+      // other failure (server down, CORS, 4xx) must be surfaced — swallowing it
+      // into the local queue is how captures silently vanished.
+      if (typeof navigator !== "undefined" && !navigator.onLine) {
+        enqueuePending({
+          localId: crypto.randomUUID(),
+          ...(mode === "link" ? { url } : { text }),
+          title: title || undefined,
+          tags,
+          captured_via: mode === "link" ? "paste" : "manual",
+        });
+      } else {
+        setError("Couldn't save — the server didn't respond. Nothing was saved; try again.");
+        return;
+      }
     }
+    onClose();
     router.refresh();
   }
 
@@ -81,6 +91,12 @@ export function CaptureSheet({ onClose }: { onClose: () => void }) {
           value={title}
           onChange={(e) => setTitle(e.target.value)}
         />
+
+        {error && (
+          <p role="alert" className={styles.error}>
+            {error}
+          </p>
+        )}
 
         <div className={styles.actions}>
           <span className={styles.target}>→ Inbox</span>

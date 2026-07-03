@@ -15,5 +15,18 @@ class Settings(BaseSettings):
     llm_model: str = "claude-sonnet-4-6"
     export_dir: str = "/tmp/gulp-exports"
 
+    @property
+    def cors_origins(self) -> list[str]:
+        """Allowed browser origins. Include the localhost <-> 127.0.0.1 twin:
+        browsers treat them as distinct origins and CORS is exact-match, so a
+        capture POST from the "wrong" host would otherwise be silently blocked.
+        """
+        origins = {self.web_origin}
+        if "localhost" in self.web_origin:
+            origins.add(self.web_origin.replace("localhost", "127.0.0.1"))
+        elif "127.0.0.1" in self.web_origin:
+            origins.add(self.web_origin.replace("127.0.0.1", "localhost"))
+        return sorted(origins)
+
 
 settings = Settings()

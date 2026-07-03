@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useState } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { flushQueue } from "@/lib/captureQueue";
@@ -32,13 +32,14 @@ export function CaptureProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    function onOnline() {
+    function drain() {
       void flushQueue().then((n) => {
         if (n > 0) router.refresh();
       });
     }
-    window.addEventListener("online", onOnline);
-    return () => window.removeEventListener("online", onOnline);
+    drain(); // self-heal on load: recover captures stranded from an earlier failure
+    window.addEventListener("online", drain); // and retry when connectivity returns
+    return () => window.removeEventListener("online", drain);
   }, [router]);
 
   return (
