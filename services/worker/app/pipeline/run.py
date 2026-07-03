@@ -21,6 +21,7 @@ from app.pipeline.adapters.note import note_to_normdoc
 from app.pipeline.adapters.pdf import pdf_to_normdoc
 from app.pipeline.adapters.webpage import webpage_to_normdoc
 from app.pipeline.digest import run_digest
+from app.pipeline.figures.run import extract_arxiv_figures
 from app.pipeline.normdoc import NormDoc
 from app.pipeline.persist import persist_pack
 
@@ -74,8 +75,18 @@ async def process_source(
         persist_pack(db, source, digest)
         source.status = SnapshotStatus.ready
         db.commit()
+        await _maybe_extract_figures(db, source, fetch)
     except Exception:
         db.rollback()
         source.status = SnapshotStatus.needs_attention
         db.commit()
         logger.exception("process_snapshot failed for %s", source.id)
+
+
+async def _maybe_extract_figures(db: Session, source: Source, fetch: FetchFn) -> None:
+    """Best-effort: the pack is already `ready`; a figure failure must not change that."""
+    try:
+        await extract_arxiv_figures(db, source, fetch)
+    except Exception:
+        db.rollback()
+        logger.exception("arxiv figure extraction failed for %s", source.id)
