@@ -17,6 +17,12 @@ from app.pipeline.figures.types import ExtractedFigure
 def persist_figures(
     db: Session, source: Source, figures: list[ExtractedFigure]
 ) -> list[SourceFigure]:
+    # Note: filesystem writes below are not transactional with the DB commit.
+    # If a write fails mid-way and the caller rolls back, restored DB rows may
+    # point at files already deleted here; this self-heals on the next
+    # idempotent re-process and degrades gracefully in the meantime — see
+    # `figure_file` in app/services/figures.py, which returns None for a
+    # missing path, so the reader just falls back to text-only.
     db.execute(delete(SourceFigure).where(SourceFigure.source_id == source.id))
     db.flush()
     shutil.rmtree(media_root() / str(source.id), ignore_errors=True)

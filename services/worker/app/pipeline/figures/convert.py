@@ -3,7 +3,11 @@
 Raster (png/jpg/jpeg/gif/webp) passes through; PDF renders page 0 to PNG via
 PyMuPDF (pure wheel, no system deps). EPS / vector-only return None (skipped)."""
 
+import logging
+
 import fitz  # PyMuPDF
+
+logger = logging.getLogger("gulp.worker")
 
 _RASTER_MIME = {
     "png": "image/png",
@@ -27,5 +31,6 @@ def normalize(name: str, data: bytes) -> tuple[bytes, str, str, int | None, int 
             pix = doc.load_page(0).get_pixmap(dpi=_PDF_DPI)
             return (pix.tobytes("png"), "png", "image/png", pix.width, pix.height)
         except Exception:
+            logger.debug("normalize: failed to render PDF %r to PNG", name, exc_info=True)
             return None
     return None
