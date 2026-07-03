@@ -55,7 +55,7 @@ export function BlockCell({
               canMoveDown={canMoveDown}
             />
           </div>
-          <BlockView block={block} />
+          <BlockView snapshotId={snapshotId} block={block} />
         </>
       )}
     </div>
