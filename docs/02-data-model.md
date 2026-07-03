@@ -69,7 +69,7 @@ The entity set, grouped by the spine step it serves:
 | Spine step | Entities |
 |---|---|
 | **Save** | `Source` → `Snapshot` · `Conversation` · `Subscription` |
-| **Digest** | `KnowledgePack` (+ `PackSection` / `PackBlock`) |
+| **Digest** | `KnowledgePack` (abstract; per-`pack_type` impls, e.g. `PaperPack` + `PackSection` / `PackBlock`) |
 | **Practice** | `Card`, `GulpSession`, `ReviewEvent` |
 | **Master** | `MasteryState` (vo), `SchedulingState` (vo), `Concept`, `ConceptEdge` |
 | **Organize** | `KnowledgeBase`, `Digest` / `DigestItem` |
@@ -80,7 +80,7 @@ The entity set, grouped by the spine step it serves:
 erDiagram
     User ||--o{ Source : owns
     Source ||--o| KnowledgePack : "snapshot has"
-    KnowledgePack ||--o{ PackSection : "report body"
+    KnowledgePack ||--o{ PackSection : "paper report body (PaperPack)"
     Source ||--o{ Card : "drafted from"
     Card }o--o{ Concept : "tests (link)"
     Source }o--o{ Concept : "about (link)"
@@ -158,26 +158,33 @@ The frozen, point-in-time item — "the everyday thing you gulped" (`01 §4.2`).
 
 ---
 
-### 4.4 `KnowledgePack` + `PackSection` / `PackBlock`
+### 4.4 `KnowledgePack` (abstract) + its per-type implementations
 
-The AI-generated **digest, authored as a structured paper report** — not a flat summary. Exists **only** for a `Snapshot` (invariant, §9). *(Amended 2026-06-28/07-02 — the original facet layer (`PackElement`), `summary`/`background`/`confidence`, and source anchoring were dropped with the paper-report contract; see [`superpowers/specs/2026-06-28-paper-report-contract-design.md`](superpowers/specs/2026-06-28-paper-report-contract-design.md) and [`superpowers/specs/2026-07-02-block-editable-pack-reader-design.md`](superpowers/specs/2026-07-02-block-editable-pack-reader-design.md).)*
+The AI-generated **digest** of a `Snapshot` — "what I understood after reading this." Exists **only** for a `Snapshot` (invariant, §9). `KnowledgePack` is a **thin abstract type**: it says only that a digest exists, names its content type, and guarantees it can be rendered. **The concrete shape is owned by a per-`pack_type` implementation** — a paper is digested very differently from a WeChat article or an X post, so the model does not force one shape on all of them.
 
-**`KnowledgePack`**
+**`KnowledgePack`** — the abstract base; every type shares exactly these:
 
 | Field | Type | Notes |
 |---|---|---|
 | `snapshot` | `→Source` | the `kind=snapshot` it digests (1–1) |
-| `title` | `text` | report title |
-| `key_insight` | `text` | the single most transferable idea — highlighted lead |
-| `core_contributions` | `string[]` (1–5) | concise standalone statements; the primary skim entry |
-| `references` | `{citation, why_interesting}[]?` | follow-up references |
+| `title` | `text` | |
+| `summary` | `text` | one-paragraph gist — the skim / search / library-card entry; universal |
+| `pack_type` | `enum{paper·article·social_post·…}` | discriminator selecting the implementation; open / extensible |
 | `status` | `enum{generating·ready}` | |
 
-**`PackSection` / `PackBlock`** — the **report the user reads**: ordered sections of ordered, typed blocks.
+Plus one behavioral contract every implementation satisfies:
+
+- **`render()` → readable content** (Markdown / a common block list). Every consumer — the web reader, card generation, search, curriculum — goes through `render()`, so nothing downstream dispatches on `pack_type`.
+
+**Per-type implementations** own their structured content and implement `render()`. The v1 (and only) implementation:
+
+**`PaperPack` (`pack_type = paper`)** — the deep, re-authored **paper report**: `key_insight`, `core_contributions[]` (1–5), `references[]` (`{citation, why_interesting}`), and the sectioned body of typed blocks below. *(This is the shape shipped in v1 — one implementation of the abstract pack, not the definition of a pack.)*
+
+**`PackSection` / `PackBlock`** — `PaperPack`'s readable body: ordered sections of ordered, typed blocks.
 
 | `PackSection` field | Type | Notes |
 |---|---|---|
-| `pack` | `→KnowledgePack` | parent |
+| `pack` | `→PaperPack` | parent |
 | `heading` | `string?` | |
 | `position` | `int` | order within the pack |
 
@@ -204,7 +211,9 @@ The AI-generated **digest, authored as a structured paper report** — not a fla
 | `role` | `enum{user·assistant}` | |
 | `content` | `text` | grounded on the block + section + pack + source body |
 
-> The pack is a **living document**: blocks are editable in place, and can be added / deleted / reordered in the web reader (block ids are stable API objects). **Re-running processing replaces the pack wholesale** — manual edits and block chats are discarded (confirmed in the UI). Cards are drafted *from* the pack on demand (§4.5, cards spec) — there is no intermediate facet layer.
+> **Extensible by design.** A new content type = a new `pack_type` implementation with its own fields + `render()`; the abstract base, the reader's entry point, card generation, and search do not change. Adding `XiaohongshuPack` / `XPostPack` touches only its own implementation.
+>
+> **`PaperPack` is a living document:** blocks are editable in place, and can be added / deleted / reordered in the web reader (block ids are stable API objects). **Re-running processing replaces the pack wholesale** — manual edits and block chats are discarded (confirmed in the UI). There is **no facet layer** — Cards are drafted *from* the pack's rendered content on demand (§4.5, cards spec), not from an intermediate facet model.
 
 ### 4.5 `Card`
 
@@ -213,7 +222,7 @@ The atomic, testable unit — "the unit of Gulp mode and scheduling" (`01 §4.2`
 | Field | Type | Notes |
 |---|---|---|
 | `source` | `→Source?` | what it was drafted from (null allowed for a standalone takeaway) |
-| `card_type` | `enum{short_answer·mcq·cloze·explain·apply·recall}` | `recall` = "say it in your own words" (`01 §F4`) |
+| `card_type` | `enum{flashcard·mcq·cloze}` | interaction contract: `flashcard` = front→flip→self-grade · `mcq` = pick one · `cloze` = fill a blank (`01 §F4`) |
 | `prompt` | `text` | |
 | `answer` | `text?` | canonical answer or rubric for AI feedback |
 | `explanation` | `text?` | source-grounded reveal explanation (`01 §F4`; S2 design §4) |
@@ -467,10 +476,9 @@ These realize the cross-cutting states in `01 §7` (Loading/Empty/Processing/Err
 | From | To | Cardinality | Via | Notes |
 |---|---|---|---|---|
 | `User` | `Source` | 1 — N | `owner` | owns everything |
-| `Source(snapshot)` | `KnowledgePack` | 1 — 0..1 | `Snapshot.pack` | pack only for snapshots |
-| `KnowledgePack` | `PackSection` | 1 — N | `PackSection.pack` | the report spine |
+| `Source(snapshot)` | `KnowledgePack` | 1 — 0..1 | `Snapshot.pack` | pack only for snapshots (abstract; a per-`pack_type` impl) |
+| `PaperPack` | `PackSection` | 1 — N | `PackSection.pack` | the paper report spine (paper impl) |
 | `PackSection` | `PackBlock` | 1 — N | `PackBlock.section` | ordered blocks |
-| `KnowledgePack` | `PackSection` → `PackBlock` | 1 — N — N | `PackSection.pack` / `PackBlock.section` | the report body (ordered) |
 | `PackBlock` | `PackBlockMessage` | 1 — N | `PackBlockMessage.block` | per-block conversation |
 | `Source` | `Card` | 1 — N | `Card.source` | a Card may be sourceless (`user` takeaway) |
 | `Card` | `Concept` | N — M | `CardConcept` | what a Card tests |
@@ -496,11 +504,11 @@ Each resolves an open question from `01 §11` (or a modeling fork). **Reversible
 |---|---|---|---|
 | D1 | **Source = single entity + `kind` discriminator** (not three entities). | Matches `01 §4.2`'s framing 1:1; derived objects (`Card`, links, digest) reference one `Source` type instead of three. | Yes — could normalize into per-form tables behind the same references. |
 | D2 | **Snapshot stores full extracted `content_body` *and* `origin_url`/`content_ref`.** | Link-rot protection is core to what a Snapshot *is* (`01 §4.2`). Resolves the `01 §11` open question. | **Yes** — `content_body` can move to a blob store via `content_ref` later; a physical concern (§9 deferred). |
-| D3 | **Inbox is a derived view, not an entity.** Inbox = `Snapshot` where `status = awaiting_review` **and** no `KBMembership`. | Resolves `01 §11`'s "pinned entry vs. filter" question — modeling it as a query means mobile (`Today` peek) and web (`Inbox`/Library filter) are the same underlying set, no duplicated state. | Yes — UI may present it either way; the model doesn't care. |
+| D3 | **Inbox is a derived view, not an entity.** Inbox = the pre-library funnel — a `Snapshot` not yet `ready` (`status ∈ {queued·unprocessed·processing·exported·needs_attention}`); `ready` = in the library (single gate, §6). | Resolves `01 §11`'s "pinned entry vs. filter" question — modeling it as a query means mobile (`Today` peek) and web (`Inbox`) are the same underlying set, no duplicated state. | Yes — UI may present it either way; the model doesn't care. |
 | D4 | **Mastery stores the 7-rung ladder; the 3-state view and `due`/`at_risk` are derived.** | `01 §F7` explicitly wants both granularities without "seven badges" in daily UI. One stored source of truth → no drift. | Yes — mapping table (§5.1) is the only thing to change. |
 | D5 | **No `Insight`/`Claim`/`Question` entities.** Takeaways are `Card(origin=user)`; claims/counter-views live in the report prose; questions are `Card`s. | Follows `01 §4.2`'s pruning of `00`'s longer list. | Yes — could promote any to a first-class entity later. |
 | D6 | **`Card.scheduling` is a fold over append-only `ReviewEvent`s.** | Keeps history immutable and makes the FSRS swap (`01 §11`) a pure recompute, not a migration. | Yes. |
-| D7 | **The pack is a readable, re-authored report** (`PackSection`/`PackBlock` spine, typed blocks, block-editable); the facet layer was dropped with the paper-report contract (2026-06-28); v1 processing is **manual-trigger** (relaxes `01` principle 2) and reports are authored in English. | Reading-first digestion is the product thesis (`00`); manual trigger controls API cost. Resolved in S2 design + `superpowers/specs/2026-06-28-paper-report-contract-design.md`. | Yes — structure/triggers can evolve per `04 §6`. |
+| D7 | **`KnowledgePack` is a thin abstract type + per-`pack_type` implementations** (§4.4); the readable, block-editable paper report is the `PaperPack` implementation, not the definition. There is **no facet layer**. v1 processing is **manual-trigger** (relaxes `01` principle 2) and reports are authored in English. | Digestion must span content types (paper · article · social post), so the base stays type-agnostic and each type owns its shape; reading-first digestion is the product thesis (`00`); manual trigger controls API cost. | Yes — new `pack_type`s slot in without touching the base (§4.4). |
 
 ---
 
@@ -516,7 +524,7 @@ Rules that must always hold; they encode the product guarantees from `01`.
 6. **`ReviewEvent`s are append-only.** They are never edited or deleted; `Card.scheduling` is recomputed from them. (D6)
 7. **Sync integrity.** Scalars resolve last-write-wins by `updated_at`; collection membership (`tags`, `KBMembership`, `CardConcept`, `SourceConcept`) resolves by union. No collection is stored as a clobberable scalar. (`01 §3`/`§10.8`, §2.3)
 8. **Deleting a `KnowledgeBase` tombstones the KB and its memberships only** — never its member `Source`s.
-9. **Unsupported / failed content is still a valid `Snapshot`** — with `pack = null` and `status = needs_attention` (failed) or `in_library` (unsupported), still taggable and searchable. (`01 §10.2`/`§10.3`)
+9. **Unsupported / failed content is still a valid `Snapshot`** — with `pack = null` and `status = needs_attention` (failed) or `ready` (unsupported but shelved), still taggable and searchable. (`01 §10.2`/`§10.3`)
 
 ---
 

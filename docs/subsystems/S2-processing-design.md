@@ -2,6 +2,13 @@
 
 *Gulp · subsystem design doc · v0.9 **draft (brainstorm closed out)** · 2026-06-24*
 
+> **⚠️ SUPERSEDED IN PART (2026-07-03).** Later owner decisions override parts of this doc; the pipeline mechanics (adapt→digest→cards, `NormDoc`, the job-spec ↔ executor seam incl. the `export`-to-Claude-Code path, manual trigger, provider-agnostic LLM layer) still stand. What changed:
+> - **Pack model** — `KnowledgePack` is now a **thin abstract type + per-`pack_type` implementations** (`02 §4.4`); the paper report is the `PaperPack` implementation. The **facet-annotation layer (`PackElement`; C2 / C12 / C15, §3.2 / §3.5) is dropped** — there are no facets; cards are generated from the pack's rendered content.
+> - **Card types** are now **`flashcard · mcq · cloze`** (`02 §4.5`), not the six referenced in §4 / C15.
+> - **Lifecycle** — references to `awaiting_review` / `in_library` are superseded by the **single-gate** model (`ready` = in the library; `02 §6`).
+>
+> Kept as the S2 build record; it will be re-authored when the pack pipeline is rebuilt to the thin-pack model.
+
 > Spins out of [`04-development-plan.md §6`](../04-development-plan.md) and resolves the **S2 charter** (`04 §4 S2`) into buildable detail. Sits below the four product docs (`01` flows / `02` objects / `03` look) and the `05` layout, and grows the `process_snapshot` placeholder that [`S1`](S1-capture-inbox-design.md) left behind.
 >
 > **Altitude:** one capability, end to end — turn a `Snapshot` into a human-readable **Knowledge Pack** (+ draft `Card`s + concept links). Stops *above* S3's review/commit gate, S5's scheduling, and S6's conversation engine (it only leaves hooks for them).

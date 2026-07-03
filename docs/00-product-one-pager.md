@@ -64,9 +64,9 @@ The moat compounds: **full chain + mastery model + conversation-to-knowledge** i
 Ship one sharp loop, **not** a full PKM. Six features:
 
 1. **Universal inbox** — links, articles, PDFs, YouTube, podcasts, audio, screenshots, notes. China-first capture: WeChat forward, browser extension, share sheet, email-in.
-2. **AI knowledge pack** — per input: summary, background, key terms, people/orgs, core claims, counter-views, links to existing knowledge.
-3. **Card-based knowledge base** — decompose content into typed objects: **Source · Claim · Concept · Question · Card · Conversation · Insight**.
-4. **Gulp mode** — a daily 5–10 min learning stream: new knowledge, due reviews, retests of misses, short-answer, MCQ, explain-it, apply-it, "say it in your own words."
+2. **AI knowledge pack** — per input, a digest whose shape fits what it is: a paper becomes a deep report, an article or post a lighter one. Not just a summary.
+3. **Card-based knowledge base** — decompose content into typed objects: **Source · Knowledge pack · Card · Concept · Conversation**.
+4. **Gulp mode** — a daily 5–10 min learning stream: new knowledge, due reviews, retests of misses — tested as flashcards, multiple-choice, and cloze.
 5. **Conversation capture** — chat about any card; on exit, Gulp extracts new points, corrected misconceptions, and questions to review.
 6. **Mastery + scheduling** — start simple (right / wrong / fuzzy → adjust interval); evolve toward FSRS later.
 

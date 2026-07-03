@@ -107,8 +107,8 @@ The library is built from typed objects (interaction spec §4.2) and the unit of
 
 ### 2.7 Voice in UI (microcopy)
 
-- **Plain and short.** "Add to library," "Start Gulp," "N due," "Save what I learned" — verbs, not features.
-- **Web is neutral and precise** ("12 awaiting review", "Approve all"); **mobile is warm and encouraging** ("Nice — 3 mastered today", "You're on a 5-day streak") — but never cute at the cost of clarity.
+- **Plain and short.** "Start Gulp," "N due," "Save what I learned," "Accept card" — verbs, not features.
+- **Web is neutral and precise** ("12 in Inbox", "Accept all"); **mobile is warm and encouraging** ("Nice — 3 mastered today", "You're on a 5-day streak") — but never cute at the cost of clarity.
 - **Numbers are mono.** Any count, interval, or streak in copy is set in Geist Mono.
 - **Never blame the user.** Failure states (§8) describe what happened and the next action ("Couldn't fully read this — retry or open original").
 
@@ -351,7 +351,7 @@ The product's most-repeated component (interaction spec §2.3).
 
 | Variant | Look | Use |
 |---|---|---|
-| **Primary** | `--blue-600` fill, white text | the one key action (Start Gulp, Add to library, Confirm) |
+| **Primary** | `--blue-600` fill, white text | the one key action (Start Gulp, Accept, Confirm) |
 | **Secondary** | `--surface` + `--border`, `--text-1` | alternatives (Open original, Skip) |
 | **Ghost** | text only, `--text-2` | low-emphasis (Dismiss, Snooze) |
 | **Danger** | `--danger` text/fill | destructive (Discard) |
@@ -367,15 +367,15 @@ The product's most-repeated component (interaction spec §2.3).
 
 ### 7.6 Snapshot detail & knowledge pack (interaction spec §F2)
 
-- **Web (deep curation):** three-pane — reader on one side, **knowledge pack** on the other (summary → background → key terms → people/orgs → core claims → counter-views → connections), each pack element a `suggested → kept / dismissed` block; **draft-cards review strip** along the bottom (`draft → accepted / rejected`).
+- **Web (deep curation):** the **pack reader** — the pack rendered as editable, per-block content (add / edit / reorder blocks, discuss a block in the side panel); a **draft-cards review strip** along the bottom (`draft → accepted / rejected`). *(For a paper this is the `PaperPack` sectioned report; other `pack_type`s render their own `render()` output — `02 §4.4`. There is no facet keep/dismiss layer.)*
 - **Mobile (quick look):** stacked **segmented control** `Read · Pack · Cards`; full curation stays on web.
-- Pack elements are cards (§2.4); kept/dismissed states use subtle check / strike affordances, not destructive color.
+- Card review (`accept` / `reject`) uses subtle check / strike affordances, not destructive color.
 
 ### 7.7 Gulp prompt & reveal — the hero (interaction spec §F4)
 
 The product's signature screen; **one thing per screen, full-bleed, no competing chrome.**
 
-- **Prompt card:** the question (`title-m`/`body-l`), prompt-type adapts (short-answer, MCQ, explain-it, apply-it, cloze, "say it in your own words"). Source context minimized until reveal.
+- **Prompt card:** the question (`title-m`/`body-l`), prompt-type adapts (flashcard, MCQ, cloze). Source context minimized until reveal.
 - **Answering:** MCQ options as large tappable cards (mobile) / numbered `1–4` (web); text field for free response; mic for voice.
 - **Reveal:** answer + source-grounded explanation; for free responses, brief AI feedback. A correct answer triggers a mobile "correct" flash (amber/emerald, reduced-motion-safe).
 - **Self-grade:** three large controls — **`Got it` / `Fuzzy` / `Missed`** (emerald / amber / red), feeding the scheduler (interaction spec §F7). Haptic on grade (mobile).

@@ -90,7 +90,7 @@ Each charter is fixed-shape: **Responsibility · Scope (in / out for v1) · Vali
 > The product's core engine — the "digestion, not collection" thesis (`00`) lives or dies here. Expect the heaviest future design doc.
 
 - **Responsibility:** turn a `Snapshot` into a structured `KnowledgePack` + draft `Card`s + concept links, asynchronously and invisibly-until-ready (`01 §F2`, `02 §4.4/4.5`).
-- **Scope — in:** content fetch / parse / extract (`content_body`); chunking for long content; pack-element generation (summary · background · key terms · people/orgs · claims · counter-views · connections); draft-card generation; `Concept` normalization & linking; the `confidence` signal for thin content. **Out:** the review/commit gate and its UI (`S3`); scheduling (`S5`); the depth of the model-eval harness (its own doc).
+- **Scope — in:** content fetch / parse / extract (`content_body`); chunking for long content; **knowledge-pack generation** (type-aware — a `pack_type` implementation per content type, `PaperPack` first; `02 §4.4`); draft-card generation; `Concept` normalization & linking. **Out:** the review/commit gate and its UI (`S3`); scheduling (`S5`); the depth of the model-eval harness (its own doc).
 - **Validates:** pack quality against a human spot-check bar; cards are actually testable; per-`Snapshot` latency and cost stay within budget; thin / long / failed / unsupported content degrade gracefully (`01 §10.2/10.3`).
 - **Dependencies:** needs `S1` (Snapshots + content). **Unblocks:** `S3`, `S4`, `S6`, `S7`.
 - **Open questions → design doc:** model choice & prompt structure; chunking strategy; the card-quality rubric and eval set; the cost/latency budget. *(This is the densest design doc in the set.)*
@@ -110,7 +110,7 @@ Each charter is fixed-shape: **Responsibility · Scope (in / out for v1) · Vali
 > The hero flow (`01 §F4`, `03 §7.7`). This is the screen the product is judged on.
 
 - **Responsibility:** run the daily learning session — present one card at a time, capture the response and the self-grade.
-- **Scope — in:** session composition (new + due + retests, interleaved); the prompt types (short-answer · MCQ · cloze · explain · apply · recall); reveal + source-grounded explanation + brief AI feedback on free responses; self-grade (`Got it / Fuzzy / Missed`) emitted as `ReviewEvent`s; the session summary; inline affordances ("Explain more" → `S6`, "Why am I seeing this?", "Snooze"). **Out:** the scheduling math (`S5` — `S4` only *emits* grades); the conversation engine internals (`S6`).
+- **Scope — in:** session composition (new + due + retests, interleaved); the prompt types (flashcard · mcq · cloze); reveal + source-grounded explanation + brief AI feedback on free responses; self-grade (`Got it / Fuzzy / Missed`) emitted as `ReviewEvent`s; the session summary; inline affordances ("Explain more" → `S6`, "Why am I seeing this?", "Snooze"). **Out:** the scheduling math (`S5` — `S4` only *emits* grades); the conversation engine internals (`S6`).
 - **Validates:** a session feels good and completes in 5–10 min on both clients; strict one-thing-per-screen; grades are reliably captured. *(Validatable even before `S5` exists, by composing a session from a hand-built / flat card pool.)*
 - **Dependencies:** needs `S2` (cards). **Unblocks:** `S5` (which consumes its `ReviewEvent`s).
 - **Open questions → design doc:** session-length adaptation; free-response AI-feedback quality; prompt-type selection logic per card.

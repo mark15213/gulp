@@ -76,8 +76,8 @@ The library is built from typed objects. Each is individually addressable, linka
 
 Built **on top of** Sources:
 
-- **Knowledge pack** — the AI-generated digest attached to a Snapshot (summary, background, terms, claims, counter-views, connections).
-- **Card** — an atomic, testable unit (question/answer, cloze, explain, apply). The unit of Gulp mode and scheduling. *(A user-authored takeaway is just a free-form Card — there is no separate "Insight" object.)*
+- **Knowledge pack** — the AI-generated digest attached to a Snapshot; its shape fits the content type (a paper becomes a deep report, an article or post a lighter digest). Not a flat summary. (`02 §4.4`)
+- **Card** — an atomic, testable unit (flashcard · mcq · cloze). The unit of Gulp mode and scheduling. *(A user-authored takeaway is just a free-form Card — there is no separate "Insight" object.)*
 - **Concept** — a normalized idea/term/person/org that Cards and Sources attach to; the spine of the knowledge graph.
 
 For **organization**:
@@ -126,7 +126,7 @@ Each flow: **trigger → steps → key screens → states → edge cases**, with
 
 **Key screens:** Capture confirm sheet · Inbox list.
 
-**States:** `Queued (offline)` → `Unprocessed` → `Processing` → `Ready (awaiting review)` → `In library` (committed; or auto-committed when **auto-approve** is on, §F2) · `Needs attention` (extraction failed, §10.2).
+**States:** `Queued (offline)` → `Unprocessed` → `Processing` → `Ready` (**= in the library**; single gate, §F2) · `Needs attention` (extraction failed, §10.2). *(`Exported` is the branch where the pack was produced externally and awaits upload.)*
 
 **Mobile vs web:** mobile = OS share sheet → confirm sheet, then a "saved" toast and the item appears in `Today`'s recent-captures peek (no Inbox tab on mobile); web = `⌘K → paste`, lands in the `Inbox` surface. Both write the same Inbox state.
 
@@ -138,7 +138,7 @@ Each flow: **trigger → steps → key screens → states → edge cases**, with
 **Goal:** turn a Snapshot into a **readable, re-authored knowledge pack** (a report the user pages through), then commit it (and its Cards) into the library — reviewed by default, but never as a hard blocker.
 
 **Steps:**
-1. On trigger (§F1), the Snapshot enters `Processing`; Gulp **re-authors the source into a structured report**: title, 1–5 **core contributions** (the skim entry), the single **key insight**, the sectioned body (prose · formula · table · figure · list blocks), and follow-up **references**. *(Amended 2026-06-28 — the facet layer was dropped with the paper-report contract; see [`superpowers/specs/2026-06-28-paper-report-contract-design.md`](superpowers/specs/2026-06-28-paper-report-contract-design.md).)*
+1. On trigger (§F1), the Snapshot enters `Processing`; Gulp **digests the source into a knowledge pack** whose shape fits the content type (`02 §4.4`). For a paper (the `PaperPack` implementation) that is a re-authored report — title, `summary`, 1–5 **core contributions**, the single **key insight**, a sectioned body (prose · formula · table · figure · list blocks), and follow-up **references**; a lighter source yields a lighter pack.
 2. Candidate **Cards** are drafted from the pack **on demand** (generate or import, §F2 step 5 — not yet scheduled).
 3. On `Ready`, the Snapshot **is in the library** — with manual-trigger processing (S2 §2.4) the user requested and reads every pack, so a separate approval act would confirm nothing.
 4. User reads the report, edits blocks in place, and discusses blocks in the side panel (the pack is a living document).
@@ -182,7 +182,7 @@ Each flow: **trigger → steps → key screens → states → edge cases**, with
 **Session composition (auto-built):** today's new knowledge + due reviews + retests of recent misses, interleaved; session length adapts to the user's chosen duration (default 5 min).
 
 **Steps (per item, one-at-a-time, full-bleed):**
-1. Prompt shown — type varies: short-answer, multiple-choice, explain-it, apply-it, cloze, or "say it in your own words."
+1. Prompt shown — one of three interaction types: **flashcard** (recall, then flip to self-grade), **multiple-choice**, or **cloze** (fill the blank).
 2. User responds (tap option / type / speak).
 3. Reveal answer + the source-grounded explanation; for free responses, AI gives brief feedback.
 4. User self-grades where needed (`Got it / Fuzzy / Missed`) — this feeds scheduling (§F7).
@@ -290,7 +290,7 @@ Each flow: **trigger → steps → key screens → states → edge cases**, with
 | Today | both | "what to do now" (+ mobile batch-confirm of new captures) | Start Gulp / Approve new |
 | Capture confirm | both | one-gesture save | Confirm |
 | Inbox | web-led | triage recent captures (mobile triages via `Today`) | Open / approve |
-| Snapshot detail | both | read + curate pack (deep curation web-only) | Add to library |
+| Snapshot detail | both | read + curate pack (deep curation web-only) | Read / accept cards |
 | Library list | both | find & filter | Open object |
 | Concept page | both | understand + test | Test me |
 | Gulp prompt / reveal | both | learn one thing | Answer → grade |

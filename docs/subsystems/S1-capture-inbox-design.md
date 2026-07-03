@@ -2,6 +2,8 @@
 
 *Gulp · subsystem design doc · v1 · 2026-06-24*
 
+> **⚠️ SUPERSEDED IN PART (2026-07-03).** Lifecycle references to `awaiting_review` / `in_library` here predate the **single-gate** convergence — `ready` = in the library, and the only review gate is per-card accept/reject (`02 §6`, `01 §F2`). The capture mechanics (one-gesture intake, `Snapshot` creation, the derived Inbox view) still stand.
+
 > The first per-subsystem design doc spun out of [`04-development-plan.md §6`](../04-development-plan.md). It sits **below** the four product docs ([`01`](../01-interaction-spec.md) flows, [`02`](../02-data-model.md) objects, [`03`](../03-ui-system.md) look) and the [`05`](../05-repo-structure.md) layout, and **resolves the `S1` charter** (`04 §4 S1`) into buildable detail: flows, interfaces, screens, the physical-schema slice, and the API contract that `02 §10` deferred.
 >
 > **Altitude:** one capability, end to end. This doc cuts S1 down to what gets built and how it connects — it resolves the charter's three open questions, fixes the data/API touchpoints, and names the seams S2/S3/S7/S8 plug into. It stops above S2's internals (no fetch/parse/prompt design) and above real auth/sync (stubbed here, owned elsewhere).
