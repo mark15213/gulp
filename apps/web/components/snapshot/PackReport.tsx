@@ -76,11 +76,11 @@ export function PackReport({ pack: initialPack }: { pack: PackOut }) {
           </div>
         )}
 
-        <h1 className={`t-display ${styles.title}`}>{pack.title}</h1>
+        <h1 className={styles.title}>{pack.title}</h1>
 
         {pack.core_contributions.length > 0 && (
           <section className={styles.block}>
-            <p className={`t-label ${styles.overline}`}>CORE CONTRIBUTIONS</p>
+            <h2 className={styles.heading}>Core contributions</h2>
             <ul className={styles.contribList}>
               {pack.core_contributions.map((c, i) => (
                 <li key={i}>
@@ -93,7 +93,7 @@ export function PackReport({ pack: initialPack }: { pack: PackOut }) {
 
         {pack.key_insight && (
           <section className={styles.insight}>
-            <p className={`t-label ${styles.overline}`}>KEY INSIGHT</p>
+            <h2 className={styles.heading}>Key insight</h2>
             <div className={`t-body-l ${styles.insightBody}`}>
               <Md>{pack.key_insight}</Md>
             </div>
@@ -125,7 +125,7 @@ export function PackReport({ pack: initialPack }: { pack: PackOut }) {
 
         {pack.references.length > 0 && (
           <section className={styles.references}>
-            <p className={`t-label ${styles.overline}`}>FURTHER READING</p>
+            <h2 className={styles.heading}>Further reading</h2>
             <ul className={styles.refList}>
               {pack.references.map((r, i) => (
                 <li key={i}>

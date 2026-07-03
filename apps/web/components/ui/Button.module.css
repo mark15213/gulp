@@ -37,16 +37,18 @@
   font-size: 14px;
 }
 
-/* Primary — the one key action. Blue fill, white text. */
+/* Primary — the one key action. Electric pop-blue (from the mark's halftone)
+ * with a black Lichtenstein keyline. Act = blue. */
 .primary {
-  background: var(--blue-600);
+  background: var(--pop-blue);
   color: #fff;
+  border-color: var(--ink);
 }
 .primary:hover {
-  background: var(--blue-500);
+  background: var(--pop-blue-hi);
 }
 .primary:active {
-  background: var(--blue-700);
+  background: var(--pop-blue-lo);
 }
 
 /* Secondary — surface + hairline. */

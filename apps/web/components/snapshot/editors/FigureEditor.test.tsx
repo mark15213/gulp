@@ -17,7 +17,7 @@ describe("FigureEditor gallery", () => {
     const onSave = vi.fn();
     render(
       <FigureEditor
-        snapshotId="snap-1"
+        snapshotId="00000000-0000-0000-0000-000000000001"
         block={{ id: "b1", type: "figure", label: "L", explanation: "E", figure_id: null }}
         onSave={onSave}
         onCancel={() => {}}

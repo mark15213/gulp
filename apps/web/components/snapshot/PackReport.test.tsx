@@ -52,9 +52,9 @@ describe("PackReport", () => {
   it("renders title, contributions, key insight and references", () => {
     const html = renderToStaticMarkup(<PackReport pack={pack} />);
     expect(html).toContain("BERT");
-    expect(html).toContain("CORE CONTRIBUTIONS");
+    expect(html).toContain("Core contributions");
     expect(html).toContain("<strong>bidirectionality</strong>");
-    expect(html).toContain("KEY INSIGHT");
+    expect(html).toContain("Key insight");
     expect(html).toContain("Vaswani 2017");
   });
 
@@ -78,14 +78,14 @@ describe("PackReport", () => {
     expect(html).toContain('data-block-id="00000000-0000-0000-0000-0000000000b6"');
   });
 
-  it("applies docs/03 type roles: serif/large title, mono overlines, section headings", () => {
+  it("gives every section title the same heading treatment", () => {
     const html = renderToStaticMarkup(<PackReport pack={pack} />);
-    expect(html).toContain("t-display");        // pack title in Instrument Serif
-    expect(html).toContain("t-label");          // mono uppercase overlines
-    expect(html).toContain("CORE CONTRIBUTIONS");
-    expect(html).toContain("KEY INSIGHT");
-    expect(html).toContain("t-title-m");        // section heading role
-    expect(html).toContain("FURTHER READING");
+    expect(html).toMatch(/<h1[^>]*>BERT<\/h1>/); // pack title is the page h1
+    // Meta blocks and content sections share one heading style (Title Case).
+    expect(html).toContain("Core contributions");
+    expect(html).toContain("Key insight");
+    expect(html).toContain("Further reading");
+    expect(html).toContain("t-title-m");         // section heading role kept
   });
 });
 

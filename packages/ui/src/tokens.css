@@ -3,22 +3,42 @@
  * Components reference the semantic names only — never raw hex. */
 
 :root {
-  /* ── Brand · Gulp Blue (§3.1) ───────────────────────────────── */
-  --blue-50: #eff5ff;
-  --blue-100: #dbe8fe;
-  --blue-500: #3b82f6;
-  --blue-600: #2563eb; /* primary */
-  --blue-700: #1d4ed8; /* pressed */
+  /* ── Brand · Gulp banana (§3.1) ─────────────────────────────────
+   * A bitten-banana, Warhol pop icon. Yellow is NEVER text on paper —
+   * it is highlight / chip-fill / marker / hover only; black + warm paper
+   * carry the reading. Legacy --blue-* names are kept but repointed to an
+   * ink + banana-tint scheme so every prior usage stays contrast-safe:
+   * a *-50 tint takes a banana-pale fill (dark text on it), while *-600/700
+   * (used as marker / border / text) resolve to warm ink. */
+  --banana: #f5ce2a;       /* warm golden, sampled from the mark */
+  --banana-deep: #d9a800;
+  --banana-wash: rgba(245, 206, 42, 0.5);
+  --ink: #16130b;
 
-  /* ── Neutrals · web cool (§3.2) ─────────────────────────────── */
-  --bg: #f8fafc;
-  --surface: #ffffff;
-  --fill: #f1f5f9;
-  --border: #e2e8f0;
-  --border-strong: #cbd5e1;
-  --muted: #94a3b8;
-  --text-2: #64748b;
-  --text-1: #0f172a;
+  /* Pop accents — the mark's Ben-Day halftone colors. Blue drives the core
+   * CTAs (act = blue); red is reserved for sparing pops. */
+  --pop-blue: #1e6fdb;
+  --pop-blue-hi: #3a86f0; /* hover */
+  --pop-blue-lo: #1657b0; /* pressed */
+  --pop-red: #e23a2d;
+
+  --blue-50: #fff4c2;  /* banana-pale tint (background only) */
+  --blue-100: #fbe7a0;
+  --blue-500: #f5ce2a; /* banana */
+  --blue-600: #16130b; /* marker / border / safe-as-text → ink */
+  --blue-700: #16130b; /* pressed → ink */
+
+  /* ── Neutrals · warm paper (§3.2) ───────────────────────────── */
+  /* surface is a warm off-white (not stark #fff) so cards sit in harmony
+   * on the warm-paper bg instead of reading as cold floating boxes. */
+  --bg: #fbf7ea;
+  --surface: #fffdf6;
+  --fill: #f4efdd;
+  --border: #e7dfc8;
+  --border-strong: #d8cca8;
+  --muted: #a99f86;
+  --text-2: #6e6552;
+  --text-1: #16130b;
 
   /* ── Mastery-state palette (§3.3) · accent / tint / on-tint ─── */
   --state-new-accent: #94a3b8;
@@ -42,14 +62,22 @@
   --warning: #f59e0b;
   --danger: #ef4444;
   --info: #2563eb;
-  --focus-ring: rgba(37, 99, 235, 0.45);
-  --overlay-scrim: rgba(15, 23, 42, 0.4);
+  --focus-ring: rgba(22, 19, 11, 0.5);
+  --overlay-scrim: rgba(22, 19, 11, 0.4);
+  /* Accent for the few components that read var(--accent, …) — resolves to
+   * ink so text/borders stay legible; use --banana explicitly for pops. */
+  --accent: #16130b;
 
   /* ── Type families (§4.1) ───────────────────────────────────── */
   /* --font-mono / --font-serif are injected by next/font (Geist Mono,
    * Instrument Serif). --font-sans is the Inter stack with system fallback. */
   --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
     Helvetica, Arial, sans-serif;
+  /* Classic book serif for reading surfaces (the report title / headings /
+   * key insight). System fonts, no webfont — and deliberately NOT the
+   * high-contrast display --font-serif (Instrument Serif). */
+  --font-reading: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia,
+    "Times New Roman", serif;
 
   /* ── Spacing · 4px base (§5.1) ──────────────────────────────── */
   --space-1: 4px;

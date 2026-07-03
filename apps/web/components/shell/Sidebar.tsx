@@ -1,4 +1,5 @@
 import React from "react";
+import Image from "next/image";
 import { IconSettings } from "@/components/ui/icons";
 import { getInbox } from "@gulp/api-client";
 import { SidebarNav } from "./SidebarNav";
@@ -10,7 +11,14 @@ export async function Sidebar() {
   return (
     <aside className={styles.sidebar}>
       <div className={styles.brand}>
-        <span className={styles.mark} aria-hidden="true" />
+        <Image
+          src="/gulp-mark.png"
+          alt="Gulp"
+          width={26}
+          height={26}
+          className={styles.mark}
+          priority
+        />
         <span className={styles.wordmark}>Gulp</span>
       </div>
 

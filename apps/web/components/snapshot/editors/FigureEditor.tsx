@@ -7,6 +7,8 @@ import type { BlockWrite } from "@/lib/packEdit";
 import { EditorShell } from "./EditorShell";
 import styles from "../Editing.module.css";
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export function FigureEditor({
   snapshotId,
   block,
@@ -24,6 +26,8 @@ export function FigureEditor({
   const [gallery, setGallery] = useState<FigureAssetOut[]>([]);
 
   useEffect(() => {
+    // Only fetch for a real snapshot id — a malformed id would 422 the API.
+    if (!UUID_RE.test(snapshotId)) return;
     let alive = true;
     getFigures(snapshotId)
       .then((figs) => alive && setGallery(figs))

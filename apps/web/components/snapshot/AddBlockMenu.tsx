@@ -9,14 +9,15 @@ const TYPES: BlockType[] = ["prose", "formula", "table", "figure", "list"];
 export function AddBlockMenu({ onInsert }: { onInsert: (type: BlockType) => void }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className={styles.addBar}>
+    <div className={`${styles.addBar} ${open ? styles.open : ""}`}>
       <button
         type="button"
-        className={styles.iconBtn}
+        className={styles.addTrigger}
         aria-label="Add block"
+        aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
       >
-        + Add block
+        +
       </button>
       {open && (
         <div className={styles.addMenu}>
