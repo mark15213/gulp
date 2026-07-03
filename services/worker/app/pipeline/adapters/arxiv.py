@@ -14,21 +14,37 @@ from app.pipeline.adapters.fetch import FetchedDoc, fetch_document
 FetchFn = Callable[[str], Awaitable[FetchedDoc]]
 
 _ARXIV_HOSTS = {"arxiv.org", "www.arxiv.org", "export.arxiv.org"}
-_ARXIV_PATH = re.compile(r"^/(?:pdf|abs)/(.+?)(?:\.pdf)?$")
+_ARXIV_PATH = re.compile(r"^/(?:pdf|abs)/(.+?)(?:\.pdf)?$", re.IGNORECASE)
 _CITATION_TITLE = re.compile(
     r'<meta[^>]+name=["\']citation_title["\'][^>]+content=["\']([^"\']+)["\']',
     re.IGNORECASE,
 )
 
 
-def arxiv_abs_url(url: str) -> str | None:
+def arxiv_id(url: str) -> str | None:
     parts = urlsplit(url)
     if (parts.hostname or "").lower() not in _ARXIV_HOSTS:
         return None
-    m = _ARXIV_PATH.match(parts.path)
+    path = parts.path.rstrip("/")  # tolerate a trailing slash
+    m = _ARXIV_PATH.match(path)
     if not m:
         return None
-    return f"https://arxiv.org/abs/{m.group(1)}"
+    ident = m.group(1)
+    return ident or None
+
+
+def arxiv_abs_url(url: str) -> str | None:
+    ident = arxiv_id(url)
+    return f"https://arxiv.org/abs/{ident}" if ident else None
+
+
+def arxiv_eprint_url(url: str) -> str | None:
+    ident = arxiv_id(url)
+    return f"https://arxiv.org/e-print/{ident}" if ident else None
+
+
+def is_arxiv(url: str) -> bool:
+    return arxiv_id(url) is not None
 
 
 async def arxiv_title(url: str, *, fetch: FetchFn = fetch_document) -> str | None:
