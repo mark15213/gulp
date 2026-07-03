@@ -213,7 +213,7 @@ Plus one behavioral contract every implementation satisfies:
 
 > **Extensible by design.** A new content type = a new `pack_type` implementation with its own fields + `render()`; the abstract base, the reader's entry point, card generation, and search do not change. Adding `XiaohongshuPack` / `XPostPack` touches only its own implementation.
 >
-> **`PaperPack` is a living document:** blocks are editable in place, and can be added / deleted / reordered in the web reader (block ids are stable API objects). **Re-running processing replaces the pack wholesale** — manual edits and block chats are discarded (confirmed in the UI). There is **no facet layer** — Cards are drafted *from* the pack's rendered content on demand (§4.5, cards spec), not from an intermediate facet model.
+> **`PaperPack` is a living document:** blocks are editable in place, and can be added / deleted / reordered in the web reader (block ids are stable API objects). **Re-running processing replaces the pack wholesale** — manual edits and block chats are discarded (confirmed in the UI). There is **no facet layer** — Cards are generated *from* the pack's rendered content (plus the reader's conversation) on demand (§4.5, cards spec; `01 §F2`), not from an intermediate facet model.
 
 ### 4.5 `Card`
 
