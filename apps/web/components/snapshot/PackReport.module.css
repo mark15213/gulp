@@ -100,6 +100,10 @@
   font-size: 13px;
   margin-bottom: var(--space-1);
 }
+.figureImage {
+  max-width: 100%;
+  height: auto;
+}
 .list { line-height: 24px; margin: 0; padding-left: var(--space-5); }
 
 .errorBar {

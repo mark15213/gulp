@@ -1,9 +1,10 @@
 import React from "react";
 import type { PackBlockOut } from "@gulp/api-client";
+import { figureUrl } from "@gulp/api-client";
 import { Md } from "./Md";
 import styles from "./PackReport.module.css";
 
-export function BlockView({ block }: { block: PackBlockOut }) {
+export function BlockView({ snapshotId, block }: { snapshotId: string; block: PackBlockOut }) {
   switch (block.type) {
     case "prose":
       return (
@@ -45,8 +46,16 @@ export function BlockView({ block }: { block: PackBlockOut }) {
     case "figure":
       return (
         <figure className={styles.figure}>
-          <div className={styles.figureLabel}>{block.label}</div>
-          <div className={styles.explanation}>{block.explanation}</div>
+          {block.figure_id ? (
+            <img
+              className={styles.figureImage}
+              src={figureUrl(snapshotId, block.figure_id)}
+              alt={block.label}
+            />
+          ) : (
+            <div className={styles.figureLabel}>{block.label}</div>
+          )}
+          <figcaption className={styles.explanation}>{block.explanation}</figcaption>
         </figure>
       );
     case "list":

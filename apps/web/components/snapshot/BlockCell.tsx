@@ -9,6 +9,7 @@ import { BlockToolbar } from "./BlockToolbar";
 import styles from "./BlockCell.module.css";
 
 export function BlockCell({
+  snapshotId,
   block,
   canMoveUp,
   canMoveDown,
@@ -18,6 +19,7 @@ export function BlockCell({
   onMoveDown,
   onDiscuss,
 }: {
+  snapshotId: string;
   block: PackBlockOut;
   canMoveUp: boolean;
   canMoveDown: boolean;
@@ -32,6 +34,7 @@ export function BlockCell({
     <div className={styles.cell} data-block-id={block.id}>
       {editing ? (
         <BlockEditor
+          snapshotId={snapshotId}
           block={block}
           onSave={(content) => {
             setEditing(false);
@@ -52,7 +55,7 @@ export function BlockCell({
               canMoveDown={canMoveDown}
             />
           </div>
-          <BlockView block={block} />
+          <BlockView snapshotId={snapshotId} block={block} />
         </>
       )}
     </div>

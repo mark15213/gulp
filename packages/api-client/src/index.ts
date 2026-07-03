@@ -261,3 +261,20 @@ export async function postBlockMessage(
   if (error || !data) throw new Error("post block message failed");
   return data;
 }
+
+export type FigureAssetOut =
+  paths["/snapshots/{snapshot_id}/figures"]["get"]["responses"]["200"]["content"]["application/json"][number];
+
+export async function getFigures(snapshotId: string): Promise<FigureAssetOut[]> {
+  const { data, error } = await client.GET("/snapshots/{snapshot_id}/figures", {
+    params: { path: { snapshot_id: snapshotId } },
+    cache: "no-store",
+  });
+  if (error || !data) throw new Error("figures fetch failed");
+  return data;
+}
+
+// Bytes URL for an <img src>. Built from baseUrl like the other non-JSON endpoints.
+export function figureUrl(snapshotId: string, figureId: string): string {
+  return `${baseUrl}/snapshots/${snapshotId}/figures/${figureId}`;
+}

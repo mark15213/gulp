@@ -37,5 +37,11 @@ strict = true
 # fixtures/dynamic patterns that fight strict typing; migrations are operational.
 exclude = ['alembic/', '/tests/']
 
+[[tool.mypy.overrides]]
+# PyMuPDF ships py.typed under the `pymupdf` dist, but not under the `fitz`
+# compat-alias import name that its own docs recommend using.
+module = "fitz"
+ignore_missing_imports = true
+
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

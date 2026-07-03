@@ -31,6 +31,7 @@ class FigureBlock(BaseModel):
     type: Literal["figure"] = "figure"
     label: str
     explanation: str
+    figure_id: str | None = None
 
 
 class ListBlock(BaseModel):

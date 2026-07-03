@@ -22,11 +22,11 @@ describe("text editors", () => {
   });
 
   it("FigureEditor emits label + explanation", async () => {
-    const block: PackBlockOut = { id: "b", type: "figure", label: "L", explanation: "E" };
+    const block: PackBlockOut = { id: "b", type: "figure", label: "L", explanation: "E", figure_id: null };
     const onSave = vi.fn();
-    render(<FigureEditor block={block} onSave={onSave} onCancel={vi.fn()} />);
+    render(<FigureEditor snapshotId="s" block={block} onSave={onSave} onCancel={vi.fn()} />);
     await userEvent.click(screen.getByRole("button", { name: "Save" }));
-    expect(onSave).toHaveBeenCalledWith({ type: "figure", label: "L", explanation: "E" });
+    expect(onSave).toHaveBeenCalledWith({ type: "figure", label: "L", explanation: "E", figure_id: null });
   });
 
   it("Cancel calls onCancel", async () => {
