@@ -2,7 +2,10 @@
 
 import React, { useCallback, useEffect, useState } from "react";
 import {
+  cardsJobReady,
   deleteCard,
+  downloadCardsJob,
+  exportCardsJob,
   generateCards,
   getCards,
   getSnapshot,
@@ -32,6 +35,7 @@ export function CardsView({
   const [status, setStatus] = useState<CardsStatus>(initialCardsStatus);
   const [error, setError] = useState<string | null>(null);
   const [importOpen, setImportOpen] = useState(false);
+  const [exporting, setExporting] = useState(false);
 
   const refetch = useCallback(async () => {
     try {
@@ -107,6 +111,28 @@ export function CardsView({
     setImportOpen(false);
   }
 
+  // Build a card-generation job zip (worker), then auto-download it once ready.
+  // Run it in Claude Code / Codex, then paste result/cards.json into "Import cards".
+  async function onExportJob() {
+    setError(null);
+    setExporting(true);
+    try {
+      await exportCardsJob(snapshotId);
+      for (let i = 0; i < 40; i++) {
+        if (await cardsJobReady(snapshotId)) {
+          downloadCardsJob(snapshotId);
+          return;
+        }
+        await new Promise((r) => setTimeout(r, pollMs));
+      }
+      setError("Export timed out — try again.");
+    } catch {
+      setError("Couldn't export the cards job — is the pack ready?");
+    } finally {
+      setExporting(false);
+    }
+  }
+
   const generating = status === "generating";
 
   return (
@@ -116,6 +142,9 @@ export function CardsView({
         <div className={styles.actions}>
           <Button onClick={onGenerate} disabled={generating}>
             Generate cards
+          </Button>
+          <Button onClick={onExportJob} disabled={exporting}>
+            {exporting ? "Preparing job…" : "Export for Claude Code"}
           </Button>
           <Button onClick={() => setImportOpen(true)}>Import cards</Button>
         </div>

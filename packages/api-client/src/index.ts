@@ -164,6 +164,36 @@ export async function generateCards(snapshotId: string): Promise<SnapshotOut> {
   return data;
 }
 
+// Package the card-generation job as a zip to run in Claude Code / Codex, then
+// import the produced cards.json back through the normal "Import cards" flow.
+export async function exportCardsJob(snapshotId: string): Promise<SnapshotOut> {
+  const { data, error } = await client.POST("/snapshots/{snapshot_id}/cards/export", {
+    params: { path: { snapshot_id: snapshotId } },
+  });
+  if (error || !data) throw new Error("export cards job failed");
+  return data;
+}
+
+export function cardsJobDownloadUrl(snapshotId: string): string {
+  return `${baseUrl}/snapshots/${snapshotId}/cards/job`;
+}
+
+/** True once the worker has finished building the zip (GET 200 vs 404). */
+export async function cardsJobReady(snapshotId: string): Promise<boolean> {
+  const res = await fetch(cardsJobDownloadUrl(snapshotId), { method: "HEAD" });
+  return res.ok;
+}
+
+/** Pull the built cards job to the user's machine without navigating away. */
+export function downloadCardsJob(snapshotId: string): void {
+  const a = document.createElement("a");
+  a.href = cardsJobDownloadUrl(snapshotId); // server sends Content-Disposition: attachment
+  a.rel = "noopener";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}
+
 export async function importCards(
   snapshotId: string,
   body: CardsImportBody,

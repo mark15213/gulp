@@ -33,6 +33,14 @@ def start_card_generation(db: Session, source: Source, enqueue: Callable[..., No
     enqueue("generate_cards", str(source.id))
 
 
+def start_cards_export(db: Session, source: Source, enqueue: Callable[..., None]) -> None:
+    """Enqueue building a card-generation job archive (needs a ready pack)."""
+    pack = db.scalar(select(KnowledgePack).where(KnowledgePack.snapshot_id == source.id))
+    if pack is None or pack.status is not PackStatus.ready:
+        raise NoReadyPackError("no ready pack to build a cards job from — run Start first")
+    enqueue("build_cards_export", str(source.id))
+
+
 def import_cards(db: Session, source: Source, payload: CardsPayload) -> list[Card]:
     rows = [
         Card(

@@ -1,10 +1,21 @@
 import json
 
 import gulp_shared.models  # noqa: F401
-from app.export.archive import write_zip
-from app.export.jobs import run_build_export, run_import_result
+import pytest
+from app.export.archive import find_entry, read_zip, write_zip
+from app.export.jobs import (
+    run_build_cards_export,
+    run_build_export,
+    run_import_result,
+)
 from gulp_shared.db import Base
-from gulp_shared.models.knowledge_pack import KnowledgePack
+from gulp_shared.models.knowledge_pack import (
+    KnowledgePack,
+    PackBlock,
+    PackBlockType,
+    PackSection,
+    PackStatus,
+)
 from gulp_shared.models.source import (
     MediaType,
     SnapshotStatus,
@@ -41,6 +52,50 @@ async def test_build_export_writes_zip_and_sets_exported(tmp_path):  # type: ign
     files = read_zip(open(path, "rb").read())
     assert find_entry(files, "CLAUDE.md")
     assert snap.status == SnapshotStatus.exported
+
+
+def _ready_pack(s, snap):  # type: ignore[no-untyped-def]
+    pack = KnowledgePack(
+        snapshot_id=snap.id, title="BERT", key_insight="bidirectional",
+        core_contributions=["MLM"], references=[], status=PackStatus.ready,
+    )
+    s.add(pack)
+    s.flush()
+    sec = PackSection(pack_id=pack.id, heading="Approach", position=0)
+    s.add(sec)
+    s.flush()
+    s.add(
+        PackBlock(
+            section_id=sec.id, block_type=PackBlockType.prose,
+            data={"content": "Masked language modeling."}, position=0,
+        )
+    )
+    s.flush()
+    return pack
+
+
+def test_build_cards_export_writes_zip(tmp_path):  # type: ignore[no-untyped-def]
+    s = _session()
+    snap = _note(s)
+    _ready_pack(s, snap)
+    s.commit()
+    path = run_build_cards_export(
+        s, snap, export_dir=str(tmp_path), now="2026-07-03T00:00:00Z"
+    )
+    assert path.endswith("-cards.zip")
+    files = read_zip(open(path, "rb").read())
+    assert find_entry(files, "CLAUDE.md")
+    assert b"BERT" in find_entry(files, "input/pack.md")
+    man = json.loads(find_entry(files, "manifest.json"))
+    assert man["job_kind"] == "cards" and man["snapshot_id"] == str(snap.id)
+
+
+def test_build_cards_export_without_ready_pack_raises(tmp_path):  # type: ignore[no-untyped-def]
+    s = _session()
+    snap = _note(s)  # no pack
+    s.commit()
+    with pytest.raises(ValueError):
+        run_build_cards_export(s, snap, export_dir=str(tmp_path))
 
 
 _VALID = {

@@ -101,6 +101,29 @@ def test_generate_unknown_snapshot_404(client: TestClient) -> None:
     assert r.status_code == 404
 
 
+# -- export (cards job for Claude Code) -------------------------------------
+
+
+def test_export_cards_enqueues(client: TestClient, db) -> None:  # type: ignore[no-untyped-def]
+    sid = _capture(client)
+    _ready_pack(db, sid)
+    r = client.post(f"/snapshots/{sid}/cards/export")
+    assert r.status_code == 202
+    assert client.enqueue_calls == [("build_cards_export", sid)]  # type: ignore[attr-defined]
+
+
+def test_export_cards_without_ready_pack_400(client: TestClient) -> None:
+    sid = _capture(client)
+    r = client.post(f"/snapshots/{sid}/cards/export")
+    assert r.status_code == 400
+
+
+def test_download_cards_job_404_when_not_built(client: TestClient) -> None:
+    sid = _capture(client)
+    r = client.get(f"/snapshots/{sid}/cards/job")
+    assert r.status_code == 404
+
+
 # -- import -----------------------------------------------------------------
 
 

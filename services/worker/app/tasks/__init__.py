@@ -9,7 +9,11 @@ from gulp_shared.db import SessionLocal
 from gulp_shared.models.source import Source
 from gulp_shared.settings import settings
 
-from app.export.jobs import run_build_export, run_import_result
+from app.export.jobs import (
+    run_build_cards_export,
+    run_build_export,
+    run_import_result,
+)
 from app.pipeline.cards import generate_cards_for_source
 from app.pipeline.metadata import run_resolve_metadata
 from app.pipeline.run import process_source
@@ -37,6 +41,18 @@ async def build_export(ctx: dict[str, Any], snapshot_id: str) -> None:
             logger.warning("build_export: snapshot %s not found", snapshot_id)
             return
         await run_build_export(db, source)
+    finally:
+        db.close()
+
+
+async def build_cards_export(ctx: dict[str, Any], snapshot_id: str) -> None:
+    db = SessionLocal()
+    try:
+        source = db.get(Source, uuid.UUID(snapshot_id))
+        if source is None:
+            logger.warning("build_cards_export: snapshot %s not found", snapshot_id)
+            return
+        run_build_cards_export(db, source)
     finally:
         db.close()
 
@@ -80,5 +96,12 @@ async def resolve_metadata(ctx: dict[str, Any], snapshot_id: str) -> None:
 
 
 class WorkerSettings:
-    functions = [process_snapshot, build_export, import_result, resolve_metadata, generate_cards]
+    functions = [
+        process_snapshot,
+        build_export,
+        build_cards_export,
+        import_result,
+        resolve_metadata,
+        generate_cards,
+    ]
     redis_settings = RedisSettings.from_dsn(settings.redis_url)

@@ -8,11 +8,16 @@ _REQUIRED = ("format_version", "job_kind", "snapshot_id", "owner_id")
 
 
 def build_manifest(
-    *, snapshot_id: str, owner_id: str, input_sha256: str, created_at: str
+    *,
+    snapshot_id: str,
+    owner_id: str,
+    input_sha256: str,
+    created_at: str,
+    job_kind: str = "digest",
 ) -> dict[str, Any]:
     return {
         "format_version": FORMAT_VERSION,
-        "job_kind": "digest",
+        "job_kind": job_kind,
         "snapshot_id": snapshot_id,
         "owner_id": owner_id,
         "input_sha256": input_sha256,

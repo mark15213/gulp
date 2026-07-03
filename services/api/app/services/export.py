@@ -12,6 +12,10 @@ def job_path(snapshot_id: str) -> str:
     return os.path.join(settings.export_dir, f"{snapshot_id}.zip")
 
 
+def cards_job_path(snapshot_id: str) -> str:
+    return os.path.join(settings.export_dir, f"{snapshot_id}-cards.zip")
+
+
 def result_path(snapshot_id: str) -> str:
     return os.path.join(settings.export_dir, f"{snapshot_id}-result.zip")
 

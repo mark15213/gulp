@@ -15,6 +15,9 @@ vi.mock("@gulp/api-client", async (importOriginal) => {
     updateCard: vi.fn(),
     deleteCard: vi.fn(),
     getSnapshot: vi.fn(),
+    exportCardsJob: vi.fn(),
+    cardsJobReady: vi.fn(),
+    downloadCardsJob: vi.fn(),
   };
 });
 
@@ -29,6 +32,9 @@ const importMock = () => api.importCards as ReturnType<typeof vi.fn>;
 const updateMock = () => api.updateCard as ReturnType<typeof vi.fn>;
 const deleteMock = () => api.deleteCard as ReturnType<typeof vi.fn>;
 const getSnapshotMock = () => api.getSnapshot as ReturnType<typeof vi.fn>;
+const exportMock = () => api.exportCardsJob as ReturnType<typeof vi.fn>;
+const jobReadyMock = () => api.cardsJobReady as ReturnType<typeof vi.fn>;
+const downloadMock = () => api.downloadCardsJob as ReturnType<typeof vi.fn>;
 
 function card(overrides: Partial<api.CardOut> = {}): api.CardOut {
   return {
@@ -120,6 +126,18 @@ describe("CardsView", () => {
     await userEvent.click(screen.getByRole("button", { name: "Import" }));
     expect(await screen.findByRole("alert")).toBeTruthy();
     expect(importMock()).not.toHaveBeenCalled();
+  });
+
+  it("exports a cards job and downloads it once the worker has built it", async () => {
+    getCardsMock().mockResolvedValue([]);
+    exportMock().mockResolvedValue({ cards_status: null });
+    jobReadyMock().mockResolvedValue(true);
+    render(<CardsView snapshotId="s1" initialCardsStatus={null} pollMs={5} />);
+    await userEvent.click(
+      await screen.findByRole("button", { name: "Export for Claude Code" }),
+    );
+    expect(exportMock()).toHaveBeenCalledWith("s1");
+    await waitFor(() => expect(downloadMock()).toHaveBeenCalledWith("s1"));
   });
 
   it("deletes a card", async () => {

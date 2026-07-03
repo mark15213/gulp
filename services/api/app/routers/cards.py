@@ -1,9 +1,11 @@
 """Cards endpoints — thin (docs/05 D4)."""
 
+import os
 import uuid
 from collections.abc import Callable
 
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import FileResponse
 from gulp_shared.contracts.cards import CardsPayload
 from gulp_shared.models.source import Source
 from gulp_shared.models.user import User
@@ -22,8 +24,10 @@ from app.services.cards import (
     import_cards,
     list_cards,
     start_card_generation,
+    start_cards_export,
     update_card,
 )
+from app.services.export import cards_job_path
 from app.services.snapshots import to_out
 
 router = APIRouter()
@@ -57,6 +61,40 @@ def generate_cards_route(
     except GenerationInFlightError as exc:
         raise HTTPException(status_code=409, detail=str(exc)) from exc
     return to_out(db, source)
+
+
+@router.post(
+    "/snapshots/{snapshot_id}/cards/export", response_model=SnapshotOut, status_code=202
+)
+def export_cards_job_route(
+    snapshot_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+    enqueue: Callable[..., None] = Depends(get_enqueue),
+) -> SnapshotOut:
+    source = _owned_snapshot(db, snapshot_id, user)
+    try:
+        start_cards_export(db, source, enqueue)
+    except NoReadyPackError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    return to_out(db, source)
+
+
+@router.get("/snapshots/{snapshot_id}/cards/job")
+def download_cards_job_route(
+    snapshot_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> FileResponse:
+    _owned_snapshot(db, snapshot_id, user)
+    path = cards_job_path(str(snapshot_id))
+    if not os.path.exists(path):
+        raise HTTPException(status_code=404, detail="cards job not built yet")
+    return FileResponse(
+        path,
+        media_type="application/zip",
+        filename=f"gulp-cards-{str(snapshot_id)[:8]}.zip",
+    )
 
 
 @router.post(
