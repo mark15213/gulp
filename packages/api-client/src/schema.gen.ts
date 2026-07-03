@@ -158,6 +158,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/snapshots/{snapshot_id}/figures": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Figures Route */
+        get: operations["list_figures_route_snapshots__snapshot_id__figures_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/snapshots/{snapshot_id}/figures/{figure_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Figure Route */
+        get: operations["get_figure_route_snapshots__snapshot_id__figures__figure_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/inbox": {
         parameters: {
             query?: never;
@@ -447,6 +481,24 @@ export interface components {
          * @enum {string}
          */
         CardsStatus: "generating" | "ready" | "failed";
+        /** FigureAssetOut */
+        FigureAssetOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Label */
+            label: string | null;
+            /** Caption */
+            caption: string | null;
+            /** Mime Type */
+            mime_type: string;
+            /** Width */
+            width: number | null;
+            /** Height */
+            height: number | null;
+        };
         /** FigureBlockOut */
         FigureBlockOut: {
             /**
@@ -463,6 +515,8 @@ export interface components {
             label: string;
             /** Explanation */
             explanation: string;
+            /** Figure Id */
+            figure_id?: string | null;
         };
         /** FigureWrite */
         FigureWrite: {
@@ -475,6 +529,8 @@ export interface components {
             label: string;
             /** Explanation */
             explanation: string;
+            /** Figure Id */
+            figure_id?: string | null;
         };
         /** FormulaBlockOut */
         FormulaBlockOut: {
@@ -1086,6 +1142,69 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SnapshotOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_figures_route_snapshots__snapshot_id__figures_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                snapshot_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FigureAssetOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_figure_route_snapshots__snapshot_id__figures__figure_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                snapshot_id: string;
+                figure_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */
