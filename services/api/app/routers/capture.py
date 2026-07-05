@@ -12,7 +12,7 @@ from app.core.auth import get_current_user
 from app.deps import get_db, get_enqueue
 from app.schemas.capture import CaptureRequest, CaptureResponse, SnapshotOut
 from app.services.capture import create_snapshot
-from app.services.snapshots import to_out
+from app.services.snapshots import delete_snapshot, to_out
 
 router = APIRouter()
 
@@ -40,3 +40,15 @@ def get_snapshot(
     if source is None or source.owner_id != user.id or source.deleted_at is not None:
         raise HTTPException(status_code=404, detail="snapshot not found")
     return to_out(db, source)
+
+
+@router.delete("/snapshots/{snapshot_id}", status_code=204)
+def delete_snapshot_route(
+    snapshot_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> None:
+    source = db.get(Source, snapshot_id)
+    if source is None or source.owner_id != user.id or source.deleted_at is not None:
+        raise HTTPException(status_code=404, detail="snapshot not found")
+    delete_snapshot(db, source)
