@@ -4,6 +4,7 @@ import React, { useMemo, useState } from "react";
 import Link from "next/link";
 import type { Snapshot } from "@gulp/api-client";
 import { ObjectGlyph } from "@/components/ui/ObjectGlyph";
+import { DeleteSnapshotButton } from "@/components/snapshot/DeleteSnapshotButton";
 import { RowBadges } from "./RowBadges";
 import { safeHost } from "@/lib/pack";
 import styles from "./LibraryList.module.css";
@@ -57,6 +58,7 @@ export function LibraryList({ items }: { items: Snapshot[] }) {
               </span>
             </div>
             <RowBadges mediaType={item.media_type} cardsStatus={item.cards_status} />
+            <DeleteSnapshotButton id={item.id} confirm />
           </li>
         ))}
       </ul>

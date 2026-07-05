@@ -3,6 +3,7 @@ import type { Snapshot } from "@gulp/api-client";
 import { ObjectGlyph } from "@/components/ui/ObjectGlyph";
 import { StartButton } from "@/components/snapshot/StartButton";
 import { ExportActions } from "@/components/snapshot/ExportActions";
+import { DeleteSnapshotButton } from "@/components/snapshot/DeleteSnapshotButton";
 import { safeHost, statusLabel } from "@/lib/pack";
 import styles from "./InboxRow.module.css";
 
@@ -17,16 +18,19 @@ export function InboxRow({ item }: { item: Snapshot }) {
         <Link href={`/snapshots/${item.id}`} className={styles.title}>{item.title}</Link>
         <span className={`t-data ${styles.meta}`}>{source}</span>
       </div>
-      {startable ? (
-        <span style={{ display: "inline-flex", gap: 8, alignItems: "center" }}>
-          <StartButton id={item.id} label="▶ Start" />
+      <span style={{ display: "inline-flex", gap: 8, alignItems: "center" }}>
+        {startable ? (
+          <>
+            <StartButton id={item.id} label="▶ Start" />
+            <ExportActions id={item.id} status={item.status} />
+          </>
+        ) : exportable ? (
           <ExportActions id={item.id} status={item.status} />
-        </span>
-      ) : exportable ? (
-        <ExportActions id={item.id} status={item.status} />
-      ) : (
-        <span className={styles.status}>{statusLabel(item.status)}</span>
-      )}
+        ) : (
+          <span className={styles.status}>{statusLabel(item.status)}</span>
+        )}
+        <DeleteSnapshotButton id={item.id} />
+      </span>
     </li>
   );
 }

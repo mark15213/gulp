@@ -1,9 +1,12 @@
 import React from "react";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { Snapshot } from "@gulp/api-client";
 import { LibraryList } from "./LibraryList";
+
+// Rows carry a <DeleteSnapshotButton> which calls useRouter().
+vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
 
 afterEach(cleanup);
 
