@@ -60,6 +60,14 @@ export async function getSnapshot(id: string): Promise<Snapshot> {
   return data;
 }
 
+// Cascade soft-delete: removes the snapshot and all its derivatives (pack, cards, …).
+export async function deleteSnapshot(id: string): Promise<void> {
+  const { error } = await client.DELETE("/snapshots/{snapshot_id}", {
+    params: { path: { snapshot_id: id } },
+  });
+  if (error) throw new Error("delete snapshot failed");
+}
+
 // v1 limitation: ALL error responses (404, 5xx, network) collapse to `null`.
 // This is fine while "no pack yet" is the only expected error state.
 // Plan B must distinguish a real 404 from a 5xx/4xx before shipping production

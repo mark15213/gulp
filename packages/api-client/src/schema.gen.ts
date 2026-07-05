@@ -32,7 +32,8 @@ export interface paths {
         get: operations["get_snapshot_snapshots__snapshot_id__get"];
         put?: never;
         post?: never;
-        delete?: never;
+        /** Delete Snapshot Route */
+        delete: operations["delete_snapshot_route_snapshots__snapshot_id__delete"];
         options?: never;
         head?: never;
         patch?: never;
@@ -918,6 +919,35 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["SnapshotOut"];
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_snapshot_route_snapshots__snapshot_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                snapshot_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {
