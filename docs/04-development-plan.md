@@ -2,7 +2,7 @@
 
 *Gulp · subsystem decomposition & build plan · v1 · 2026-06-24 (amended 2026-07-06)*
 
-> **Amendment (2026-07-06) — replan to the core loop.** The subsystem set is narrowed to the five that carry the core "capture → digest → practice" journey: **`S0`–`S4`**. Two changes from the original cut. **(1) Mastery & Scheduling folds into `S4`:** Gulp Mode now owns both halves of the daily loop — the *session* (present + grade) **and** the resurfacing engine that turns grades into schedule — so scheduling is described inside `S4`, not as a separate downstream subsystem. **(2) `S6` Conversation Capture, `S7` Feeds & Digest, and `S8` Sync & Multi-client are dropped** — they aren't yet-core and weren't settled enough to build against; they'll be re-derived from scratch if and when they're needed. **Current status:** `S0`–`S2` shipped; `S3` partially shipped (the single-gate slice — card accept + Library + tag filters — is done; the KB/Concept ambition remains, see §4·`S3`); **`S4` is next**, and finishing `S3`'s KB is the circle-back after it.
+> **Amendment (2026-07-06) — replan to the core loop.** The subsystem set is narrowed to the five that carry the core "capture → digest → practice" journey: **`S0`–`S4`**. Two changes from the original cut. **(1) Mastery & Scheduling folds into `S4`:** Gulp Mode now owns both halves of the daily loop — the *session* (present + grade) **and** the resurfacing engine that turns grades into schedule — so scheduling is described inside `S4`, not as a separate downstream subsystem. **(2) `S6` Conversation Capture, `S7` Feeds & Digest, and `S8` Sync & Multi-client are dropped** — they aren't yet-core and weren't settled enough to build against; they'll be re-derived from scratch if and when they're needed. **Current status:** `S0`–`S2` shipped; `S3` partially shipped (the single-gate slice — card accept + Library + tag filters — is done; the KB/Concept ambition remains, see §4·`S3`); **`S4` shipped (2026-07-07)** — the daily session + mastery/scheduling engine; **finishing `S3`'s KB is now next**.
 
 > Companion to [`00-product-one-pager.md`](00-product-one-pager.md) (the *what/why*), [`01-interaction-spec.md`](01-interaction-spec.md) (the *how the user moves*), [`02-data-model.md`](02-data-model.md) (the *objects it's made of*), and [`03-ui-system.md`](03-ui-system.md) (the *how it looks*). Those four define the product; this doc defines **how we build it** — how the system splits into independently shippable subsystems, what capability each one carries, and in what order they come online.
 >
@@ -127,8 +127,8 @@ S0  Foundation                         (floor — first, no deps)              �
 S1  Capture & Inbox                    (needs S0)                            ✓ shipped
 S2  Processing & Pack                  (needs S1) ← the engine               ✓ shipped
 S3  Library, KB & Review               (needs S2)                            ◐ single-gate slice shipped; KB/Concepts remain
-S4  Gulp Mode + Scheduling             (needs S2's cards)                  ← next — closes the core loop (session + resurfacing)
-    ↳ then circle back to finish S3's KB / Concept design
+S4  Gulp Mode + Scheduling             (needs S2's cards)                  ✓ shipped — closes the core loop (session + resurfacing)
+    ↳ next: circle back to finish S3's KB / Concept design
 X1  Onboarding · X2  Notifications     (threaded; each lights up with its source subsystem)
 ```
 

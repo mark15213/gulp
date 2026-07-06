@@ -247,4 +247,6 @@ Registered in `main.py`. After schema changes: **`just gen-client`**.
 
 ---
 
+> **Implemented 2026-07-07** (branch `feat/s4-gulp-mode`, plan [`../superpowers/plans/2026-07-06-s4-gulp-mode.md`](../superpowers/plans/2026-07-06-s4-gulp-mode.md)): the full engine ships — `ReviewEvent` log + the scheduling/mastery fold on `Card`, SM-2-lite scheduler, the 7-rung ladder, persisted resumable `GulpSession`, the `/gulp` API, and the full-bleed `/gulp` web session (all three card types, keyboard grading, client-driven retests, snooze, summary) + Today Start/Resume + mastery surfaces. Parked as designed: KB/concept scopes (400), inline AI feedback, FSRS swap.
+
 *Next per-subsystem work in build order (`04 §5`): the **circle-back to `S3`** — the KB / Concept slice — which consumes S4's stored `ladder` for Concept mastery rollups and lifts the scope-`400`s this doc leaves behind.*
