@@ -183,3 +183,61 @@ def snooze(db: Session, owner_id: uuid.UUID, card_id: uuid.UUID) -> None:
         raise ValueError("card_not_found")
     card.next_review_at = _now() + timedelta(days=1)
     db.flush()
+
+
+def complete_session(db: Session, session_id: uuid.UUID, owner_id: uuid.UUID) -> None:
+    sess = db.get(GulpSession, session_id)
+    if sess is None or sess.owner_id != owner_id:
+        raise ValueError("session_not_found")
+    sess.status = SessionStatus.complete
+    sess.completed_at = _now()
+    db.flush()
+
+
+def _streak_days(db: Session, owner_id: uuid.UUID) -> int:
+    stmt = select(GulpSession.completed_at).where(
+        GulpSession.owner_id == owner_id,
+        GulpSession.status == SessionStatus.complete,
+        GulpSession.completed_at.is_not(None),
+    ).order_by(GulpSession.completed_at.desc())
+    days = sorted({c.date() for (c,) in db.execute(stmt)}, reverse=True)
+    if not days:
+        return 0
+    streak, cursor = 0, _now().date()
+    for d in days:
+        if d == cursor or (cursor - d).days == 1:
+            streak += 1
+            cursor = d
+        else:
+            break
+    return streak
+
+
+def summarize(db: Session, session_id: uuid.UUID, owner_id: uuid.UUID) -> dict[str, int]:
+    stmt = select(ReviewEvent.card_id, ReviewEvent.grade).where(
+        ReviewEvent.session_id == session_id
+    ).order_by(ReviewEvent.at)
+    last: dict[str, str] = {}
+    for cid, g in db.execute(stmt):
+        last[str(cid)] = g.value
+    reviewed = len(last)
+    still_fuzzy = sum(1 for g in last.values() if g in ("fuzzy", "missed"))
+    mastered = 0
+    for cid in last:
+        c = db.get(Card, uuid.UUID(cid))
+        if c and c.ladder and c.ladder.value == "mastered":
+            mastered += 1
+    now = _now()
+    due_count = sum(
+        1 for c in _accepted_cards(db, owner_id)
+        if c.reps > 0 and mastery.is_due(c.next_review_at, now)
+    )
+    from app.services.inbox import list_inbox
+    return {
+        "reviewed_count": reviewed,
+        "newly_mastered": mastered,
+        "still_fuzzy": still_fuzzy,
+        "streak_days": _streak_days(db, owner_id),
+        "due_count": due_count,
+        "inbox_count": len(list_inbox(db, owner_id)),
+    }
