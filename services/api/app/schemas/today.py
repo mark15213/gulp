@@ -10,6 +10,13 @@ class TodayDigestItem(BaseModel):
     accepted_cards: int
 
 
+class MasteryTally(BaseModel):
+    new: int
+    learning: int
+    known: int
+    at_risk: int
+
+
 class TodayOut(BaseModel):
     accepted_cards: int
     card_sources: int
@@ -17,3 +24,6 @@ class TodayOut(BaseModel):
     digest: list[TodayDigestItem]
     inbox_count: int
     recent: list[SnapshotOut]
+    due_count: int
+    new_count: int
+    mastery: MasteryTally
