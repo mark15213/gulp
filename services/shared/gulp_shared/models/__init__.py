@@ -1,4 +1,4 @@
-from gulp_shared.models.card import Card, CardOrigin, CardStatus, CardType
+from gulp_shared.models.card import Card, CardOrigin, CardStatus, CardType, MasteryLadder
 from gulp_shared.models.concept import (
     CardConcept,
     Concept,
@@ -41,6 +41,7 @@ __all__ = [
     "CardType",
     "CardOrigin",
     "CardStatus",
+    "MasteryLadder",
     "Concept",
     "ConceptType",
     "ConceptEdge",
