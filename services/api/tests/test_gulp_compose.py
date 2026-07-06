@@ -1,5 +1,7 @@
 # services/api/tests/test_gulp_compose.py
 # Uses conftest fixtures: `db`, `owner` (seeded DEV_USER), `make_accepted_card`.
+from datetime import UTC, datetime
+
 from app.services.gulp import compose_session, current_session, init_scheduling_on_accept
 from gulp_shared.models import (
     Card,
@@ -12,13 +14,14 @@ from gulp_shared.models import (
     SnapshotStatus,
     Source,
     SourceKind,
+    User,
 )
 
 
-def _src(db, owner):
+def _src(db, owner, **kw):
     s = Source(
         owner_id=owner.id, kind=SourceKind.snapshot, title="src",
-        status=SnapshotStatus.ready,
+        status=SnapshotStatus.ready, **kw,
     )
     db.add(s)
     db.flush()
@@ -63,3 +66,38 @@ def test_current_session_returns_active(db, owner):
     _accept(db, src)
     s = compose_session(db, owner.id, target_minutes=5, scope_type=SessionScope.daily)
     assert current_session(db, owner.id).id == s.id
+
+
+def test_compose_excludes_foreign_and_deleted(db, owner):
+    # Included: live accepted card under owner's live source.
+    live = _accept(db, _src(db, owner))
+
+    # Excluded: accepted card under a different user's source.
+    other = User(display_name="Other")
+    db.add(other)
+    db.flush()
+    _accept(db, _src(db, other))
+
+    # Excluded: accepted card under a soft-deleted source.
+    _accept(db, _src(db, owner, deleted_at=datetime.now(UTC)))
+
+    # Excluded: accepted card that is itself soft-deleted.
+    _accept(db, _src(db, owner), deleted_at=datetime.now(UTC))
+
+    out = compose_session(db, owner.id, target_minutes=5, scope_type=SessionScope.daily)
+    assert out.planned_card_ids == [str(live.id)]
+
+
+def test_init_scheduling_idempotent(db, owner):
+    src = _src(db, owner)
+    c = _accept(db, src)
+    c.reps = 5
+    c.interval_days = 40.0
+    c.ladder = MasteryLadder.mastered
+    db.flush()
+
+    init_scheduling_on_accept(c)  # ladder already set → must no-op
+
+    assert c.reps == 5
+    assert c.interval_days == 40.0
+    assert c.ladder is MasteryLadder.mastered
