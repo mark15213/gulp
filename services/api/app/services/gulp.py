@@ -1,15 +1,19 @@
 """Gulp session orchestration (S4 design §4, §6). Thin-router callable."""
 
+import random
 import uuid
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
 from gulp_shared.domain import mastery
 from gulp_shared.domain import session as compose
+from gulp_shared.domain.scheduling import Scheduling, apply_review
 from gulp_shared.models import (
     Card,
     CardStatus,
     GulpSession,
     MasteryLadder,
+    ReviewEvent,
+    ReviewGrade,
     SessionScope,
     SessionStatus,
     Source,
@@ -95,3 +99,87 @@ def current_session(db: Session, owner_id: uuid.UUID) -> GulpSession | None:
         .limit(1)
     )
     return db.scalars(stmt).first()
+
+
+def _recent_lapse(db: Session, card_id: uuid.UUID) -> bool:
+    stmt = (
+        select(ReviewEvent.grade)
+        .where(ReviewEvent.card_id == card_id)
+        .order_by(ReviewEvent.at.desc())
+        .limit(2)
+    )
+    grades = [g for (g,) in db.execute(stmt)]
+    return any(g == ReviewGrade.missed for g in grades)
+
+
+def advance_from_current(
+    db: Session, card: Card, sched: Scheduling, grade: str, is_mcq: bool,
+) -> str:
+    current = card.ladder.value if card.ladder else mastery.INITIAL_LADDER
+    return mastery.advance_ladder(
+        current, sched, grade, is_mcq=is_mcq,
+        recent_lapse=_recent_lapse(db, card.id),
+    )
+
+
+def record_review(
+    db: Session, session_id: uuid.UUID, owner_id: uuid.UUID, card_id: uuid.UUID,
+    grade: str, response: str | None,
+) -> Card:
+    card = db.get(Card, card_id)
+    if card is None:
+        raise ValueError("card_not_found")
+    sess = db.get(GulpSession, session_id)
+    if sess is None or sess.owner_id != owner_id:
+        raise ValueError("session_not_found")
+    now = _now()
+    db.add(ReviewEvent(
+        owner_id=owner_id, session_id=session_id, card_id=card_id,
+        grade=ReviewGrade(grade), response=response, at=now,
+    ))
+    is_mcq = card.card_type.value == "mcq"
+    sched = apply_review(
+        Scheduling(card.interval_days, card.ease, card.reps, card.lapses),
+        grade, is_mcq=is_mcq,
+    )
+    card.interval_days = sched.interval_days
+    card.ease = sched.ease
+    card.reps = sched.reps
+    card.lapses = sched.lapses
+    jitter = random.uniform(-1.0, 1.0)  # ±1-day de-sync (C7)
+    card.next_review_at = now + timedelta(days=max(0.0, sched.interval_days + jitter))
+    card.last_reviewed_at = now
+    card.ladder = MasteryLadder(advance_from_current(db, card, sched, grade, is_mcq))
+    card.mastery_updated_at = now
+    db.flush()
+    return card
+
+
+def next_card_id(db: Session, session_id: uuid.UUID, owner_id: uuid.UUID) -> str | None:
+    sess = db.get(GulpSession, session_id)
+    if sess is None:
+        return None
+    # events this session, by card
+    stmt = select(ReviewEvent.card_id, ReviewEvent.grade).where(
+        ReviewEvent.session_id == session_id
+    ).order_by(ReviewEvent.at)
+    last: dict[str, str] = {}
+    for cid, g in db.execute(stmt):
+        last[str(cid)] = g.value
+    # 1) planned cards with no passing event yet
+    for cid in sess.planned_card_ids:
+        if last.get(cid) in (None, "missed"):
+            return cid
+    # 2) any missed card (live retest) not yet recovered
+    for cid, g in last.items():
+        if g == "missed":
+            return cid
+    return None
+
+
+def snooze(db: Session, owner_id: uuid.UUID, card_id: uuid.UUID) -> None:
+    card = db.get(Card, card_id)
+    if card is None:
+        raise ValueError("card_not_found")
+    card.next_review_at = _now() + timedelta(days=1)
+    db.flush()
