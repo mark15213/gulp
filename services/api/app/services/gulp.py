@@ -3,6 +3,7 @@
 import random
 import uuid
 from datetime import UTC, datetime, timedelta
+from typing import Literal, cast
 
 from gulp_shared.domain import mastery
 from gulp_shared.domain import session as compose
@@ -21,11 +22,30 @@ from gulp_shared.models import (
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.schemas.gulp import SessionCardOut, SessionOut
+
 _WIRED_SCOPES = {SessionScope.daily, SessionScope.at_risk, SessionScope.free_explore}
+
+_Reason = Literal["new", "due", "retest", "at_risk"]
+_Daily = Literal["new", "learning", "known"]
 
 
 def _now() -> datetime:
     return datetime.now(UTC)
+
+
+def _aware(dt: datetime | None) -> datetime | None:
+    """Normalize to an aware (UTC) datetime.
+
+    SQLite (dev/test) doesn't persist tzinfo on `DateTime(timezone=True)`
+    columns, so a `Card` re-materialized from a fresh SELECT (e.g. after its
+    prior in-memory instance was garbage-collected) comes back naive even
+    though it was written as UTC. Postgres (prod) always round-trips aware
+    values, so this is a no-op there.
+    """
+    if dt is not None and dt.tzinfo is None:
+        return dt.replace(tzinfo=UTC)
+    return dt
 
 
 def init_scheduling_on_accept(card: Card) -> None:
@@ -68,10 +88,11 @@ def compose_session(
     due_ar, due, new = [], [], []
     for c in cards:
         ref = compose.CardRef(card_id=str(c.id), source_id=str(c.source_id))
+        next_review_at = _aware(c.next_review_at)
         if c.reps == 0:
             new.append(ref)
-        elif mastery.is_due(c.next_review_at, now):
-            if mastery.is_at_risk(c.next_review_at, c.interval_days, now):
+        elif mastery.is_due(next_review_at, now):
+            if mastery.is_at_risk(next_review_at, c.interval_days, now):
                 due_ar.append(ref)
             else:
                 due.append(ref)
@@ -84,7 +105,7 @@ def compose_session(
         status=SessionStatus.active, started_at=now,
     )
     db.add(sess)
-    db.flush()
+    db.commit()
     return sess
 
 
@@ -151,7 +172,7 @@ def record_review(
     card.last_reviewed_at = now
     card.ladder = MasteryLadder(advance_from_current(db, card, sched, grade, is_mcq))
     card.mastery_updated_at = now
-    db.flush()
+    db.commit()
     return card
 
 
@@ -182,7 +203,7 @@ def snooze(db: Session, owner_id: uuid.UUID, card_id: uuid.UUID) -> None:
     if card is None:
         raise ValueError("card_not_found")
     card.next_review_at = _now() + timedelta(days=1)
-    db.flush()
+    db.commit()
 
 
 def complete_session(db: Session, session_id: uuid.UUID, owner_id: uuid.UUID) -> None:
@@ -191,7 +212,7 @@ def complete_session(db: Session, session_id: uuid.UUID, owner_id: uuid.UUID) ->
         raise ValueError("session_not_found")
     sess.status = SessionStatus.complete
     sess.completed_at = _now()
-    db.flush()
+    db.commit()
 
 
 def _streak_days(db: Session, owner_id: uuid.UUID) -> int:
@@ -230,7 +251,7 @@ def summarize(db: Session, session_id: uuid.UUID, owner_id: uuid.UUID) -> dict[s
     now = _now()
     due_count = sum(
         1 for c in _accepted_cards(db, owner_id)
-        if c.reps > 0 and mastery.is_due(c.next_review_at, now)
+        if c.reps > 0 and mastery.is_due(_aware(c.next_review_at), now)
     )
     from app.services.inbox import list_inbox
     return {
@@ -241,3 +262,37 @@ def summarize(db: Session, session_id: uuid.UUID, owner_id: uuid.UUID) -> dict[s
         "due_count": due_count,
         "inbox_count": len(list_inbox(db, owner_id)),
     }
+
+
+def _reason_for(card: Card, now: datetime) -> _Reason:
+    if card.reps == 0:
+        return "new"
+    if mastery.is_at_risk(_aware(card.next_review_at), card.interval_days, now):
+        return "at_risk"
+    return "due"
+
+
+def to_session_card_out(
+    db: Session, card: Card, *, reason: _Reason | None = None
+) -> SessionCardOut:
+    ladder = card.ladder.value if card.ladder else mastery.INITIAL_LADDER
+    src = db.get(Source, card.source_id) if card.source_id else None
+    return SessionCardOut(
+        id=card.id, card_type=card.card_type.value, prompt=card.prompt,
+        options=card.options, answer=card.answer, explanation=card.explanation,
+        source_title=src.title if src else None,
+        reason=reason or _reason_for(card, _now()),
+        daily=cast(_Daily, mastery.daily_state(ladder)),
+    )
+
+
+def to_session_out(db: Session, sess: GulpSession) -> SessionOut:
+    cards: list[SessionCardOut] = []
+    for cid in sess.planned_card_ids:
+        c = db.get(Card, uuid.UUID(cid))
+        if c is not None:  # tolerate a card deleted mid-session (C6)
+            cards.append(to_session_card_out(db, c))
+    return SessionOut(
+        id=sess.id, scope_type=sess.scope_type.value, target_minutes=sess.target_minutes,
+        status=sess.status.value, started_at=sess.started_at, cards=cards,
+    )
