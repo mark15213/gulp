@@ -1,0 +1,261 @@
+/* Full-bleed Gulp session layout (S4 §7, docs/03). Translated from the
+ * approved prototype's `#session` view — no sidebar, no page chrome, the
+ * whole viewport is the stage. Card-type interactions (flip / mcq / cloze),
+ * the polished grade bar, why/snooze and the real summary stats are Task
+ * 16/17; this module only carries the skeleton's structure + spacing. */
+
+.page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background:
+    radial-gradient(rgba(217, 168, 0, 0.13) 1.2px, transparent 1.5px) 0 0 /
+      16px 16px,
+    var(--surface);
+  color: var(--text-1);
+}
+
+/* ── topbar: exit · progress track · counter ─────────────────── */
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-5);
+  border-bottom: 1px solid var(--border);
+}
+
+.iconBtn {
+  width: 32px;
+  height: 32px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--text-2);
+  font-size: 15px;
+  transition:
+    color 140ms cubic-bezier(0.2, 0, 0, 1),
+    border-color 140ms cubic-bezier(0.2, 0, 0, 1);
+}
+.iconBtn:hover {
+  color: var(--ink);
+  border-color: var(--ink);
+}
+
+.track {
+  flex: 1;
+  height: 9px;
+  border: 1.5px solid var(--ink);
+  border-radius: var(--radius-pill);
+  background: var(--fill);
+  overflow: hidden;
+}
+.track i {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, var(--banana), var(--banana-deep));
+  transition: width 350ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.counter {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 12px;
+  color: var(--text-2);
+  min-width: 48px;
+  text-align: right;
+}
+
+/* ── stage: the centered reading column ──────────────────────── */
+.stage {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-6) var(--space-5) var(--space-5);
+}
+
+.cardwrap {
+  width: 100%;
+  max-width: var(--measure);
+}
+
+.srcline {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.srcName {
+  color: var(--text-2);
+  font-size: 12.5px;
+}
+
+.typeTag {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+  margin-bottom: var(--space-2);
+}
+
+.prompt {
+  font-family: var(--font-reading);
+  font-size: 27px;
+  line-height: 34px;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+
+/* placeholder reveal trigger — Task 16 replaces with <CardPrompt> per
+ * card-type (flashcard flip / mcq options / cloze input). */
+.flip {
+  margin-top: var(--space-6);
+  display: flex;
+  justify-content: center;
+}
+
+.reveal {
+  margin-top: var(--space-6);
+  border-top: 1px dashed var(--border-strong);
+  padding-top: var(--space-4);
+  animation: rise 0.28s ease both;
+}
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.answer {
+  font-family: var(--font-reading);
+  font-size: 19px;
+  line-height: 26px;
+  margin-bottom: var(--space-2);
+}
+
+.explain {
+  color: var(--text-2);
+  font-size: 13.5px;
+  line-height: 20px;
+}
+
+/* ── placeholder grade area — Task 16 replaces with <GradeBar> ──── */
+.gradebar {
+  border-top: 1px solid var(--border);
+  padding: var(--space-4) var(--space-5);
+}
+
+.grades {
+  display: flex;
+  gap: var(--space-3);
+  max-width: var(--measure);
+  margin: 0 auto;
+}
+
+.gradeBtn {
+  flex: 1;
+  border: 1.5px solid var(--ink);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  padding: var(--space-3) var(--space-2);
+  font-weight: 700;
+  font-size: 14px;
+  box-shadow: 2px 2px 0 var(--ink);
+  transition:
+    transform 70ms,
+    box-shadow 70ms;
+}
+.gradeBtn:hover:not(:disabled) {
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0 var(--ink);
+}
+.gradeBtn:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+.gradeGot {
+  background: var(--state-known-tint);
+  color: var(--state-known-on);
+}
+.gradeFuzzy {
+  background: var(--state-learning-tint);
+  color: var(--state-learning-on);
+}
+.gradeMiss {
+  background: var(--state-risk-tint);
+  color: var(--state-risk-on);
+}
+
+/* ── minimal "session complete" placeholder — Task 17 replaces with the
+ * real stats grid / next-up / streak. ───────────────────────────── */
+.summary {
+  margin: auto;
+  max-width: var(--measure);
+  width: 100%;
+  text-align: center;
+  padding: var(--space-10) var(--space-5);
+}
+
+.summaryTitle {
+  font-family: var(--font-reading);
+  font-size: 30px;
+  letter-spacing: -0.015em;
+  margin-bottom: var(--space-2);
+}
+
+.summarySub {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--text-2);
+  margin-bottom: var(--space-6);
+}
+
+.backLink {
+  display: inline-block;
+  background: var(--ink);
+  color: var(--surface);
+  font-weight: 600;
+  padding: var(--space-3) var(--space-5);
+  border-radius: var(--radius-md);
+  box-shadow: 2px 2px 0 var(--banana);
+}
+.backLink:hover {
+  background: var(--ink-hi);
+}
+
+/* ── initial load state (app/gulp/page.tsx) ──────────────────────── */
+.loading {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  color: var(--text-2);
+  background: var(--surface);
+}
+
+@media (max-width: 620px) {
+  .prompt {
+    font-size: 23px;
+    line-height: 30px;
+  }
+  .grades {
+    flex-direction: row;
+  }
+}

@@ -1,22 +1,20 @@
+import React from "react";
 import type { ReactNode } from "react";
 import { Sidebar } from "./Sidebar";
+import { FullBleedGate } from "./FullBleedGate";
 import { CaptureProvider } from "@/components/capture/CaptureProvider";
 import { CaptureButton } from "@/components/capture/CaptureButton";
-import styles from "./Shell.module.css";
 
 // The web workbench frame (docs/03 §5.2): fixed sidebar + fluid content.
+// Full-bleed routes (e.g. /gulp, Task 15) opt out of the sidebar + capture
+// affordance via FullBleedGate — see that file for why the route check
+// lives in a small Client Component rather than here.
 export function Shell({ children }: { children: ReactNode }) {
   return (
     <CaptureProvider>
-      <div className={styles.shell}>
-        <Sidebar />
-        <main className={styles.main}>
-          <div style={{ display: "flex", justifyContent: "flex-end", padding: "12px 24px 0" }}>
-            <CaptureButton />
-          </div>
-          {children}
-        </main>
-      </div>
+      <FullBleedGate sidebar={<Sidebar />} captureButton={<CaptureButton />}>
+        {children}
+      </FullBleedGate>
     </CaptureProvider>
   );
 }

@@ -7,3 +7,9 @@
 .main {
   min-width: 0;
 }
+
+.captureRow {
+  display: flex;
+  justify-content: flex-end;
+  padding: 12px 24px 0;
+}
