@@ -5,13 +5,14 @@ from collections.abc import Callable
 from datetime import UTC, datetime
 
 from gulp_shared.contracts.cards import CardDraft, CardsPayload
-from gulp_shared.models.card import Card, CardOrigin
+from gulp_shared.models.card import Card, CardOrigin, CardStatus
 from gulp_shared.models.knowledge_pack import KnowledgePack, PackStatus
 from gulp_shared.models.source import CardsStatus, Source
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.schemas.cards import CardPatch
+from app.services.gulp import init_scheduling_on_accept
 
 
 class NoReadyPackError(Exception):
@@ -96,6 +97,8 @@ def update_card(db: Session, card: Card, patch: CardPatch) -> Card:
         card.options = merged.options
     if patch.status is not None:
         card.status = patch.status
+        if patch.status is CardStatus.accepted:
+            init_scheduling_on_accept(card)
     db.commit()
     return card
 
