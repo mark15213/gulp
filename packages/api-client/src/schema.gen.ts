@@ -81,13 +81,13 @@ export interface paths {
             cookie?: never;
         };
         /** Download Cards Job Route */
-        get: operations["download_cards_job_route_snapshots__snapshot_id__cards_job_head"];
+        get: operations["download_cards_job_route_snapshots__snapshot_id__cards_job_get"];
         put?: never;
         post?: never;
         delete?: never;
         options?: never;
         /** Download Cards Job Route */
-        head: operations["download_cards_job_route_snapshots__snapshot_id__cards_job_head"];
+        head: operations["download_cards_job_route_snapshots__snapshot_id__cards_job_get"];
         patch?: never;
         trace?: never;
     };
@@ -220,6 +220,125 @@ export interface paths {
         };
         /** Get Figure Route */
         get: operations["get_figure_route_snapshots__snapshot_id__figures__figure_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/gulp/sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Start Session */
+        post: operations["start_session_gulp_sessions_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/gulp/sessions/current": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Current */
+        get: operations["get_current_gulp_sessions_current_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/gulp/sessions/{session_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Session */
+        get: operations["get_session_gulp_sessions__session_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/gulp/sessions/{session_id}/reviews": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Review */
+        post: operations["review_gulp_sessions__session_id__reviews_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/gulp/sessions/{session_id}/snooze": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Snooze */
+        post: operations["snooze_gulp_sessions__session_id__snooze_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/gulp/sessions/{session_id}/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Complete */
+        post: operations["complete_gulp_sessions__session_id__complete_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/gulp/sessions/{session_id}/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Summary */
+        get: operations["summary_gulp_sessions__session_id__summary_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -447,6 +566,17 @@ export interface components {
             /** Options */
             options?: string[] | null;
         };
+        /** CardMasteryOut */
+        CardMasteryOut: {
+            /** Ladder */
+            ladder: string;
+            /** Daily */
+            daily: string;
+            /** Next Review At */
+            next_review_at: string | null;
+            /** Interval Days */
+            interval_days: number;
+        };
         /**
          * CardOrigin
          * @enum {string}
@@ -651,6 +781,17 @@ export interface components {
              */
             ordered: boolean;
         };
+        /** MasteryTally */
+        MasteryTally: {
+            /** New */
+            new: number;
+            /** Learning */
+            learning: number;
+            /** Known */
+            known: number;
+            /** At Risk */
+            at_risk: number;
+        };
         /**
          * MediaType
          * @enum {string}
@@ -677,6 +818,13 @@ export interface components {
              * Format: date-time
              */
             created_at: string;
+        };
+        /** NextUp */
+        NextUp: {
+            /** Due Count */
+            due_count: number;
+            /** Inbox Count */
+            inbox_count: number;
         };
         /** PackOut */
         PackOut: {
@@ -746,6 +894,90 @@ export interface components {
             /** Content */
             content: string;
         };
+        /** ReviewIn */
+        ReviewIn: {
+            /**
+             * Card Id
+             * Format: uuid
+             */
+            card_id: string;
+            /**
+             * Grade
+             * @enum {string}
+             */
+            grade: "got_it" | "fuzzy" | "missed";
+            /** Response */
+            response?: string | null;
+        };
+        /** ReviewOut */
+        ReviewOut: {
+            mastery: components["schemas"]["CardMasteryOut"];
+            next_card: components["schemas"]["SessionCardOut"] | null;
+            /** Done */
+            done: boolean;
+        };
+        /** SessionCardOut */
+        SessionCardOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Card Type
+             * @enum {string}
+             */
+            card_type: "flashcard" | "mcq" | "cloze";
+            /** Prompt */
+            prompt: string;
+            /** Options */
+            options?: string[] | null;
+            /** Answer */
+            answer?: string | null;
+            /** Explanation */
+            explanation?: string | null;
+            /** Source Title */
+            source_title?: string | null;
+            /**
+             * Reason
+             * @enum {string}
+             */
+            reason: "new" | "due" | "retest" | "at_risk";
+            /**
+             * Daily
+             * @enum {string}
+             */
+            daily: "new" | "learning" | "known";
+        };
+        /** SessionOut */
+        SessionOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Scope Type */
+            scope_type: string;
+            /** Target Minutes */
+            target_minutes: number;
+            /** Status */
+            status: string;
+            /** Started At */
+            started_at: string | null;
+            /** Cards */
+            cards: components["schemas"]["SessionCardOut"][];
+        };
+        /** SessionStartIn */
+        SessionStartIn: {
+            /**
+             * Scope Type
+             * @default daily
+             * @enum {string}
+             */
+            scope_type: "daily" | "at_risk" | "free_explore";
+            /** Target Minutes */
+            target_minutes?: number | null;
+        };
         /** SnapshotOut */
         SnapshotOut: {
             /**
@@ -786,11 +1018,31 @@ export interface components {
          * @enum {string}
          */
         SnapshotStatus: "queued" | "unprocessed" | "processing" | "ready" | "exported" | "needs_attention";
+        /** SnoozeIn */
+        SnoozeIn: {
+            /**
+             * Card Id
+             * Format: uuid
+             */
+            card_id: string;
+        };
         /**
          * SourceKind
          * @enum {string}
          */
         SourceKind: "snapshot" | "conversation" | "subscription";
+        /** SummaryOut */
+        SummaryOut: {
+            /** Reviewed Count */
+            reviewed_count: number;
+            /** Newly Mastered */
+            newly_mastered: number;
+            /** Still Fuzzy */
+            still_fuzzy: number;
+            /** Streak Days */
+            streak_days: number;
+            next_up: components["schemas"]["NextUp"];
+        };
         /** TableBlockOut */
         TableBlockOut: {
             /**
@@ -844,6 +1096,11 @@ export interface components {
             inbox_count: number;
             /** Recent */
             recent: components["schemas"]["SnapshotOut"][];
+            /** Due Count */
+            due_count: number;
+            /** New Count */
+            new_count: number;
+            mastery: components["schemas"]["MasteryTally"];
         };
         /** ValidationError */
         ValidationError: {
@@ -1022,7 +1279,7 @@ export interface operations {
             };
         };
     };
-    download_cards_job_route_snapshots__snapshot_id__cards_job_head: {
+    download_cards_job_route_snapshots__snapshot_id__cards_job_get: {
         parameters: {
             query?: never;
             header?: never;
@@ -1053,7 +1310,7 @@ export interface operations {
             };
         };
     };
-    download_cards_job_route_snapshots__snapshot_id__cards_job_head: {
+    download_cards_job_route_snapshots__snapshot_id__cards_job_get: {
         parameters: {
             query?: never;
             header?: never;
@@ -1363,6 +1620,222 @@ export interface operations {
                 };
                 content: {
                     "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    start_session_gulp_sessions_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SessionStartIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_current_gulp_sessions_current_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionOut"] | null;
+                };
+            };
+        };
+    };
+    get_session_gulp_sessions__session_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    review_gulp_sessions__session_id__reviews_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReviewIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReviewOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    snooze_gulp_sessions__session_id__snooze_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SnoozeIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReviewOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    complete_gulp_sessions__session_id__complete_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SummaryOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    summary_gulp_sessions__session_id__summary_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SummaryOut"];
                 };
             };
             /** @description Validation Error */

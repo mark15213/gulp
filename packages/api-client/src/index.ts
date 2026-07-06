@@ -286,3 +286,65 @@ export async function getFigures(snapshotId: string): Promise<FigureAssetOut[]> 
 export function figureUrl(snapshotId: string, figureId: string): string {
   return `${baseUrl}/snapshots/${snapshotId}/figures/${figureId}`;
 }
+
+export type GulpSession =
+  paths["/gulp/sessions"]["post"]["responses"]["200"]["content"]["application/json"];
+export type SessionCard = GulpSession["cards"][number];
+export type ReviewResult =
+  paths["/gulp/sessions/{session_id}/reviews"]["post"]["responses"]["200"]["content"]["application/json"];
+export type GulpSummary =
+  paths["/gulp/sessions/{session_id}/complete"]["post"]["responses"]["200"]["content"]["application/json"];
+
+export async function startGulpSession(
+  body: { scope_type?: "daily" | "at_risk" | "free_explore"; target_minutes?: number } = {},
+): Promise<GulpSession> {
+  // schema.gen.ts marks `scope_type` non-optional because it carries a Pydantic
+  // default (openapi-typescript's defaultNonNullable) — mirror that default here
+  // so callers can still omit it.
+  const { data, error } = await client.POST("/gulp/sessions", {
+    body: { scope_type: body.scope_type ?? "daily", target_minutes: body.target_minutes },
+  });
+  if (error || !data) throw new Error("start gulp failed");
+  return data;
+}
+
+export async function getCurrentGulpSession(): Promise<GulpSession | null> {
+  const { data, error } = await client.GET("/gulp/sessions/current", { cache: "no-store" });
+  if (error) throw new Error("current session fetch failed");
+  return data ?? null;
+}
+
+export async function getGulpSession(id: string): Promise<GulpSession> {
+  const { data, error } = await client.GET("/gulp/sessions/{session_id}", {
+    params: { path: { session_id: id } }, cache: "no-store",
+  });
+  if (error || !data) throw new Error("session fetch failed");
+  return data;
+}
+
+export async function reviewCard(
+  sessionId: string,
+  body: { card_id: string; grade: "got_it" | "fuzzy" | "missed"; response?: string | null },
+): Promise<ReviewResult> {
+  const { data, error } = await client.POST("/gulp/sessions/{session_id}/reviews", {
+    params: { path: { session_id: sessionId } }, body,
+  });
+  if (error || !data) throw new Error("review failed");
+  return data;
+}
+
+export async function snoozeCard(sessionId: string, cardId: string): Promise<ReviewResult> {
+  const { data, error } = await client.POST("/gulp/sessions/{session_id}/snooze", {
+    params: { path: { session_id: sessionId } }, body: { card_id: cardId },
+  });
+  if (error || !data) throw new Error("snooze failed");
+  return data;
+}
+
+export async function completeGulpSession(sessionId: string): Promise<GulpSummary> {
+  const { data, error } = await client.POST("/gulp/sessions/{session_id}/complete", {
+    params: { path: { session_id: sessionId } },
+  });
+  if (error || !data) throw new Error("complete failed");
+  return data;
+}
