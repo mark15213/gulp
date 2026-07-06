@@ -6,8 +6,7 @@ import enum
 import uuid
 from datetime import UTC, datetime
 
-from sqlalchemy import Enum, ForeignKey, Text
-from sqlalchemy import DateTime
+from sqlalchemy import DateTime, Enum, ForeignKey, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from gulp_shared.db import Base, TimestampedBase

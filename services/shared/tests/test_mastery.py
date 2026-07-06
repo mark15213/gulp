@@ -1,6 +1,10 @@
 from datetime import UTC, datetime, timedelta
+
 from gulp_shared.domain.mastery import (
-    LADDER, advance_ladder, daily_state, is_at_risk, is_due,
+    advance_ladder,
+    daily_state,
+    is_at_risk,
+    is_due,
 )
 from gulp_shared.domain.scheduling import Scheduling
 

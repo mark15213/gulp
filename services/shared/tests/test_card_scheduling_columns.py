@@ -7,7 +7,9 @@ def test_card_has_scheduling_defaults():
     from sqlalchemy.orm import Session
     from sqlalchemy.pool import StaticPool
 
-    engine = create_engine("sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool)
+    engine = create_engine(
+        "sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool
+    )
     Base.metadata.create_all(engine)
     with Session(engine) as s:
         c = Card(card_type=CardType.flashcard, prompt="q", origin=CardOrigin.pack)
