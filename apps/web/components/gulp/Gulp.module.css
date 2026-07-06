@@ -88,6 +88,7 @@
 .srcline {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: var(--space-3);
   margin-bottom: var(--space-4);
 }
@@ -95,6 +96,37 @@
 .srcName {
   color: var(--text-2);
   font-size: 12.5px;
+}
+
+/* ── why-chip: toggled one-line scheduling reason (Task 17) ──────────── */
+.whyBtn {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-2);
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-pill);
+  padding: 4px 10px;
+  transition:
+    color 140ms cubic-bezier(0.2, 0, 0, 1),
+    border-color 140ms cubic-bezier(0.2, 0, 0, 1);
+}
+.whyBtn:hover {
+  color: var(--ink);
+  border-color: var(--ink);
+}
+
+.whyPop {
+  /* forces the explanation onto its own full-width row within the
+   * flex-wrap srcline, right under the chip that opened it. */
+  flex-basis: 100%;
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 20px;
+  color: var(--text-2);
+  background: var(--fill);
+  border-left: 3px solid var(--state-due-accent);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  padding: var(--space-2) var(--space-3);
 }
 
 .typeTag {
@@ -252,6 +284,33 @@
   line-height: 20px;
 }
 
+/* ── snooze: opt out of grading this card, back tomorrow (Task 17) ──── */
+.snoozeRow {
+  max-width: var(--measure);
+  margin: var(--space-3) auto 0;
+  display: flex;
+  justify-content: center;
+}
+
+.snoozeBtn {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-2);
+  padding: 5px 12px;
+  border-radius: var(--radius-pill);
+  transition:
+    color 140ms cubic-bezier(0.2, 0, 0, 1),
+    background 140ms cubic-bezier(0.2, 0, 0, 1);
+}
+.snoozeBtn:hover:not(:disabled) {
+  color: var(--ink);
+  background: var(--fill);
+}
+.snoozeBtn:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
 /* ── placeholder grade area — Task 16 replaces with <GradeBar> ──── */
 .gradebar {
   border-top: 1px solid var(--border);
@@ -322,8 +381,7 @@
   outline-offset: 2px;
 }
 
-/* ── minimal "session complete" placeholder — Task 17 replaces with the
- * real stats grid / next-up / streak. ───────────────────────────── */
+/* ── "session complete": stats grid / next-up / streak (Task 17) ───── */
 .summary {
   margin: auto;
   max-width: var(--measure);
@@ -348,8 +406,73 @@
   margin-bottom: var(--space-6);
 }
 
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-3);
+  width: 100%;
+}
+
+.stat {
+  border: 1.5px solid var(--ink);
+  border-radius: var(--radius-md);
+  padding: var(--space-4) var(--space-2);
+  background: var(--surface);
+}
+
+.statValue {
+  font-family: var(--font-reading);
+  font-size: 34px;
+  line-height: 1;
+}
+
+.statLabel {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-2);
+  margin-top: var(--space-2);
+}
+
+.statMastered {
+  box-shadow: 3px 3px 0 var(--state-known-accent);
+}
+
+.statStreak {
+  box-shadow: 3px 3px 0 var(--banana);
+}
+
+.nextUp {
+  margin-top: var(--space-6);
+  width: 100%;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--fill);
+  padding: var(--space-4);
+  text-align: left;
+}
+
+.nextUpLabel {
+  font-weight: 600;
+  margin-bottom: var(--space-1);
+}
+
+.nextUpText {
+  color: var(--text-2);
+  font-size: 12.5px;
+}
+.nextUpText a {
+  color: var(--pop-blue);
+  font-weight: 500;
+}
+.nextUpText a:hover {
+  text-decoration: underline;
+}
+
 .backLink {
   display: inline-block;
+  margin-top: var(--space-6);
   background: var(--ink);
   color: var(--surface);
   font-weight: 600;
@@ -380,5 +503,8 @@
   }
   .grades {
     flex-direction: row;
+  }
+  .stats {
+    grid-template-columns: repeat(2, 1fr);
   }
 }

@@ -1,3 +1,4 @@
+import React from "react";
 import styles from "./StateChip.module.css";
 
 // Mastery states (docs/03 §7.2) — real scheduling lands with S5.

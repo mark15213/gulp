@@ -5,6 +5,7 @@ import Link from "next/link";
 import {
   completeGulpSession,
   reviewCard,
+  snoozeCard,
   type GulpSession,
   type GulpSummary,
   type SessionCard,
@@ -13,6 +14,8 @@ import { StateChip } from "@/components/ui/StateChip";
 import { CardPrompt } from "./CardPrompt";
 import { Reveal } from "./Reveal";
 import { GradeBar } from "./GradeBar";
+import { WhyChip } from "./WhyChip";
+import { SessionSummary } from "./SessionSummary";
 import styles from "./Gulp.module.css";
 
 export type Phase = "prompt" | "revealed";
@@ -36,6 +39,9 @@ export function SessionRunner({ initial }: { initial: GulpSession }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const finishing = useRef(false);
+  // Card ids already given a within-session retest pass, so a repeated
+  // `missed` grade doesn't re-queue them forever (see grade() below).
+  const retested = useRef<Set<string>>(new Set());
 
   const current = queue[0] ?? null;
   const total = index + queue.length;
@@ -60,23 +66,37 @@ export function SessionRunner({ initial }: { initial: GulpSession }) {
     setPhase("revealed");
   }
 
-  // Task 16's GradeBar calls into this. Submits the grade; if the server
-  // hands back a retest card (a missed card re-queued for another pass this
-  // session, per the prototype), it's folded onto the end of the local
-  // queue so it surfaces again before the session ends.
+  // Task 16's GradeBar calls into this. Submits the grade for recording +
+  // scheduling only — the *client* queue is the source of truth for what to
+  // show next, never the server's `next_card` (that's just the next card the
+  // server would have planned regardless of this grade, and folding it in
+  // duplicates whatever's already queued behind it; see Task 17 brief).
+  //
+  // On a `missed` grade, the just-graded card goes back on the end of the
+  // queue for one retest this session (per the prototype). `retested` caps
+  // this at one pass per card — a card missed twice in the same session
+  // isn't re-queued a second time; it simply falls back to its own schedule
+  // and returns tomorrow, so the queue can't loop forever.
   async function grade(g: Grade, response?: string) {
     if (!current || phase !== "revealed" || busy) return;
     setBusy(true);
     setError(null);
     try {
-      const result = await reviewCard(sessionId, {
+      await reviewCard(sessionId, {
         card_id: current.id,
         grade: g,
         response,
       });
       setQueue((prev) => {
-        const rest = prev.slice(1);
-        return result.next_card ? [...rest, result.next_card] : rest;
+        const [graded, ...rest] = prev;
+        if (g === "missed" && graded && !retested.current.has(graded.id)) {
+          retested.current.add(graded.id);
+          // The server no longer supplies this retest pass (see above), so
+          // the client marks it — this is what drives the "· retest" tag
+          // and the WhyChip's retest copy for the second time around.
+          return [...rest, { ...graded, reason: "retest" as const }];
+        }
+        return rest;
       });
       setIndex((i) => i + 1);
       setSuggested(undefined);
@@ -88,17 +108,31 @@ export function SessionRunner({ initial }: { initial: GulpSession }) {
     }
   }
 
+  // The snooze control (Task 17): opts this card out of the session
+  // entirely — no grade recorded, no retest — and lets it come back
+  // tomorrow via its existing schedule. Shares `busy` with grade() so the
+  // two can't race each other on the same card.
+  async function snooze() {
+    if (!current || busy) return;
+    setBusy(true);
+    setError(null);
+    try {
+      await snoozeCard(sessionId, current.id);
+      setQueue((prev) => prev.slice(1));
+      setIndex((i) => i + 1);
+      setSuggested(undefined);
+      setPhase("prompt");
+    } catch {
+      setError("Couldn't snooze that card — try again.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   if (summary) {
     return (
       <div className={styles.page}>
-        <div className={styles.summary}>
-          <p className={styles.summaryTitle}>Session complete</p>
-          <p className={styles.summarySub}>{summary.reviewed_count} reviewed</p>
-          {/* Task 17: stats grid (mastered / fuzzy / streak) + next-up */}
-          <Link href="/" className={styles.backLink}>
-            Back to Today
-          </Link>
-        </div>
+        <SessionSummary summary={summary} />
       </div>
     );
   }
@@ -130,6 +164,7 @@ export function SessionRunner({ initial }: { initial: GulpSession }) {
             <span className={styles.srcName}>
               {current.source_title ?? "Untitled source"}
             </span>
+            <WhyChip reason={current.reason} />
           </div>
 
           <p className={styles.typeTag}>
@@ -152,9 +187,20 @@ export function SessionRunner({ initial }: { initial: GulpSession }) {
         </p>
       )}
 
-      {/* Task 17 adds the snooze row alongside this */}
       {phase === "revealed" && (
-        <GradeBar suggested={suggested} onGrade={(g) => void grade(g)} />
+        <>
+          <div className={styles.snoozeRow}>
+            <button
+              type="button"
+              className={styles.snoozeBtn}
+              disabled={busy}
+              onClick={() => void snooze()}
+            >
+              Snooze — bring it back tomorrow
+            </button>
+          </div>
+          <GradeBar suggested={suggested} onGrade={(g) => void grade(g)} />
+        </>
       )}
     </div>
   );
