@@ -25,6 +25,7 @@ from app.services.cards import (
     list_cards,
     start_card_generation,
     start_cards_export,
+    to_card_out,
     update_card,
 )
 from app.services.export import cards_job_path
@@ -111,7 +112,7 @@ def import_cards_route(
     user: User = Depends(get_current_user),
 ) -> list[CardOut]:
     source = _owned_snapshot(db, snapshot_id, user)
-    return [CardOut.model_validate(c) for c in import_cards(db, source, payload)]
+    return [to_card_out(c) for c in import_cards(db, source, payload)]
 
 
 @router.get("/snapshots/{snapshot_id}/cards", response_model=list[CardOut])
@@ -121,7 +122,7 @@ def list_cards_route(
     user: User = Depends(get_current_user),
 ) -> list[CardOut]:
     source = _owned_snapshot(db, snapshot_id, user)
-    return [CardOut.model_validate(c) for c in list_cards(db, source)]
+    return [to_card_out(c) for c in list_cards(db, source)]
 
 
 @router.patch("/snapshots/{snapshot_id}/cards/{card_id}", response_model=CardOut)
@@ -138,7 +139,7 @@ def update_card_route(
     except LookupError:
         raise HTTPException(status_code=404, detail="card not found") from None
     try:
-        return CardOut.model_validate(update_card(db, card, patch))
+        return to_card_out(update_card(db, card, patch))
     except ValidationError as exc:
         raise HTTPException(status_code=422, detail=_validation_detail(exc)) from exc
 

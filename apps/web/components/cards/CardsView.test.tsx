@@ -140,6 +140,16 @@ describe("CardsView", () => {
     await waitFor(() => expect(downloadMock()).toHaveBeenCalledWith("s1"));
   });
 
+  it("shows the daily mastery badge once a card carries one, and hides it otherwise", async () => {
+    getCardsMock().mockResolvedValue([
+      card({ daily: "known" }),
+      card({ id: "c2", prompt: "Imported Q?", origin: "imported" }), // no daily yet (not accepted)
+    ]);
+    render(<CardsView snapshotId="s1" initialCardsStatus={null} />);
+    expect(await screen.findByText("Known")).toBeTruthy();
+    expect(screen.getByText("Imported Q?")).toBeTruthy();
+  });
+
   it("deletes a card", async () => {
     getCardsMock().mockResolvedValue([card()]);
     deleteMock().mockResolvedValue(undefined);

@@ -81,13 +81,13 @@ export interface paths {
             cookie?: never;
         };
         /** Download Cards Job Route */
-        get: operations["download_cards_job_route_snapshots__snapshot_id__cards_job_get"];
+        get: operations["download_cards_job_route_snapshots__snapshot_id__cards_job_head"];
         put?: never;
         post?: never;
         delete?: never;
         options?: never;
         /** Download Cards Job Route */
-        head: operations["download_cards_job_route_snapshots__snapshot_id__cards_job_get"];
+        head: operations["download_cards_job_route_snapshots__snapshot_id__cards_job_head"];
         patch?: never;
         trace?: never;
     };
@@ -610,6 +610,8 @@ export interface components {
              * Format: date-time
              */
             updated_at: string;
+            /** Daily */
+            daily?: ("new" | "learning" | "known") | null;
         };
         /**
          * CardPatch
@@ -1279,7 +1281,7 @@ export interface operations {
             };
         };
     };
-    download_cards_job_route_snapshots__snapshot_id__cards_job_get: {
+    download_cards_job_route_snapshots__snapshot_id__cards_job_head: {
         parameters: {
             query?: never;
             header?: never;
@@ -1310,7 +1312,7 @@ export interface operations {
             };
         };
     };
-    download_cards_job_route_snapshots__snapshot_id__cards_job_get: {
+    download_cards_job_route_snapshots__snapshot_id__cards_job_head: {
         parameters: {
             query?: never;
             header?: never;

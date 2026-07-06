@@ -3,15 +3,19 @@ export const dynamic = "force-dynamic";
 import React from "react";
 import Link from "next/link";
 import { StartGulpCard } from "@/components/today/StartGulpCard";
+import { MasteryTally } from "@/components/today/MasteryTally";
 import { DigestCard } from "@/components/today/DigestCard";
 import { CapturePeek, type RecentItem } from "@/components/today/CapturePeek";
-import { getToday } from "@gulp/api-client";
+import { getCurrentGulpSession, getToday } from "@gulp/api-client";
 import { timeAgo } from "@/lib/time";
 import styles from "./page.module.css";
 
 // Today — the web "what should I do right now?" landing (docs/03 §7.9).
 export default async function TodayPage() {
   const today = await getToday();
+  // A missing/unreachable session shouldn't fail the whole page — it just
+  // means the CTA reads "Start" instead of "Resume" (S4 §7).
+  const current = await getCurrentGulpSession().catch(() => null);
   const date = new Date().toLocaleDateString("en-US", {
     weekday: "long",
     month: "long",
@@ -46,7 +50,12 @@ export default async function TodayPage() {
       <StartGulpCard
         acceptedCards={today.accepted_cards}
         cardSources={today.card_sources}
+        dueCount={today.due_count}
+        newCount={today.new_count}
+        hasResumable={!!current}
       />
+
+      <MasteryTally mastery={today.mastery} />
 
       <section className={styles.section}>
         <div className={styles.sectionHead}>

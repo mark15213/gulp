@@ -1,17 +1,25 @@
 import React from "react";
+import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { IconArrowRight } from "@/components/ui/icons";
 import styles from "./StartGulpCard.module.css";
 
 // The "what to do now" hero (docs/03 §7.9). Counts are live (accepted cards
-// across the library); the practice loop itself ships with scheduling (S5),
-// so the CTA stays disabled until then.
+// across the library, plus today's due/new queue); the CTA hands off to the
+// real practice loop at /gulp (S4 §7) — "Resume" when a session is already
+// in progress, else "Start".
 export function StartGulpCard({
   acceptedCards,
   cardSources,
+  dueCount,
+  newCount,
+  hasResumable,
 }: {
   acceptedCards: number;
   cardSources: number;
+  dueCount: number;
+  newCount: number;
+  hasResumable: boolean;
 }) {
   return (
     <section className={styles.hero}>
@@ -34,10 +42,15 @@ export function StartGulpCard({
       </div>
 
       <div className={styles.action}>
-        <Button variant="primary" size="lg" disabled iconRight={<IconArrowRight />}>
-          Start Gulp
-        </Button>
-        <p className={styles.actionHint}>Practice mode is coming soon</p>
+        <Link href="/gulp">
+          <Button variant="primary" size="lg" iconRight={<IconArrowRight />}>
+            {hasResumable ? "Resume Gulp" : "Start Gulp"}
+          </Button>
+        </Link>
+        <p className={styles.actionHint}>
+          <span className="t-data">{dueCount}</span> due ·{" "}
+          <span className="t-data">{newCount}</span> new
+        </p>
       </div>
     </section>
   );

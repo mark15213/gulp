@@ -3,16 +3,20 @@
 import uuid
 from collections.abc import Callable
 from datetime import UTC, datetime
+from typing import Literal, cast
 
 from gulp_shared.contracts.cards import CardDraft, CardsPayload
+from gulp_shared.domain import mastery
 from gulp_shared.models.card import Card, CardOrigin, CardStatus
 from gulp_shared.models.knowledge_pack import KnowledgePack, PackStatus
 from gulp_shared.models.source import CardsStatus, Source
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.schemas.cards import CardPatch
+from app.schemas.cards import CardOut, CardPatch
 from app.services.gulp import init_scheduling_on_accept
+
+_Daily = Literal["new", "learning", "known"]
 
 
 class NoReadyPackError(Exception):
@@ -21,6 +25,14 @@ class NoReadyPackError(Exception):
 
 class GenerationInFlightError(Exception):
     """A generation job is already running for this source."""
+
+
+def to_card_out(card: Card) -> CardOut:
+    """Build the response schema, deriving the daily badge from `ladder`
+    (S4 §7) — None until the card is accepted onto the mastery ladder."""
+    out = CardOut.model_validate(card)
+    out.daily = cast(_Daily, mastery.daily_state(card.ladder.value)) if card.ladder else None
+    return out
 
 
 def start_card_generation(db: Session, source: Source, enqueue: Callable[..., None]) -> None:

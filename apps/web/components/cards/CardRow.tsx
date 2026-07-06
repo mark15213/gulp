@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import type { CardOut, CardPatchBody } from "@gulp/api-client";
 import { Button } from "@/components/ui/Button";
+import { StateChip } from "@/components/ui/StateChip";
 import styles from "./Cards.module.css";
 
 const ORIGIN_LABEL: Record<CardOut["origin"], string> = {
@@ -59,6 +60,7 @@ export function CardRow({
         {card.status !== "draft" && (
           <span className={`t-label ${styles[card.status]}`}>{card.status}</span>
         )}
+        {card.daily && <StateChip state={card.daily} />}
       </div>
       {editing ? (
         <div className={styles.editor}>

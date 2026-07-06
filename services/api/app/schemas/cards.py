@@ -6,6 +6,7 @@ the same schema the worker's generation turn emits.
 
 import uuid
 from datetime import datetime
+from typing import Literal
 
 from gulp_shared.models.card import CardOrigin, CardStatus, CardType
 from pydantic import BaseModel, ConfigDict
@@ -24,6 +25,9 @@ class CardOut(BaseModel):
     status: CardStatus
     created_at: datetime
     updated_at: datetime
+    # 3-state daily badge (S4 §7, docs/03 §7.2), derived from `ladder` at
+    # response time — None until a card is accepted onto the ladder.
+    daily: Literal["new", "learning", "known"] | None = None
 
 
 class CardPatch(BaseModel):

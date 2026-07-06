@@ -19,22 +19,16 @@ export function StateChip({
   count,
 }: {
   state: MasteryState;
-  /** When set, a Due chip renders as a mono count badge ("3 due"). */
+  /** When set, renders as a mono count badge (e.g. "3 due", "84 known"). */
   count?: number;
 }) {
   const label =
-    state === "due" && count !== undefined
-      ? `${count} due`
-      : LABELS[state];
+    count !== undefined ? `${count} ${LABELS[state].toLowerCase()}` : LABELS[state];
 
   return (
     <span className={`${styles.chip} ${styles[state]}`}>
       <span className={styles.dot} aria-hidden="true" />
-      {state === "due" && count !== undefined ? (
-        <span className={styles.count}>{label}</span>
-      ) : (
-        label
-      )}
+      {count !== undefined ? <span className={styles.count}>{label}</span> : label}
     </span>
   );
 }
