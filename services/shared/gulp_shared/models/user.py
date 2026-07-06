@@ -21,3 +21,4 @@ class User(TimestampedBase, Base):
 
     display_name: Mapped[str | None] = mapped_column(String, default=None)
     locale: Mapped[Locale] = mapped_column(Enum(Locale, name="locale"), default=Locale.en)
+    gulp_session_minutes: Mapped[int] = mapped_column(default=5)

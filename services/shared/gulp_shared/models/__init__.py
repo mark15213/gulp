@@ -7,6 +7,7 @@ from gulp_shared.models.concept import (
     ConceptType,
     SourceConcept,
 )
+from gulp_shared.models.gulp_session import GulpSession, SessionScope, SessionStatus
 from gulp_shared.models.knowledge_pack import (
     KnowledgePack,
     PackBlock,
@@ -49,6 +50,9 @@ __all__ = [
     "ConceptRelation",
     "CardConcept",
     "SourceConcept",
+    "GulpSession",
+    "SessionScope",
+    "SessionStatus",
     "KnowledgePack",
     "PackStatus",
     "PackSection",
