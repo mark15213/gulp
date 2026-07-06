@@ -21,7 +21,7 @@ export function InboxRow({ item }: { item: Snapshot }) {
       <span style={{ display: "inline-flex", gap: 8, alignItems: "center" }}>
         {startable ? (
           <>
-            <StartButton id={item.id} label="▶ Start" />
+            <StartButton id={item.id} />
             <ExportActions id={item.id} status={item.status} />
           </>
         ) : exportable ? (

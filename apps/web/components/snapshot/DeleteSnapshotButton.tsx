@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { deleteSnapshot } from "@gulp/api-client";
+import { IconButton } from "@/components/ui/IconButton";
 import { IconClose, IconTrash } from "@/components/ui/icons";
 import styles from "./DeleteSnapshotButton.module.css";
 
@@ -36,27 +37,19 @@ export function DeleteSnapshotButton({ id, confirm = false }: { id: string; conf
 
   return (
     <span className={styles.group}>
-      <button
-        type="button"
-        className={`${styles.iconBtn} ${armed ? styles.armed : ""}`}
+      <IconButton
+        label={armed ? "Confirm delete" : "Delete"}
+        tone="danger"
+        active={armed}
         onClick={onTrashClick}
         disabled={pending}
-        aria-label={armed ? "Confirm delete" : "Delete"}
-        title={armed ? "Click again to delete" : "Delete"}
       >
         <IconTrash />
-      </button>
+      </IconButton>
       {armed && (
-        <button
-          type="button"
-          className={styles.iconBtn}
-          onClick={() => setArmed(false)}
-          disabled={pending}
-          aria-label="Cancel"
-          title="Cancel"
-        >
+        <IconButton label="Cancel" onClick={() => setArmed(false)} disabled={pending}>
           <IconClose />
-        </button>
+        </IconButton>
       )}
       {error && (
         <span className={`t-data ${styles.error}`} role="alert">

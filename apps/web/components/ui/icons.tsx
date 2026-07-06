@@ -126,3 +126,26 @@ export const IconClose = (p: IconProps) => (
     <path d="M6 6l12 12M18 6 6 18" />
   </Icon>
 );
+export const IconPlay = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M7 5l12 7-12 7Z" />
+  </Icon>
+);
+export const IconExport = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M12 15V3M8 7l4-4 4 4" />
+    <path d="M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4" />
+  </Icon>
+);
+export const IconDownload = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M12 3v12M8 11l4 4 4-4" />
+    <path d="M5 20h14" />
+  </Icon>
+);
+export const IconUpload = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M12 21V9M8 13l4-4 4 4" />
+    <path d="M5 4h14" />
+  </Icon>
+);

@@ -4,51 +4,6 @@
   gap: var(--space-1, 2px);
 }
 
-/* Low-emphasis icon control — muted at rest, reddens on hover/focus.
- * Mirrors Button.module.css tokens (radius, transition, risk tint). */
-.iconBtn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  padding: 0;
-  border: 1px solid transparent;
-  border-radius: var(--radius-md);
-  background: transparent;
-  color: var(--text-2);
-  cursor: pointer;
-  transition:
-    background 140ms cubic-bezier(0.2, 0, 0, 1),
-    border-color 140ms cubic-bezier(0.2, 0, 0, 1),
-    color 140ms cubic-bezier(0.2, 0, 0, 1);
-}
-.iconBtn svg {
-  width: 16px;
-  height: 16px;
-  flex: none;
-}
-.iconBtn:hover {
-  color: var(--danger);
-  background: var(--state-risk-tint);
-}
-.iconBtn:focus-visible {
-  outline: 2px solid var(--pop-blue);
-  outline-offset: 1px;
-}
-.iconBtn:disabled {
-  opacity: 0.55;
-  cursor: default;
-  pointer-events: none;
-}
-
-/* Armed (library second-click gate) — the trash goes red with a keyline. */
-.armed {
-  color: var(--danger);
-  background: var(--state-risk-tint);
-  border-color: var(--danger);
-}
-
 .error {
   color: var(--danger);
 }

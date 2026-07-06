@@ -14,6 +14,8 @@
   --banana-deep: #d9a800;
   --banana-wash: rgba(245, 206, 42, 0.5);
   --ink: #16130b;
+  --ink-hi: #2c2718; /* primary hover — a warm lift off pure ink */
+  --ink-lo: #0b0905; /* primary pressed */
 
   /* Pop accents — the mark's Ben-Day halftone colors. Blue drives the core
    * CTAs (act = blue); red is reserved for sparing pops. */

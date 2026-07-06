@@ -4,7 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getSnapshot, importResult, jobDownloadUrl, startExport } from "@gulp/api-client";
 import type { Snapshot } from "@gulp/api-client";
-import { Button } from "@/components/ui/Button";
+import { IconButton } from "@/components/ui/IconButton";
+import { IconDownload, IconExport, IconUpload } from "@/components/ui/icons";
 import { exportOutcome } from "@/lib/export";
 
 const POLL_MS = 3000;
@@ -92,19 +93,27 @@ export function ExportActions({ id, status }: { id: string; status: Snapshot["st
   if (status === "exported") {
     return (
       <span style={{ display: "inline-flex", gap: 8, alignItems: "center" }}>
-        <a href={jobDownloadUrl(id)}><Button variant="secondary">⤓ Download job</Button></a>
-        <Button variant="secondary" disabled={busy} onClick={() => fileRef.current?.click()}>⤓ Upload result</Button>
+        <IconButton label="Download job" onClick={() => downloadJob(id)}>
+          <IconDownload />
+        </IconButton>
+        <IconButton label="Upload result" disabled={busy} onClick={() => fileRef.current?.click()}>
+          <IconUpload />
+        </IconButton>
         <input ref={fileRef} type="file" accept=".zip" hidden onChange={onUpload} />
       </span>
     );
   }
   return (
     <span style={{ display: "inline-flex", gap: 8, alignItems: "center" }}>
-      <Button variant="secondary" disabled={busy || building} onClick={onExport}>
-        {building ? "Preparing export…" : error ? "⇪ Retry export" : "⇪ Export job"}
-      </Button>
+      <IconButton
+        label={building ? "Preparing export…" : error ? "Retry export" : "Export job"}
+        disabled={busy || building}
+        onClick={onExport}
+      >
+        <IconExport />
+      </IconButton>
       {error && (
-        <span role="alert" style={{ color: "var(--color-danger, #c0362c)", fontSize: 13 }}>
+        <span role="alert" style={{ color: "var(--danger)", fontSize: 13 }}>
           {error}
         </span>
       )}

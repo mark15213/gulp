@@ -1,0 +1,47 @@
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text-2);
+  cursor: pointer;
+  transition:
+    background 140ms cubic-bezier(0.2, 0, 0, 1),
+    border-color 140ms cubic-bezier(0.2, 0, 0, 1),
+    color 140ms cubic-bezier(0.2, 0, 0, 1);
+}
+.btn svg {
+  width: 17px;
+  height: 17px;
+  flex: none;
+}
+.btn:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 1px;
+}
+.btn:disabled {
+  opacity: 0.55;
+  cursor: default;
+  pointer-events: none;
+}
+
+/* Neutral — warms to banana (tokens: banana is highlight / hover only). */
+.neutral:hover {
+  color: var(--ink);
+  background: var(--banana-wash);
+}
+
+/* Danger — reddens; `active` is the armed second-click gate. */
+.danger:hover,
+.danger.active {
+  color: var(--danger);
+  background: var(--state-risk-tint);
+}
+.danger.active {
+  border-color: var(--danger);
+}

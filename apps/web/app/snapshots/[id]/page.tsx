@@ -51,7 +51,7 @@ export default async function SnapshotPage({ params }: { params: Promise<{ id: s
         <>
           <div className={styles.banner}>Couldn&apos;t fully read this.</div>
           <div className={styles.actions}>
-            <StartButton id={id} label="▶ Retry" />
+            <StartButton id={id} label="Retry" />
             <ExportActions id={id} status={snap.status} />
             {snap.origin_url && (
               <a className={styles.open} href={snap.origin_url} target="_blank" rel="noreferrer">Open original</a>

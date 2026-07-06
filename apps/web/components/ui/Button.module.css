@@ -37,18 +37,19 @@
   font-size: 14px;
 }
 
-/* Primary — the one key action. Electric pop-blue (from the mark's halftone)
- * with a black Lichtenstein keyline. Act = blue. */
+/* Primary — the one key action. Solid warm ink on paper: reads as the same
+ * line-art as the rest of the UI (banana stays the highlight/hover accent,
+ * never a button fill). Act = ink. */
 .primary {
-  background: var(--pop-blue);
-  color: #fff;
+  background: var(--ink);
+  color: var(--surface);
   border-color: var(--ink);
 }
 .primary:hover {
-  background: var(--pop-blue-hi);
+  background: var(--ink-hi);
 }
 .primary:active {
-  background: var(--pop-blue-lo);
+  background: var(--ink-lo);
 }
 
 /* Secondary — surface + hairline. */
