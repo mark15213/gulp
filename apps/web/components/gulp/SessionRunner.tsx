@@ -9,26 +9,29 @@ import {
   type GulpSummary,
   type SessionCard,
 } from "@gulp/api-client";
-import { Button } from "@/components/ui/Button";
 import { StateChip } from "@/components/ui/StateChip";
+import { CardPrompt } from "./CardPrompt";
+import { Reveal } from "./Reveal";
+import { GradeBar } from "./GradeBar";
 import styles from "./Gulp.module.css";
 
 export type Phase = "prompt" | "revealed";
 // Derived from reviewCard's own signature (not hand-rolled) so this can't
 // drift from the generated schema.
 type Grade = Parameters<typeof reviewCard>[1]["grade"];
+type Suggested = "got_it" | "missed";
 
-// The queue state machine driving a Gulp session (S4 §7, Task 15). This is
-// the SHELL: Task 16 swaps the inline prompt/reveal markup below for a real
-// <CardPrompt> (flashcard flip / mcq / cloze) and a polished <GradeBar>;
-// Task 17 swaps the "session complete" placeholder for the real summary and
-// adds the why/snooze affordances. The state shape (queue/index/phase) and
-// the grade()/reveal() seams are meant to survive both.
+// The queue state machine driving a Gulp session (S4 §7, Task 15), wired to
+// the real <CardPrompt> (flashcard flip / mcq / cloze), <Reveal>, and
+// <GradeBar> (Task 16). Task 17 swaps the "session complete" placeholder for
+// the real summary and adds the why/snooze affordances. The state shape
+// (queue/index/phase) and the grade()/reveal() seams survive both.
 export function SessionRunner({ initial }: { initial: GulpSession }) {
   const sessionId = initial.id;
   const [queue, setQueue] = useState<SessionCard[]>(initial.cards);
   const [index, setIndex] = useState(0);
   const [phase, setPhase] = useState<Phase>("prompt");
+  const [suggested, setSuggested] = useState<Suggested | undefined>(undefined);
   const [summary, setSummary] = useState<GulpSummary | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -49,7 +52,11 @@ export function SessionRunner({ initial }: { initial: GulpSession }) {
       .catch(() => setError("Couldn't finish the session — try again."));
   }, [queue.length, summary, sessionId]);
 
-  function reveal() {
+  // CardPrompt calls into this. `suggested` carries the mcq's implied grade
+  // (correct pick → got_it, wrong pick → missed) so GradeBar can nudge
+  // toward it without deciding for the learner.
+  function reveal(suggestedGrade?: Suggested) {
+    setSuggested(suggestedGrade);
     setPhase("revealed");
   }
 
@@ -72,6 +79,7 @@ export function SessionRunner({ initial }: { initial: GulpSession }) {
         return result.next_card ? [...rest, result.next_card] : rest;
       });
       setIndex((i) => i + 1);
+      setSuggested(undefined);
       setPhase("prompt");
     } catch {
       setError("Couldn't submit that grade — try again.");
@@ -130,23 +138,11 @@ export function SessionRunner({ initial }: { initial: GulpSession }) {
           </p>
           <p className={styles.prompt}>{current.prompt}</p>
 
-          {/* Task 16: replace with <CardPrompt> (flashcard flip / mcq / cloze) */}
           {phase === "prompt" && (
-            <div className={styles.flip}>
-              <Button variant="secondary" onClick={reveal}>
-                Show answer
-              </Button>
-            </div>
+            <CardPrompt key={current.id} card={current} onReveal={reveal} />
           )}
 
-          {phase === "revealed" && (
-            <div className={styles.reveal}>
-              <p className={styles.answer}>{current.answer}</p>
-              {current.explanation && (
-                <p className={styles.explain}>{current.explanation}</p>
-              )}
-            </div>
-          )}
+          {phase === "revealed" && <Reveal card={current} />}
         </div>
       </div>
 
@@ -156,33 +152,9 @@ export function SessionRunner({ initial }: { initial: GulpSession }) {
         </p>
       )}
 
-      {/* Task 16: replace with <GradeBar>; Task 17 adds the snooze row */}
+      {/* Task 17 adds the snooze row alongside this */}
       {phase === "revealed" && (
-        <div className={styles.gradebar}>
-          <div className={styles.grades}>
-            <button
-              className={`${styles.gradeBtn} ${styles.gradeGot}`}
-              disabled={busy}
-              onClick={() => void grade("got_it")}
-            >
-              Got it
-            </button>
-            <button
-              className={`${styles.gradeBtn} ${styles.gradeFuzzy}`}
-              disabled={busy}
-              onClick={() => void grade("fuzzy")}
-            >
-              Fuzzy
-            </button>
-            <button
-              className={`${styles.gradeBtn} ${styles.gradeMiss}`}
-              disabled={busy}
-              onClick={() => void grade("missed")}
-            >
-              Missed
-            </button>
-          </div>
-        </div>
+        <GradeBar suggested={suggested} onGrade={(g) => void grade(g)} />
       )}
     </div>
   );

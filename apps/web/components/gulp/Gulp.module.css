@@ -114,12 +114,112 @@
   text-wrap: balance;
 }
 
-/* placeholder reveal trigger — Task 16 replaces with <CardPrompt> per
- * card-type (flashcard flip / mcq options / cloze input). */
+/* ── CardPrompt: the per-card-type interaction (S4 §7, Task 16) ──────── */
 .flip {
   margin-top: var(--space-6);
   display: flex;
   justify-content: center;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.kbd {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  background: var(--ink);
+  color: var(--surface);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.opts {
+  margin-top: var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.opt {
+  text-align: left;
+  border: 1.5px solid var(--border-strong);
+  background: var(--surface);
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-4);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  transition:
+    border-color 100ms cubic-bezier(0.2, 0, 0, 1),
+    background 100ms cubic-bezier(0.2, 0, 0, 1);
+}
+.opt:hover:not(:disabled) {
+  border-color: var(--ink);
+  background: var(--fill);
+}
+.opt:disabled {
+  cursor: default;
+}
+
+.optKey {
+  width: 22px;
+  height: 22px;
+  flex: none;
+  border-radius: 5px;
+  border: 1px solid var(--border-strong);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  display: grid;
+  place-items: center;
+  color: var(--text-2);
+}
+
+.optCorrect {
+  border-color: var(--state-known-accent);
+  background: var(--state-known-tint);
+  color: var(--state-known-on);
+}
+.optCorrect .optKey {
+  background: var(--state-known-accent);
+  color: var(--surface);
+  border-color: var(--state-known-accent);
+}
+
+.optWrong {
+  border-color: var(--state-risk-accent);
+  background: var(--state-risk-tint);
+  color: var(--state-risk-on);
+}
+.optWrong .optKey {
+  background: var(--state-risk-accent);
+  color: var(--surface);
+  border-color: var(--state-risk-accent);
+}
+
+.optMark {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+.clozebox {
+  margin-top: var(--space-6);
+  display: flex;
+  gap: var(--space-3);
+}
+
+.clozeInput {
+  flex: 1;
+  font: inherit;
+  font-size: 16px;
+  padding: var(--space-3) var(--space-4);
+  border: 1.5px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--ink);
+}
+.clozeInput:focus {
+  border-color: var(--ink);
+  outline: none;
 }
 
 .reveal {
@@ -197,6 +297,29 @@
 .gradeMiss {
   background: var(--state-risk-tint);
   color: var(--state-risk-on);
+}
+
+.gradeLabel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+}
+
+.gradeKey {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  border: 1px solid currentColor;
+  border-radius: 3px;
+  padding: 0 4px;
+  opacity: 0.6;
+}
+
+/* the grade the picked mcq answer implies (S4 §7) — a gentle outline, not a
+ * second color, so it nudges without overriding the learner's own judgment. */
+.suggested {
+  outline: 2.5px solid var(--ink);
+  outline-offset: 2px;
 }
 
 /* ── minimal "session complete" placeholder — Task 17 replaces with the
