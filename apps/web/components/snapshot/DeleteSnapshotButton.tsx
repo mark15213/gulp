@@ -3,13 +3,14 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { deleteSnapshot } from "@gulp/api-client";
-import { Button } from "@/components/ui/Button";
+import { IconClose, IconTrash } from "@/components/ui/icons";
+import styles from "./DeleteSnapshotButton.module.css";
 
-/** Delete a snapshot (inbox or library). `confirm` gates it behind a two-step inline prompt. */
+/** Delete a snapshot. Icon-only; `confirm` arms it (a second click) for the library. */
 export function DeleteSnapshotButton({ id, confirm = false }: { id: string; confirm?: boolean }) {
   const router = useRouter();
   const [pending, setPending] = useState(false);
-  const [confirming, setConfirming] = useState(false);
+  const [armed, setArmed] = useState(false);
   const [error, setError] = useState(false);
 
   async function doDelete() {
@@ -21,39 +22,45 @@ export function DeleteSnapshotButton({ id, confirm = false }: { id: string; conf
     } catch {
       setError(true);
       setPending(false);
-      setConfirming(false);
+      setArmed(false);
     }
   }
 
-  const wrap = { display: "inline-flex", gap: 8, alignItems: "center" } as const;
-
-  if (confirming) {
-    return (
-      <span style={wrap}>
-        <span className="t-data">Delete?</span>
-        <Button variant="danger" onClick={doDelete} disabled={pending}>
-          {pending ? "Deleting…" : "Yes"}
-        </Button>
-        <Button variant="ghost" onClick={() => setConfirming(false)} disabled={pending}>
-          Cancel
-        </Button>
-      </span>
-    );
+  function onTrashClick() {
+    if (confirm && !armed) {
+      setArmed(true); // first click just arms — a second click fires.
+      return;
+    }
+    void doDelete();
   }
 
   return (
-    <span style={wrap}>
-      <Button
-        variant="danger"
-        onClick={confirm ? () => setConfirming(true) : doDelete}
+    <span className={styles.group}>
+      <button
+        type="button"
+        className={`${styles.iconBtn} ${armed ? styles.armed : ""}`}
+        onClick={onTrashClick}
         disabled={pending}
-        aria-label="Delete"
+        aria-label={armed ? "Confirm delete" : "Delete"}
+        title={armed ? "Click again to delete" : "Delete"}
       >
-        {pending ? "Deleting…" : "Delete"}
-      </Button>
+        <IconTrash />
+      </button>
+      {armed && (
+        <button
+          type="button"
+          className={styles.iconBtn}
+          onClick={() => setArmed(false)}
+          disabled={pending}
+          aria-label="Cancel"
+          title="Cancel"
+        >
+          <IconClose />
+        </button>
+      )}
       {error && (
-        <span className="t-data" role="alert" style={{ color: "var(--danger, #c00)" }}>
-          Couldn’t delete — try again.
+        <span className={`t-data ${styles.error}`} role="alert">
+          Couldn’t delete
         </span>
       )}
     </span>

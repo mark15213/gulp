@@ -29,21 +29,21 @@ describe("DeleteSnapshotButton", () => {
     await waitFor(() => expect(refresh).toHaveBeenCalled());
   });
 
-  it("requires a two-step confirm when confirm is set", async () => {
+  it("requires a second click (arm → confirm) when confirm is set", async () => {
     deleteMock().mockResolvedValue(undefined);
     render(<DeleteSnapshotButton id="s1" confirm />);
 
-    // First click only reveals the confirm prompt — no API call yet.
+    // First click only arms — no API call yet, and the button relabels.
     await userEvent.click(screen.getByRole("button", { name: "Delete" }));
     expect(deleteMock()).not.toHaveBeenCalled();
-    expect(screen.getByText("Delete?")).toBeTruthy();
 
-    await userEvent.click(screen.getByRole("button", { name: "Yes" }));
+    // Second click on the now-armed trash fires the delete.
+    await userEvent.click(screen.getByRole("button", { name: "Confirm delete" }));
     expect(deleteMock()).toHaveBeenCalledWith("s1");
     await waitFor(() => expect(refresh).toHaveBeenCalled());
   });
 
-  it("cancel backs out of the confirm without deleting", async () => {
+  it("cancel backs out of the armed state without deleting", async () => {
     render(<DeleteSnapshotButton id="s1" confirm />);
     await userEvent.click(screen.getByRole("button", { name: "Delete" }));
     await userEvent.click(screen.getByRole("button", { name: "Cancel" }));
