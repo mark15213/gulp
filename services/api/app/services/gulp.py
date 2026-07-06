@@ -235,8 +235,12 @@ def _streak_days(db: Session, owner_id: uuid.UUID) -> int:
 
 
 def summarize(db: Session, session_id: uuid.UUID, owner_id: uuid.UUID) -> dict[str, int]:
+    sess = db.get(GulpSession, session_id)
+    if sess is None or sess.owner_id != owner_id:
+        raise ValueError("session_not_found")
     stmt = select(ReviewEvent.card_id, ReviewEvent.grade).where(
-        ReviewEvent.session_id == session_id
+        ReviewEvent.session_id == session_id,
+        ReviewEvent.owner_id == owner_id,
     ).order_by(ReviewEvent.at)
     last: dict[str, str] = {}
     for cid, g in db.execute(stmt):

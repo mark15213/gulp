@@ -46,3 +46,19 @@ def test_review_rejects_card_not_in_session(client, db, owner, make_accepted_car
     r2 = client.post(f"/gulp/sessions/{_uuid.uuid4()}/reviews",
                      json={"card_id": sess["cards"][0]["id"], "grade": "got_it"})
     assert r2.status_code == 404
+
+
+def test_complete_and_summary_reject_bogus_session(client):
+    import uuid as _uuid
+    bogus = _uuid.uuid4()
+    assert client.post(f"/gulp/sessions/{bogus}/complete").status_code == 404
+    assert client.get(f"/gulp/sessions/{bogus}/summary").status_code == 404
+
+
+def test_snooze_happy_path(client, db, owner, make_accepted_card):
+    make_accepted_card(db, owner)
+    sess = client.post("/gulp/sessions", json={"scope_type": "daily"}).json()
+    card_id = sess["cards"][0]["id"]
+    r = client.post(f"/gulp/sessions/{sess['id']}/snooze", json={"card_id": card_id})
+    assert r.status_code == 200
+    assert "next_card" in r.json()

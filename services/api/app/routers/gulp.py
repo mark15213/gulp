@@ -109,7 +109,10 @@ def snooze(
     user: User = Depends(get_current_user),
 ) -> ReviewOut:
     _require_session_card(db, session_id, user.id, body.card_id)  # owner + membership guard
-    svc.snooze(db, user.id, body.card_id)
+    try:
+        svc.snooze(db, user.id, body.card_id)
+    except ValueError as exc:
+        raise HTTPException(404, str(exc)) from exc
     nxt_id = svc.next_card_id(db, session_id, user.id)
     nxt = None
     if nxt_id:
@@ -135,7 +138,10 @@ def complete(
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> SummaryOut:
-    svc.complete_session(db, session_id, user.id)
+    try:
+        svc.complete_session(db, session_id, user.id)
+    except ValueError as exc:
+        raise HTTPException(404, str(exc)) from exc
     out = svc.summarize(db, session_id, user.id)
     return _summary_out(out)
 
@@ -146,7 +152,11 @@ def summary(
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> SummaryOut:
-    return _summary_out(svc.summarize(db, session_id, user.id))
+    try:
+        out = svc.summarize(db, session_id, user.id)
+    except ValueError as exc:
+        raise HTTPException(404, str(exc)) from exc
+    return _summary_out(out)
 
 
 def _summary_out(d: dict[str, int]) -> SummaryOut:
