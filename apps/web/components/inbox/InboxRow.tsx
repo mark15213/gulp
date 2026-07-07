@@ -29,7 +29,7 @@ export function InboxRow({ item }: { item: Snapshot }) {
         ) : (
           <span className={styles.status}>{statusLabel(item.status)}</span>
         )}
-        <DeleteSnapshotButton id={item.id} />
+        <DeleteSnapshotButton id={item.id} confirm />
       </span>
     </li>
   );
