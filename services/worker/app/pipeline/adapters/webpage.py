@@ -18,6 +18,21 @@ from app.pipeline.normdoc import Anchor, NormBlock, NormDoc
 
 _HEADING = re.compile(r"^#{1,6}\s+(.*\S)\s*$")
 
+# Leading site chrome an aggregator/preprint host prepends to <title>: a
+# HuggingFace "Paper page - …" label or an arXiv id "[2607.05061] …". Left in,
+# it leaks into the user-visible snapshot title (Library, card source).
+_TITLE_CHROME = re.compile(
+    r"^\s*(?:\[\d{4}\.\d{4,5}(?:v\d+)?\]\s*|Paper page\s*[-–—:]\s*)+",
+    re.IGNORECASE,
+)
+
+
+def _clean_title(title: str | None) -> str | None:
+    if title is None:
+        return None
+    cleaned = _TITLE_CHROME.sub("", title).strip()
+    return cleaned or title  # never strip a title down to nothing
+
 
 def _dedupe(markdown: str) -> str:
     """Remove exact-duplicate paragraphs from trafilatura's markdown output.
@@ -73,7 +88,7 @@ def webpage_to_normdoc(html: str, *, fallback_title: str, url: str) -> NormDoc:
     raw, title = extract_markdown(html)
     body = _dedupe(raw)
     return NormDoc(
-        title=title or fallback_title,
+        title=_clean_title(title) or fallback_title,
         lang=None,
         media_type="article",
         content_body=body,

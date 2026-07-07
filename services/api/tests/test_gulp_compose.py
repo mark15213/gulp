@@ -68,6 +68,33 @@ def test_current_session_returns_active(db, owner):
     assert current_session(db, owner.id).id == s.id
 
 
+def test_compose_abandons_prior_active_session(db, owner):
+    """F3 regression: re-Starting must not orphan the previous active session —
+    exactly one active session per owner survives, and it is the newest."""
+    from gulp_shared.models import GulpSession
+
+    src = _src(db, owner)
+    _accept(db, src)
+    first = compose_session(db, owner.id, target_minutes=5, scope_type=SessionScope.daily)
+    second = compose_session(db, owner.id, target_minutes=5, scope_type=SessionScope.daily)
+    db.refresh(first)
+    assert first.status is SessionStatus.abandoned
+    assert second.status is SessionStatus.active
+    actives = [
+        s
+        for s in db.query(GulpSession).filter_by(owner_id=owner.id).all()
+        if s.status is SessionStatus.active
+    ]
+    assert len(actives) == 1 and actives[0].id == second.id
+    assert current_session(db, owner.id).id == second.id
+    # a superseded (abandoned) session must not resurface as resumable once the
+    # active one is done — completing `second` leaves no `current`.
+    from app.services.gulp import complete_session
+
+    complete_session(db, second.id, owner.id)
+    assert current_session(db, owner.id) is None
+
+
 def test_compose_excludes_foreign_and_deleted(db, owner):
     # Included: live accepted card under owner's live source.
     live = _accept(db, _src(db, owner))

@@ -1,4 +1,15 @@
-from app.pipeline.adapters.webpage import webpage_to_normdoc
+from app.pipeline.adapters.webpage import _clean_title, webpage_to_normdoc
+
+
+def test_clean_title_strips_site_chrome() -> None:
+    """F2 regression: aggregator/preprint chrome must not leak into the title."""
+    assert _clean_title("Paper page - Agentic Search") == "Agentic Search"
+    assert _clean_title("[2607.05061] KVpop — KV Compression") == "KVpop — KV Compression"
+    assert _clean_title("[2607.05061v2] KVpop") == "KVpop"
+    assert _clean_title("A Normal Title — With Dashes") == "A Normal Title — With Dashes"
+    assert _clean_title(None) is None
+    # stripping must never reduce a title to nothing — keep the original
+    assert _clean_title("Paper page - ") == "Paper page - "
 
 # A minimal article. trafilatura extracts the <article> main content.
 HTML = """

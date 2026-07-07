@@ -83,6 +83,16 @@ def compose_session(
         raise ValueError("scope_unavailable")
     minutes = target_minutes or 5
     now = _now()
+    # One active session per owner: abandon any prior active session so a
+    # re-Start doesn't orphan it (composition is frozen per session; the fresh
+    # one supersedes). `current_session` then returns this new session.
+    for prev in db.scalars(
+        select(GulpSession).where(
+            GulpSession.owner_id == owner_id,
+            GulpSession.status == SessionStatus.active,
+        )
+    ):
+        prev.status = SessionStatus.abandoned
     cards = _accepted_cards(db, owner_id)
 
     due_ar, due, new = [], [], []
@@ -110,11 +120,14 @@ def compose_session(
 
 
 def current_session(db: Session, owner_id: uuid.UUID) -> GulpSession | None:
+    # Only a live `active` session is resumable. `abandoned` means superseded by
+    # a newer Start (compose_session), so it must not resurface as "current"; a
+    # `complete` session is done. There is at most one active session per owner.
     stmt = (
         select(GulpSession)
         .where(
             GulpSession.owner_id == owner_id,
-            GulpSession.status.in_([SessionStatus.active, SessionStatus.abandoned]),
+            GulpSession.status == SessionStatus.active,
         )
         .order_by(GulpSession.created_at.desc())
         .limit(1)
@@ -167,8 +180,12 @@ def record_review(
     card.ease = sched.ease
     card.reps = sched.reps
     card.lapses = sched.lapses
-    jitter = random.uniform(-1.0, 1.0)  # ±1-day de-sync (C7)
-    card.next_review_at = now + timedelta(days=max(0.0, sched.interval_days + jitter))
+    # ±1-day de-sync to spread the daily load (C7), floored at 1 day: a passing
+    # review always yields interval_days >= 1, and jitter must never collapse
+    # that first interval to ~0 (which would resurface a just-learned card the
+    # same day, defeating the minimum spacing).
+    jitter = random.uniform(-1.0, 1.0)
+    card.next_review_at = now + timedelta(days=max(1.0, sched.interval_days + jitter))
     card.last_reviewed_at = now
     card.ladder = MasteryLadder(advance_from_current(db, card, sched, grade, is_mcq))
     card.mastery_updated_at = now

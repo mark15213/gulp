@@ -1,5 +1,20 @@
+from datetime import timedelta
+
+import app.services.gulp as gulpsvc
 from app.services.gulp import compose_session, next_card_id, record_review
 from gulp_shared.models import MasteryLadder, ReviewEvent, SessionScope
+
+
+def test_first_interval_never_collapses_below_a_day(db, owner, make_accepted_card, monkeypatch):
+    """F1 regression: worst-case de-sync jitter must not schedule a just-learned
+    card to resurface the same day — next_review_at stays >= ~1 day out."""
+    monkeypatch.setattr(gulpsvc.random, "uniform", lambda _a, _b: -1.0)  # worst-case jitter
+    card = make_accepted_card(db, owner)
+    s = compose_session(db, owner.id, target_minutes=5, scope_type=SessionScope.daily)
+    updated = record_review(db, s.id, owner.id, card.id, "got_it", None)
+    assert updated.next_review_at is not None
+    delta = updated.next_review_at - updated.last_reviewed_at
+    assert delta >= timedelta(days=1) - timedelta(seconds=1)
 
 
 def test_got_it_advances_and_schedules(db, owner, make_accepted_card):
