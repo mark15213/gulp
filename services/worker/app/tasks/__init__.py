@@ -6,15 +6,18 @@ from typing import Any
 
 from arq.connections import RedisSettings
 from gulp_shared.db import SessionLocal
-from gulp_shared.models.source import Source
+from gulp_shared.models.source import SnapshotStatus, Source
 from gulp_shared.settings import settings
+from sqlalchemy.orm import Session
 
 from app.export.jobs import (
     run_build_cards_export,
     run_build_export,
     run_import_result,
 )
+from app.pipeline.adapters.fetch import fetch_document
 from app.pipeline.cards import generate_cards_for_source
+from app.pipeline.figures.run import link_imported_figures
 from app.pipeline.metadata import run_resolve_metadata
 from app.pipeline.run import process_source
 
@@ -67,8 +70,19 @@ async def import_result(ctx: dict[str, Any], snapshot_id: str, upload_path: str)
         with open(upload_path, "rb") as f:
             data = f.read()
         run_import_result(db, source, data)
+        if source.status is SnapshotStatus.ready:
+            await _maybe_link_figures(db, source)
     finally:
         db.close()
+
+
+async def _maybe_link_figures(db: Session, source: Source) -> None:
+    """Best-effort: the pack is already `ready`; a figure failure must not change that."""
+    try:
+        await link_imported_figures(db, source, fetch_document)
+    except Exception:
+        db.rollback()
+        logger.exception("figure auto-link failed for %s", source.id)
 
 
 async def generate_cards(ctx: dict[str, Any], snapshot_id: str) -> None:
