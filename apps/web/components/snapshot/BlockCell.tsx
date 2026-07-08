@@ -1,11 +1,12 @@
 "use client";
 
 import React, { useState } from "react";
-import type { PackBlockOut } from "@gulp/api-client";
+import type { FigureAssetOut, PackBlockOut } from "@gulp/api-client";
 import type { BlockWrite } from "@/lib/packEdit";
 import { BlockView } from "./BlockView";
 import { BlockEditor } from "./editors/BlockEditor";
 import { BlockToolbar } from "./BlockToolbar";
+import { InsertFigureMenu } from "./InsertFigureMenu";
 import styles from "./BlockCell.module.css";
 
 export function BlockCell({
@@ -13,6 +14,8 @@ export function BlockCell({
   block,
   canMoveUp,
   canMoveDown,
+  figures,
+  onInsertFigure,
   onSaveContent,
   onDelete,
   onMoveUp,
@@ -23,6 +26,8 @@ export function BlockCell({
   block: PackBlockOut;
   canMoveUp: boolean;
   canMoveDown: boolean;
+  figures: FigureAssetOut[];
+  onInsertFigure: (figure: FigureAssetOut) => void;
   onSaveContent: (content: BlockWrite) => void;
   onDelete: () => void;
   onMoveUp: () => void;
@@ -54,6 +59,7 @@ export function BlockCell({
               canMoveUp={canMoveUp}
               canMoveDown={canMoveDown}
             />
+            <InsertFigureMenu snapshotId={snapshotId} figures={figures} onPick={onInsertFigure} />
           </div>
           <BlockView snapshotId={snapshotId} block={block} />
         </>

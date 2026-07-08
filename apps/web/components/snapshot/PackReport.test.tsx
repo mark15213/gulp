@@ -16,6 +16,7 @@ vi.mock("@gulp/api-client", async (importOriginal) => {
     deleteBlock: vi.fn(),
     getBlockMessages: vi.fn(),
     postBlockMessage: vi.fn(),
+    getFigures: vi.fn(async () => []),
   };
 });
 
@@ -136,6 +137,31 @@ describe("PackReport editing", () => {
     await userEvent.click(screen.getAllByRole("button", { name: "Add block" })[0]!);
     await userEvent.click(screen.getAllByRole("button", { name: "Add prose block" })[0]!);
     expect(api.createBlock).toHaveBeenCalled();
+  });
+
+  it("inserts a pre-linked figure block below the chosen block", async () => {
+    vi.mocked(api.getFigures).mockResolvedValue([
+      { id: "fig-9", label: "Figure 2", caption: "Attention heads.", mime_type: "image/png", width: 8, height: 8 },
+    ]);
+    vi.mocked(api.createBlock).mockResolvedValue({
+      id: "00000000-0000-0000-0000-0000000000c1",
+      type: "figure",
+      label: "Figure 2",
+      explanation: "Attention heads.",
+      figure_id: "fig-9",
+    });
+    render(<PackReport pack={pack} />);
+    const menus = await screen.findAllByRole("button", { name: /insert figure below/i });
+    await userEvent.click(menus[0]!);
+    await userEvent.click(screen.getByRole("button", { name: "Figure 2" }));
+    expect(api.createBlock).toHaveBeenCalledWith(
+      pack.snapshot_id,
+      pack.sections[0]!.id,
+      {
+        content: { type: "figure", label: "Figure 2", explanation: "Attention heads.", figure_id: "fig-9" },
+        position: 1,
+      },
+    );
   });
 });
 

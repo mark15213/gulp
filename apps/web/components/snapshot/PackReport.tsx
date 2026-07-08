@@ -1,8 +1,8 @@
 "use client";
 
-import React, { Fragment, useState } from "react";
-import { createBlock, deleteBlock, updateBlock } from "@gulp/api-client";
-import type { PackBlockOut, PackOut } from "@gulp/api-client";
+import React, { Fragment, useEffect, useState } from "react";
+import { createBlock, deleteBlock, getFigures, updateBlock } from "@gulp/api-client";
+import type { FigureAssetOut, PackBlockOut, PackOut } from "@gulp/api-client";
 import {
   emptyContent,
   insertBlockAt,
@@ -18,11 +18,26 @@ import { ChatPanel } from "./ChatPanel";
 import { Md } from "./Md";
 import styles from "./PackReport.module.css";
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export function PackReport({ pack: initialPack }: { pack: PackOut }) {
   const [pack, setPack] = useState(initialPack);
   const [error, setError] = useState<string | null>(null);
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
+  const [figures, setFigures] = useState<FigureAssetOut[]>([]);
   const sid = pack.snapshot_id;
+
+  useEffect(() => {
+    // Only fetch for a real snapshot id — a malformed id would 422 the API.
+    if (!UUID_RE.test(sid)) return;
+    let alive = true;
+    getFigures(sid)
+      .then((figs) => alive && setFigures(figs))
+      .catch(() => alive && setFigures([]));
+    return () => {
+      alive = false;
+    };
+  }, [sid]);
 
   function saveContent(sectionId: string, blockId: string, content: BlockWrite) {
     setError(null);
@@ -65,6 +80,19 @@ export function PackReport({ pack: initialPack }: { pack: PackOut }) {
     createBlock(sid, sectionId, { content: emptyContent(type), position: index })
       .then((block) => setPack((p) => insertBlockAt(p, sectionId, index, block)))
       .catch(() => setError("Couldn't add a block — try again."));
+  }
+
+  function insertFigure(sectionId: string, index: number, f: FigureAssetOut) {
+    setError(null);
+    const content: BlockWrite = {
+      type: "figure",
+      label: f.label ?? "Figure",
+      explanation: f.caption ?? "",
+      figure_id: f.id,
+    };
+    createBlock(sid, sectionId, { content, position: index })
+      .then((block) => setPack((p) => insertBlockAt(p, sectionId, index, block)))
+      .catch(() => setError("Couldn't add the figure — try again."));
   }
 
   return (
@@ -111,6 +139,8 @@ export function PackReport({ pack: initialPack }: { pack: PackOut }) {
                   block={block}
                   canMoveUp={i > 0}
                   canMoveDown={i < section.blocks.length - 1}
+                  figures={figures}
+                  onInsertFigure={(f) => insertFigure(section.id, i + 1, f)}
                   onSaveContent={(content) => saveContent(section.id, block.id, content)}
                   onDelete={() => del(section.id, block.id)}
                   onMoveUp={() => move(section.id, block.id, -1)}
