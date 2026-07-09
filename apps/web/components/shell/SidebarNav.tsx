@@ -3,16 +3,17 @@
 import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { IconToday, IconInbox, IconLibrary } from "@/components/ui/icons";
+import { IconToday, IconInbox, IconLibrary, IconFeeds } from "@/components/ui/icons";
 import styles from "./Sidebar.module.css";
 
 // Single-gate nav (spec 2026-07-02): Today first, then the conveyor belt
-// (Inbox = to-do) and the shelf (Library = ready). Feeds returns with S7;
-// Knowledge bases are parked (tags cover grouping).
+// (Inbox = to-do), the shelf (Library = ready), and the stream (Feeds —
+// spec 2026-07-09). Knowledge bases are parked (tags cover grouping).
 const NAV = [
   { label: "Today", href: "/", icon: IconToday },
   { label: "Inbox", href: "/inbox", icon: IconInbox },
   { label: "Library", href: "/library", icon: IconLibrary },
+  { label: "Feeds", href: "/feeds", icon: IconFeeds },
 ] as const;
 
 // Today only on the exact root; sections match themselves and their subtree.
