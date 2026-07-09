@@ -4,7 +4,7 @@
 import logging
 import uuid
 from datetime import UTC, datetime, timedelta
-from typing import Any
+from typing import Any, cast
 
 from arq import cron
 from arq.connections import RedisSettings
@@ -12,7 +12,7 @@ from gulp_shared.db import SessionLocal
 from gulp_shared.models import FeedEntry
 from gulp_shared.models.source import SnapshotStatus, Source, SourceKind
 from gulp_shared.settings import settings
-from sqlalchemy import delete, select
+from sqlalchemy import CursorResult, delete, select
 from sqlalchemy.orm import Session
 
 from app.export.jobs import (
@@ -21,8 +21,8 @@ from app.export.jobs import (
     run_import_result,
 )
 from app.pipeline.adapters.fetch import fetch_document
-from app.pipeline.feeds import run_fetch_feed
 from app.pipeline.cards import generate_cards_for_source
+from app.pipeline.feeds import run_fetch_feed
 from app.pipeline.figures.run import link_imported_figures
 from app.pipeline.metadata import run_resolve_metadata
 from app.pipeline.run import process_source
@@ -165,10 +165,13 @@ async def prune_feed_entries(ctx: dict[str, Any]) -> None:
     db = SessionLocal()
     try:
         cutoff = datetime.now(UTC) - timedelta(days=settings.feed_entry_retention_days)
-        result = db.execute(
-            delete(FeedEntry).where(
-                FeedEntry.promoted_source_id.is_(None), FeedEntry.created_at < cutoff
-            )
+        result = cast(
+            CursorResult[Any],
+            db.execute(
+                delete(FeedEntry).where(
+                    FeedEntry.promoted_source_id.is_(None), FeedEntry.created_at < cutoff
+                )
+            ),
         )
         db.commit()
         logger.info("prune_feed_entries: removed %d", result.rowcount)

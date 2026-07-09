@@ -226,6 +226,8 @@ Each flow: **trigger → steps → key screens → states → edge cases**, with
 ### F6 — Feeds (subscriptions) & digests
 **Goal:** turn followed feeds into a personalized, digestible stream — not an infinite inbox.
 
+> **Amended 2026-07-09** (spec [`superpowers/specs/2026-07-09-subscription-system-design.md`](superpowers/specs/2026-07-09-subscription-system-design.md)): the **subscription half is built** — RSSHub/Folo-compatible feeds (`rsshub://` + plain RSS), a web `Feeds` surface (subscriptions · entries · reader) and a `Discover` catalog. Two deviations from the steps below: new items land as lightweight **FeedEntries** (step 2's auto-created Snapshots were rejected — library stays clean) and only an explicit **Gulp** promotes one into the pipeline; `auto_approve` stays parked with the snapshot gate. Steps 3–4's **digest remains deferred**, as is OPML import.
+
 **Steps:**
 1. Add a **Subscription** (RSS / newsletter address / channel) or import OPML.
 2. New items auto-create **Snapshots** (lightweight, unprocessed) under that subscription.

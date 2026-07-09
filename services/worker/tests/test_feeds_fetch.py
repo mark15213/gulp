@@ -2,14 +2,13 @@ import pathlib
 
 import httpx
 import pytest
+from app.pipeline.feeds import run_fetch_feed
 from gulp_shared.db import Base
 from gulp_shared.models import FeedEntry, SnapshotStatus, Source, SourceKind
 from gulp_shared.models.user import DEV_USER_ID, User
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
-
-from app.pipeline.feeds import run_fetch_feed
 
 FIXTURES = pathlib.Path(__file__).parent / "fixtures"
 

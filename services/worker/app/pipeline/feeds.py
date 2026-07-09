@@ -35,7 +35,9 @@ def _entry_content(entry: Any) -> str | None:
 
 def _entry_published(entry: Any) -> datetime | None:
     t = entry.get("published_parsed") or entry.get("updated_parsed")
-    return datetime(*t[:6], tzinfo=UTC) if t else None
+    if not t:
+        return None
+    return datetime(t[0], t[1], t[2], t[3], t[4], t[5], tzinfo=UTC)
 
 
 def _mark_ok(sub: Source) -> None:

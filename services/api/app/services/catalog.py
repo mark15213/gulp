@@ -5,7 +5,7 @@ network fetch — lazy, cached, and never on the subscription hot path."""
 import json
 import logging
 import time
-from typing import Any
+from typing import Any, cast
 
 import httpx
 from gulp_shared.settings import settings
@@ -36,7 +36,7 @@ def get_catalog() -> dict[str, Any]:
     raw: bytes | None = None
     try:
         r = Redis.from_url(settings.redis_url)
-        raw = r.get(_CACHE_KEY)
+        raw = cast(bytes | None, r.get(_CACHE_KEY))
         if raw is None:
             raw = _fetch_routes_json()
             r.set(_CACHE_KEY, raw, ex=_REDIS_TTL)

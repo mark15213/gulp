@@ -90,6 +90,7 @@ erDiagram
     Source ||--o| Sediment : "conversation yields"
     Sediment ||--o{ SedimentItem : proposes
     Source ||--o{ Source : "subscription emits snapshot"
+    Source ||--o{ FeedEntry : "subscription fetches"
     GulpSession }o--o{ Card : composition
     GulpSession ||--o{ ReviewEvent : logs
     Card ||--o{ ReviewEvent : graded-by
@@ -150,8 +151,8 @@ The frozen, point-in-time item — "the everyday thing you gulped" (`01 §4.2`).
 | `origin_url` | `string?` | original reference (null for manual note / screenshot / audio memo) |
 | `content_body` | `text?` | **stored extracted content** — the link-rot-proof copy (§8 decision) |
 | `content_ref` | `string?` | pointer to the stored original/blob (media, raw file) |
-| `captured_via` | `enum{share_sheet·wechat·email·in_app·paste·manual·screenshot·audio_memo}` | provenance (`01 §F1`) |
-| `emitted_by` | `→Source?` | the `Subscription` that produced it; null for ad-hoc captures (`01 §F6`) |
+| `captured_via` | `enum{share_sheet·wechat·email·in_app·paste·manual·screenshot·audio_memo·feed}` | provenance (`01 §F1`; `feed` = promoted from a subscription, spec 2026-07-09) |
+| `emitted_by` | `→Source?` | the `Subscription` that produced it; null for ad-hoc captures (`01 §F6`) — **live** as of spec 2026-07-09 (was deferred with S7) |
 | `pack` | `→KnowledgePack?` | 1–1; null until generated, and null forever for unsupported content (`01 §10.3`) |
 
 **`status` domain (the capture lifecycle, `01 §F1`/`§F2` — amended 2026-07-02, single gate; see [`superpowers/specs/2026-07-02-single-gate-lifecycle-design.md`](superpowers/specs/2026-07-02-single-gate-lifecycle-design.md)):**
@@ -315,22 +316,35 @@ A Conversation is itself a **form of `Source`** (`01 §F5`) — an interactive o
 
 ---
 
-### 4.8 `Subscription` (`kind = subscription`)
+### 4.8 `Subscription` (`kind = subscription`) + `FeedEntry`
 
-The streaming form of `Source` — "a followed feed that auto-emits Snapshots" (`01 §4.2`/`§F6`). Fields present when `kind = subscription`:
+> **Amended 2026-07-09** (spec [`superpowers/specs/2026-07-09-subscription-system-design.md`](superpowers/specs/2026-07-09-subscription-system-design.md)): implemented as built. Items do **not** auto-create Snapshots; they land in a lightweight `FeedEntry` table and an explicit **gulp** promotes one. `feed_type`, `auto_approve` (parked with the snapshot gate), and the stored `status`/`unread_count` are dropped — health and unread are **derived**.
+
+The streaming form of `Source` — a followed feed, RSSHub/Folo-compatible. Fields present when `kind = subscription`:
 
 | Field | Type | Notes |
 |---|---|---|
-| `feed_type` | `enum{rss·newsletter·channel}` | |
-| `feed_address` | `string` | URL / newsletter address / channel id |
-| `auto_approve` | `bool` | **per-feed override** of `User.auto_approve_default` (`01 §F2`/`§F6`) |
-| `muted` | `bool` | "too much from here" control (`01 §F6`) |
-| `unread_count` | `int` | |
+| `feed_url` | `string` | canonical address: `rsshub://ns/path` (instance-independent, Folo convention) or plain `https://…` RSS/Atom |
+| `muted` | `bool` | "too much from here" control (`01 §F6`) — stops polling, keeps data |
 | `last_fetch_at` | `timestamp?` | |
+| `last_fetch_error` | `text?` | null = healthy; set/cleared per fetch |
+| `feed_etag` / `feed_http_modified` | `string?` | conditional GET (HTTP 304) |
+| `consecutive_failures` | `int?` | ≥5 → poll backs off to daily |
 
-**`status` domain:** `active` / `muted` / `error` (fetch error — surfaced on Feeds, never blocks the digest; `01 §F6`).
+**Health is derived, not stored:** `muted` → `muted`; `last_fetch_error != null` → `error`; else `active`. `unread_count` is derived from `FeedEntry.read_at`. `Source.status` is constant `ready` for subscription rows.
 
-> Emitted Snapshots point **back** at the Subscription via `Snapshot.emitted_by` (§4.3) — a `Source → Source` reference, not a separate join.
+**`FeedEntry`** — lightweight, prunable feed items (unpromoted entries older than 90 days are swept weekly):
+
+| Field | Type | Notes |
+|---|---|---|
+| `subscription` | `→Source` | cascade-deleted with the subscription |
+| `guid` | `string` | feed-provided id, else hash(link+title); **unique per subscription** (dedup) |
+| `title` / `url` / `author` / `published_at` | | list display |
+| `content_html` | `text?` | feed-provided content — powers the Feeds reading pane |
+| `read_at` | `timestamp?` | null = unread |
+| `promoted_source` | `→Source?` | set on gulp; doubles as the "already gulped" record |
+
+> Promotion ("gulp") creates a `Source(kind=snapshot, captured_via=feed)` through the normal capture path and enqueues processing; the Snapshot points **back** at the Subscription via `Snapshot.emitted_by` (§4.3) — a `Source → Source` reference, not a separate join.
 
 ---
 
@@ -467,7 +481,7 @@ Every `status`/`state` field, in one place. (`Source.status` is split by form, s
 |---|---|---|
 | **`Snapshot.status`** | `queued · unprocessed · processing · ready · exported · needs_attention` *(amended 2026-07-02 — single gate)* | capture lands `unprocessed`; processing is **manually triggered** (S2 §2.4): `unprocessed`→`processing`→`ready` (**= in library**); `unprocessed`→`exported`→`ready` (external job + import); `processing`→`needs_attention` (failed) → `processing` (retry); `queued` = offline buffer. The parked review states re-enter with unvetted inflow (auto-process / S7) |
 | **`Conversation.status`** | `active · saved · discarded` | `active`→`saved` (with sediment) · `active`→`discarded` (keeps thread) |
-| **`Subscription.status`** | `active · muted · error` | `active`↔`muted` · `active`↔`error` (fetch) |
+| **`Subscription` health** *(derived, not stored — §4.8 amendment 2026-07-09)* | `active · muted · error` | `active`↔`muted` (muted flag) · `active`↔`error` (`last_fetch_error` set/cleared per fetch) |
 | **`KnowledgePack.status`** | `generating · ready` | `generating`→`ready` |
 | **`SedimentItem.state`** | `suggested · kept · dismissed` | `suggested`→`kept`/`dismissed` |
 | **`Card.status`** | `draft · accepted · rejected` | `draft`→`accepted` (enters scheduling) / `rejected` |
@@ -495,7 +509,8 @@ These realize the cross-cutting states in `01 §7` (Loading/Empty/Processing/Err
 | `Source(conversation)` | `ConversationMessage` | 1 — N | `.conversation` | ordered thread |
 | `Source(conversation)` | `Sediment` | 1 — 0..1 | `.sediment` | on save |
 | `Sediment` | `SedimentItem` | 1 — N | `.sediment` | |
-| `Source(subscription)` | `Source(snapshot)` | 1 — N | `Snapshot.emitted_by` | feed emits snapshots |
+| `Source(subscription)` | `Source(snapshot)` | 1 — N | `Snapshot.emitted_by` | feed emits snapshots (via explicit gulp — §4.8) |
+| `Source(subscription)` | `FeedEntry` | 1 — N | `.subscription` | fetched items; prunable working data |
 | `GulpSession` | `Card` | N — M | `.composition` | interleaved items |
 | `GulpSession` | `ReviewEvent` | 1 — N | `.session` | grade log |
 | `Card` | `ReviewEvent` | 1 — N | `.card` | review history |
