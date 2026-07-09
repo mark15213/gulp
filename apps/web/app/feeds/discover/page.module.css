@@ -1,0 +1,22 @@
+.page {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 32px 24px;
+}
+
+.header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding-bottom: 16px;
+}
+
+.back {
+  color: var(--text-muted, #777);
+  text-decoration: none;
+  font-size: 0.9em;
+}
+
+.back:hover {
+  color: inherit;
+}

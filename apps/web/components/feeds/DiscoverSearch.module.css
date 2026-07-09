@@ -1,0 +1,157 @@
+.discover {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.pasteRow,
+.searchRow {
+  display: flex;
+  gap: 8px;
+}
+
+.input {
+  font: inherit;
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: none;
+  color: inherit;
+}
+
+.primary {
+  font: inherit;
+  font-weight: 600;
+  padding: 8px 18px;
+  border: none;
+  border-radius: 8px;
+  background: var(--blue-600, #2563eb);
+  color: #fff;
+  cursor: pointer;
+}
+
+.primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.secondary {
+  font: inherit;
+  padding: 8px 18px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: none;
+  cursor: pointer;
+}
+
+.ok {
+  color: var(--emerald-600, #059669);
+  font-size: 0.9em;
+  margin: 0;
+}
+
+.error {
+  color: var(--red-500, #ef4444);
+  font-size: 0.9em;
+  margin: 0;
+}
+
+.section {
+  margin-top: 12px;
+}
+
+.sectionTitle {
+  font-size: 0.95em;
+  font-weight: 600;
+  margin: 0 0 10px;
+}
+
+.grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 12px;
+}
+
+.card {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.cardHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.ns {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.badge {
+  font-size: 0.72em;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--amber-500, #f59e0b);
+  color: var(--amber-600, #d97706);
+  flex: none;
+}
+
+.routeName {
+  margin: 0;
+  font-size: 0.88em;
+  color: var(--text-muted, #777);
+}
+
+.path {
+  font-size: 0.78em;
+  color: var(--text-muted, #777);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.example {
+  font: inherit;
+  font-size: 0.8em;
+  text-align: left;
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: var(--blue-600, #2563eb);
+  padding: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.subscribe {
+  font: inherit;
+  font-size: 0.85em;
+  font-weight: 600;
+  align-self: flex-start;
+  margin-top: 2px;
+  padding: 4px 14px;
+  border: 1px solid var(--blue-600, #2563eb);
+  border-radius: 999px;
+  background: none;
+  color: var(--blue-600, #2563eb);
+  cursor: pointer;
+}
+
+.subscribe:disabled {
+  border-color: var(--emerald-600, #059669);
+  color: var(--emerald-600, #059669);
+  cursor: default;
+}
