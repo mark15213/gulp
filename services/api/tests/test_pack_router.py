@@ -10,6 +10,7 @@ from gulp_shared.models.knowledge_pack import (
     PackBlockType,
     PackSection,
     PackStatus,
+    PackType,
 )
 from gulp_shared.models.source import SnapshotStatus, Source, SourceKind
 from gulp_shared.models.user import DEV_USER_ID
@@ -28,8 +29,9 @@ def _ready_snapshot_with_pack(db) -> uuid.UUID:  # type: ignore[no-untyped-def]
                   status=SnapshotStatus.ready)
     db.add(snap)
     db.flush()
-    pack = KnowledgePack(snapshot_id=snap.id, title="BERT", key_insight="ki",
-                         core_contributions=["c1"], references=[], status=PackStatus.ready)
+    pack = KnowledgePack(snapshot_id=snap.id, title="BERT", pack_type=PackType.paper,
+                         extras={"key_insight": "ki", "core_contributions": ["c1"]},
+                         status=PackStatus.ready)
     db.add(pack)
     db.flush()
     sec = PackSection(pack_id=pack.id, heading="H", position=0)
@@ -81,8 +83,9 @@ def test_get_pack_exposes_section_and_block_ids(client, db) -> None:  # type: ig
                   status=SnapshotStatus.ready)
     db.add(snap)
     db.flush()
-    pack = KnowledgePack(snapshot_id=snap.id, title="BERT", key_insight="ki",
-                         core_contributions=["c1"], references=[], status=PackStatus.ready)
+    pack = KnowledgePack(snapshot_id=snap.id, title="BERT", pack_type=PackType.paper,
+                         extras={"key_insight": "ki", "core_contributions": ["c1"]},
+                         status=PackStatus.ready)
     db.add(pack)
     db.flush()
     sec = PackSection(pack_id=pack.id, heading="H", position=0)

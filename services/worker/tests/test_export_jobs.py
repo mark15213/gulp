@@ -15,6 +15,7 @@ from gulp_shared.models.knowledge_pack import (
     PackBlockType,
     PackSection,
     PackStatus,
+    PackType,
 )
 from gulp_shared.models.source import (
     MediaType,
@@ -56,8 +57,9 @@ async def test_build_export_writes_zip_and_sets_exported(tmp_path):  # type: ign
 
 def _ready_pack(s, snap):  # type: ignore[no-untyped-def]
     pack = KnowledgePack(
-        snapshot_id=snap.id, title="BERT", key_insight="bidirectional",
-        core_contributions=["MLM"], references=[], status=PackStatus.ready,
+        snapshot_id=snap.id, title="BERT", pack_type=PackType.paper,
+        extras={"key_insight": "bidirectional", "core_contributions": ["MLM"]},
+        status=PackStatus.ready,
     )
     s.add(pack)
     s.flush()

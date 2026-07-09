@@ -1,4 +1,7 @@
-"""KnowledgePack — a structured paper report (docs/02 §4.4, S2 design §3)."""
+"""KnowledgePack — the thin abstract digest base + per-pack_type extras
+(docs/02 §4.4). The sectioned block body is the substrate every pack type
+shares; `extras` holds what a specific pack_type adds on top (the paper
+report's key_insight / core_contributions / references live there)."""
 
 import enum
 import uuid
@@ -15,12 +18,22 @@ class PackStatus(enum.StrEnum):
     ready = "ready"
 
 
+class PackType(enum.StrEnum):
+    """Discriminator selecting the pack implementation (docs/02 §4.4):
+    `paper` = LLM-authored deep report; `article` = deterministic preserve
+    of the source's own structure."""
+
+    paper = "paper"
+    article = "article"
+
+
 class PackBlockType(enum.StrEnum):
     prose = "prose"
     formula = "formula"
     table = "table"
     figure = "figure"
     list = "list"
+    code = "code"
 
 
 class KnowledgePack(TimestampedBase, Base):
@@ -30,9 +43,9 @@ class KnowledgePack(TimestampedBase, Base):
         ForeignKey("sources.id"), unique=True, index=True
     )
     title: Mapped[str] = mapped_column(Text)
-    key_insight: Mapped[str] = mapped_column(Text)
-    core_contributions: Mapped[list[str]] = mapped_column(JSON, default=list)
-    references: Mapped[list[dict[str, Any]]] = mapped_column(JSON, default=list)
+    summary: Mapped[str | None] = mapped_column(Text, default=None)
+    pack_type: Mapped[PackType] = mapped_column(Enum(PackType, name="pack_type"))
+    extras: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
     status: Mapped[PackStatus] = mapped_column(Enum(PackStatus, name="pack_status"))
 
     # delete-orphan so replacing a pack (re-import) removes its sections/blocks in

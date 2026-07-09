@@ -14,6 +14,7 @@ from gulp_shared.models.knowledge_pack import (
     PackBlockType,
     PackSection,
     PackStatus,
+    PackType,
 )
 from gulp_shared.models.pack_block_message import ChatRole, PackBlockMessage
 from gulp_shared.models.source import SnapshotStatus, Source, SourceKind
@@ -46,9 +47,8 @@ def _library_snapshot_with_derivatives(db) -> Source:  # type: ignore[no-untyped
     pack = KnowledgePack(
         snapshot_id=src.id,
         title="T",
-        key_insight="k",
-        core_contributions=["c"],
-        references=[],
+        pack_type=PackType.paper,
+        extras={"key_insight": "k", "core_contributions": ["c"]},
         status=PackStatus.ready,
     )
     db.add(pack)

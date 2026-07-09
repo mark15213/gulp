@@ -14,6 +14,7 @@ from gulp_shared.models.knowledge_pack import (
     PackBlockType,
     PackSection,
     PackStatus,
+    PackType,
 )
 from gulp_shared.models.pack_block_message import ChatRole
 from gulp_shared.models.source import SnapshotStatus, Source, SourceKind
@@ -38,8 +39,9 @@ def _block(db) -> dict:  # type: ignore[no-untyped-def]
                   status=SnapshotStatus.ready, content_body="The source body text.")
     db.add(snap)
     db.flush()
-    pack = KnowledgePack(snapshot_id=snap.id, title="BERT", key_insight="Change the objective.",
-                         core_contributions=[], references=[], status=PackStatus.ready)
+    pack = KnowledgePack(snapshot_id=snap.id, title="BERT", pack_type=PackType.paper,
+                         extras={"key_insight": "Change the objective."},
+                         status=PackStatus.ready)
     db.add(pack)
     db.flush()
     sec = PackSection(pack_id=pack.id, heading="Method", position=0)

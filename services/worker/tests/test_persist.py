@@ -2,10 +2,12 @@ import gulp_shared.models  # noqa: F401
 from app.pipeline.persist import persist_pack
 from app.pipeline.schemas import (
     FormulaBlock,
+    PackDraft,
     PaperReport,
     ProseBlock,
     Reference,
     Section,
+    draft_from_paper_report,
 )
 from gulp_shared.db import Base
 from gulp_shared.models.knowledge_pack import (
@@ -14,6 +16,7 @@ from gulp_shared.models.knowledge_pack import (
     PackBlockType,
     PackSection,
     PackStatus,
+    PackType,
 )
 from gulp_shared.models.source import (
     SnapshotStatus,
@@ -59,15 +62,17 @@ def _snapshot(s):  # type: ignore[no-untyped-def]
     return snap
 
 
-_REPORT = PaperReport(
-    title="BERT",
-    key_insight="ki",
-    core_contributions=["c1", "c2"],
-    sections=[Section(heading="H", blocks=[
-        ProseBlock(content="b0"),
-        FormulaBlock(latex="a=b", explanation="x"),
-    ])],
-    references=[Reference(citation="V2017", why_interesting="t")],
+_REPORT = draft_from_paper_report(
+    PaperReport(
+        title="BERT",
+        key_insight="ki",
+        core_contributions=["c1", "c2"],
+        sections=[Section(heading="H", blocks=[
+            ProseBlock(content="b0"),
+            FormulaBlock(latex="a=b", explanation="x"),
+        ])],
+        references=[Reference(citation="V2017", why_interesting="t")],
+    )
 )
 
 
@@ -80,9 +85,10 @@ def test_persist_writes_report_fields_and_typed_blocks() -> None:
     got = s.scalar(select(KnowledgePack).where(KnowledgePack.snapshot_id == snap.id))
     assert got is not None
     assert got.status == PackStatus.ready
-    assert got.title == "BERT" and got.key_insight == "ki"
-    assert got.core_contributions == ["c1", "c2"]
-    assert got.references == [{"citation": "V2017", "why_interesting": "t"}]
+    assert got.pack_type == PackType.paper and got.summary is None
+    assert got.title == "BERT" and got.extras["key_insight"] == "ki"
+    assert got.extras["core_contributions"] == ["c1", "c2"]
+    assert got.extras["references"] == [{"citation": "V2017", "why_interesting": "t"}]
     sections = list(s.scalars(select(PackSection).where(PackSection.pack_id == pack.id)))
     assert len(sections) == 1 and sections[0].heading == "H"
     blocks = sorted(
@@ -92,6 +98,25 @@ def test_persist_writes_report_fields_and_typed_blocks() -> None:
     assert [b.block_type for b in blocks] == [PackBlockType.prose, PackBlockType.formula]
     assert blocks[0].data == {"content": "b0"}
     assert blocks[1].data == {"latex": "a=b", "explanation": "x"}
+
+
+def test_persist_article_draft_with_summary_and_empty_extras() -> None:
+    s = _session()
+    snap = _snapshot(s)
+    draft = PackDraft(
+        title="Harness Engineering",
+        summary="A post about harnesses.",
+        pack_type="article",
+        sections=[Section(heading=None, blocks=[ProseBlock(content="Original prose.")])],
+    )
+    persist_pack(s, snap, draft)
+    s.commit()
+
+    got = s.scalar(select(KnowledgePack).where(KnowledgePack.snapshot_id == snap.id))
+    assert got is not None
+    assert got.pack_type == PackType.article
+    assert got.summary == "A post about harnesses."
+    assert got.extras == {}
 
 
 def test_persist_is_idempotent_and_replaces() -> None:

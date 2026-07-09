@@ -3,7 +3,7 @@
 import uuid
 from typing import Annotated, Literal
 
-from gulp_shared.models.knowledge_pack import PackStatus
+from gulp_shared.models.knowledge_pack import PackStatus, PackType
 from pydantic import BaseModel, Field, TypeAdapter
 
 
@@ -34,6 +34,7 @@ class FigureBlockOut(BaseModel):
     label: str
     explanation: str
     figure_id: uuid.UUID | None = None
+    url: str | None = None
 
 
 class ListBlockOut(BaseModel):
@@ -41,6 +42,13 @@ class ListBlockOut(BaseModel):
     type: Literal["list"] = "list"
     items: list[str]
     ordered: bool = False
+
+
+class CodeBlockOut(BaseModel):
+    id: uuid.UUID
+    type: Literal["code"] = "code"
+    language: str | None = None
+    content: str
 
 
 class ProseWrite(BaseModel):
@@ -66,6 +74,7 @@ class FigureWrite(BaseModel):
     label: str
     explanation: str
     figure_id: uuid.UUID | None = None
+    url: str | None = None
 
 
 class ListWrite(BaseModel):
@@ -74,13 +83,20 @@ class ListWrite(BaseModel):
     ordered: bool = False
 
 
+class CodeWrite(BaseModel):
+    type: Literal["code"] = "code"
+    language: str | None = None
+    content: str
+
+
 BlockOut = Annotated[
-    ProseBlockOut | FormulaBlockOut | TableBlockOut | FigureBlockOut | ListBlockOut,
+    ProseBlockOut | FormulaBlockOut | TableBlockOut | FigureBlockOut | ListBlockOut
+    | CodeBlockOut,
     Field(discriminator="type"),
 ]
 
 BlockWrite = Annotated[
-    ProseWrite | FormulaWrite | TableWrite | FigureWrite | ListWrite,
+    ProseWrite | FormulaWrite | TableWrite | FigureWrite | ListWrite | CodeWrite,
     Field(discriminator="type"),
 ]
 BlockWriteAdapter: TypeAdapter[BlockWrite] = TypeAdapter(BlockWrite)
@@ -110,8 +126,11 @@ class PackReferenceOut(BaseModel):
 class PackOut(BaseModel):
     snapshot_id: uuid.UUID
     status: PackStatus
+    pack_type: PackType
     title: str
-    core_contributions: list[str]
-    key_insight: str
+    summary: str | None = None
+    # paper-pack extras, projected from KnowledgePack.extras; empty for other types
+    core_contributions: list[str] = []
+    key_insight: str | None = None
     sections: list[PackSectionOut]
-    references: list[PackReferenceOut]
+    references: list[PackReferenceOut] = []

@@ -24,6 +24,7 @@ from app.pipeline.digest import run_digest
 from app.pipeline.figures.run import extract_arxiv_figures
 from app.pipeline.normdoc import NormDoc
 from app.pipeline.persist import persist_pack
+from app.pipeline.schemas import draft_from_paper_report
 
 logger = logging.getLogger("gulp.worker")
 
@@ -72,7 +73,7 @@ async def process_source(
         ):
             source.title = normdoc.title
         digest = await run_digest(normdoc, provider=provider, config=config)
-        persist_pack(db, source, digest)
+        persist_pack(db, source, draft_from_paper_report(digest))
         source.status = SnapshotStatus.ready
         db.commit()
         await _maybe_extract_figures(db, source, fetch)

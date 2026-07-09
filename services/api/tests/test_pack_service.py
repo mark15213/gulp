@@ -7,6 +7,7 @@ from gulp_shared.models.knowledge_pack import (
     PackBlockType,
     PackSection,
     PackStatus,
+    PackType,
 )
 from gulp_shared.models.source import SnapshotStatus, Source, SourceKind
 from gulp_shared.models.user import DEV_USER_ID
@@ -24,9 +25,9 @@ def _snapshot(db) -> Source:
 
 def _seed_pack(db, snapshot_id: uuid.UUID) -> None:
     pack = KnowledgePack(
-        snapshot_id=snapshot_id, title="BERT", key_insight="ki",
-        core_contributions=["c1", "c2"],
-        references=[{"citation": "V2017", "why_interesting": "t"}],
+        snapshot_id=snapshot_id, title="BERT", pack_type=PackType.paper,
+        extras={"key_insight": "ki", "core_contributions": ["c1", "c2"],
+                "references": [{"citation": "V2017", "why_interesting": "t"}]},
         status=PackStatus.ready,
     )
     db.add(pack)

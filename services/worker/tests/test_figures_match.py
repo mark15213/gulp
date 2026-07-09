@@ -8,6 +8,7 @@ from gulp_shared.models.knowledge_pack import (
     PackBlockType,
     PackSection,
     PackStatus,
+    PackType,
 )
 from gulp_shared.models.source import MediaType, SnapshotStatus, Source, SourceKind
 from gulp_shared.models.source_figure import SourceFigure
@@ -43,8 +44,8 @@ def _figure(s, snap, order, label=None, caption=None):  # type: ignore[no-untype
 def _figure_blocks(s, snap, labels, preset=None):  # type: ignore[no-untyped-def]
     """Pack with one section holding a figure block per label. `preset` maps
     block index -> pre-existing figure_id."""
-    pack = KnowledgePack(snapshot_id=snap.id, title="T", key_insight="k",
-                         core_contributions=[], references=[], status=PackStatus.ready)
+    pack = KnowledgePack(snapshot_id=snap.id, title="T", pack_type=PackType.paper,
+                         extras={"key_insight": "k"}, status=PackStatus.ready)
     s.add(pack)
     s.flush()
     sec = PackSection(pack_id=pack.id, heading="H", position=0)

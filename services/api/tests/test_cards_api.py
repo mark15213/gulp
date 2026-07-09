@@ -7,7 +7,7 @@ from app.deps import get_db, get_enqueue
 from app.main import app
 from fastapi.testclient import TestClient
 from gulp_shared.models.card import Card, CardOrigin, CardType
-from gulp_shared.models.knowledge_pack import KnowledgePack, PackStatus
+from gulp_shared.models.knowledge_pack import KnowledgePack, PackStatus, PackType
 from gulp_shared.models.source import CardsStatus, SnapshotStatus, Source, SourceKind
 from gulp_shared.models.user import User
 
@@ -33,9 +33,8 @@ def _ready_pack(db, sid: str) -> KnowledgePack:  # type: ignore[no-untyped-def]
     pack = KnowledgePack(
         snapshot_id=uuid.UUID(sid),
         title="T",
-        key_insight="k",
-        core_contributions=["c"],
-        references=[],
+        pack_type=PackType.paper,
+        extras={"key_insight": "k", "core_contributions": ["c"]},
         status=PackStatus.ready,
     )
     db.add(pack)

@@ -1,4 +1,4 @@
-"""Persist stage: PaperReport -> KnowledgePack + section/block rows.
+"""Persist stage: PackDraft -> KnowledgePack + section/block rows.
 
 Idempotent: a re-run drops the snapshot's existing pack and rebuilds it, so
 re-Start cleanly regenerates. source.status is the caller's responsibility.
@@ -10,12 +10,13 @@ from gulp_shared.models.knowledge_pack import (
     PackBlockType,
     PackSection,
     PackStatus,
+    PackType,
 )
 from gulp_shared.models.source import Source
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.pipeline.schemas import PaperReport
+from app.pipeline.schemas import PackDraft
 
 
 def _delete_existing(db: Session, snapshot_id: object) -> None:
@@ -29,19 +30,19 @@ def _delete_existing(db: Session, snapshot_id: object) -> None:
     db.flush()
 
 
-def persist_pack(db: Session, source: Source, report: PaperReport) -> KnowledgePack:
+def persist_pack(db: Session, source: Source, draft: PackDraft) -> KnowledgePack:
     _delete_existing(db, source.id)
     pack = KnowledgePack(
         snapshot_id=source.id,
-        title=report.title,
-        key_insight=report.key_insight,
-        core_contributions=list(report.core_contributions),
-        references=[r.model_dump() for r in report.references],
+        title=draft.title,
+        summary=draft.summary,
+        pack_type=PackType(draft.pack_type),
+        extras=draft.extras,
         status=PackStatus.ready,
     )
     db.add(pack)
     db.flush()
-    for i, section in enumerate(report.sections):
+    for i, section in enumerate(draft.sections):
         row = PackSection(pack_id=pack.id, heading=section.heading, position=i)
         db.add(row)
         db.flush()

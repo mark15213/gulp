@@ -38,6 +38,16 @@ class MediaType(enum.StrEnum):
     webpage = "webpage"
 
 
+class SourceGenre(enum.StrEnum):
+    """Knowledge genre — what kind of knowledge artifact this is, not the media
+    format (that is `MediaType`). Detected at parse time, user-correctable;
+    selects the pack-production strategy (docs/02 §4.3-4.4)."""
+
+    paper = "paper"
+    article = "article"
+    note = "note"
+
+
 class CardsStatus(enum.StrEnum):
     """Inline card-generation job state; null = never triggered. Imports don't touch it."""
 
@@ -70,6 +80,9 @@ class Source(TimestampedBase, Base):
     # snapshot-specific (docs/02 §4.3); nullable for other kinds.
     media_type: Mapped[MediaType | None] = mapped_column(
         Enum(MediaType, name="media_type"), default=None
+    )
+    genre: Mapped[SourceGenre | None] = mapped_column(
+        Enum(SourceGenre, name="source_genre"), default=None
     )
     origin_url: Mapped[str | None] = mapped_column(String, default=None, index=True)
     content_body: Mapped[str | None] = mapped_column(Text, default=None)

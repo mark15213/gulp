@@ -57,12 +57,13 @@ def _grounding_system(db: Session, snapshot_id: uuid.UUID, block: PackBlock) -> 
     pack = db.scalar(select(KnowledgePack).where(KnowledgePack.snapshot_id == snapshot_id))
     source = db.scalar(select(Source).where(Source.id == snapshot_id))
     body = (source.content_body or "") if source else ""
+    key_insight = (pack.extras or {}).get("key_insight", "") if pack else ""
     return (
-        "You are helping the reader understand one block of a paper report. "
+        "You are helping the reader understand one block of a knowledge pack. "
         "Answer the question grounded in the provided source and block; if the "
         "source does not cover it, say so plainly.\n"
-        f"Report title: {pack.title if pack else ''}\n"
-        f"Key insight: {pack.key_insight if pack else ''}\n"
+        f"Pack title: {pack.title if pack else ''}\n"
+        f"Key insight: {key_insight}\n"
         f"Section: {section.heading if section else ''}\n"
         f"Block ({block.block_type.value}): {_block_text(block)}\n"
         f"Source excerpt:\n{body[:_MAX_SOURCE_CHARS]}"

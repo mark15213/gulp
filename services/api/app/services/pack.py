@@ -54,14 +54,17 @@ def pack_out(db: Session, snapshot_id: uuid.UUID) -> PackOut | None:
             )
         )
 
+    extras = pack.extras or {}
     return PackOut(
         snapshot_id=snapshot_id,
         status=pack.status,
+        pack_type=pack.pack_type,
         title=pack.title,
-        core_contributions=list(pack.core_contributions or []),
-        key_insight=pack.key_insight,
+        summary=pack.summary,
+        core_contributions=list(extras.get("core_contributions") or []),
+        key_insight=extras.get("key_insight"),
         sections=sections,
-        references=[PackReferenceOut(**r) for r in (pack.references or [])],
+        references=[PackReferenceOut(**r) for r in (extras.get("references") or [])],
     )
 
 

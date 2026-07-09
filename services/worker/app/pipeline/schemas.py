@@ -55,7 +55,9 @@ Block = Annotated[
 
 
 class Section(BaseModel):
-    heading: str
+    # None = a lead-in section with no heading (e.g. an article's intro);
+    # the LLM paper report always sets one.
+    heading: str | None
     blocks: list[Block]
 
 

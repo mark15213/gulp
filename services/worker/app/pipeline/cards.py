@@ -63,22 +63,34 @@ def _render_block(block: PackBlock) -> str:
         return f"{data.get('label', '')}: {data.get('explanation', '')}"
     if block.block_type is PackBlockType.list:
         return "\n".join(f"- {item}" for item in data.get("items", []))
+    if block.block_type is PackBlockType.code:
+        lang = data.get("language") or ""
+        return f"```{lang}\n{data.get('content', '')}\n```"
     return ""
 
 
 def render_pack_text(pack: KnowledgePack) -> str:
-    parts = [f"# {pack.title}", f"Key insight: {pack.key_insight}", "Core contributions:"]
-    parts += [f"- {c}" for c in pack.core_contributions or []]
+    # Header is extras-driven, so no dispatch on pack_type: paper packs carry
+    # key_insight/core_contributions/references in extras, article packs don't.
+    parts = [f"# {pack.title}"]
+    if pack.summary:
+        parts.append(pack.summary)
+    extras = pack.extras or {}
+    if extras.get("key_insight"):
+        parts.append(f"Key insight: {extras['key_insight']}")
+    if extras.get("core_contributions"):
+        parts.append("Core contributions:")
+        parts += [f"- {c}" for c in extras["core_contributions"]]
     for section in sorted(pack.sections, key=lambda s: s.position):
         parts.append(f"\n## {section.heading or ''}")
         parts += [
             _render_block(b) for b in sorted(section.blocks, key=lambda b: b.position)
         ]
-    if pack.references:
+    if extras.get("references"):
         parts.append("\nReferences:")
         parts += [
             f"- {r.get('citation', '')} — {r.get('why_interesting', '')}"
-            for r in pack.references
+            for r in extras["references"]
         ]
     return "\n".join(parts)
 

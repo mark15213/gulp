@@ -22,6 +22,7 @@ from app.pipeline.adapters.fetch import FetchedDoc, fetch_document
 from app.pipeline.cards import render_conversation, render_pack_text
 from app.pipeline.persist import persist_pack
 from app.pipeline.run import _to_normdoc
+from app.pipeline.schemas import draft_from_paper_report
 
 logger = logging.getLogger("gulp.worker")
 
@@ -104,7 +105,7 @@ def run_build_cards_export(
 def run_import_result(db: Session, source: Source, data: bytes) -> None:
     try:
         digest = import_result_archive(data)
-        persist_pack(db, source, digest)
+        persist_pack(db, source, draft_from_paper_report(digest))
         source.status = SnapshotStatus.ready
         db.commit()
     except Exception:

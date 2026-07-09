@@ -14,6 +14,7 @@ from gulp_shared.models.knowledge_pack import (
     PackBlockType,
     PackSection,
     PackStatus,
+    PackType,
 )
 from gulp_shared.models.source import MediaType, SnapshotStatus, Source, SourceKind
 from gulp_shared.models.source_figure import SourceFigure
@@ -43,8 +44,8 @@ def _snap(s, url="https://arxiv.org/abs/2606.17162"):  # type: ignore[no-untyped
 
 
 def _pack_with_figure_block(s, snap):  # type: ignore[no-untyped-def]
-    pack = KnowledgePack(snapshot_id=snap.id, title="T", key_insight="k",
-                         core_contributions=[], references=[], status=PackStatus.ready)
+    pack = KnowledgePack(snapshot_id=snap.id, title="T", pack_type=PackType.paper,
+                         extras={"key_insight": "k"}, status=PackStatus.ready)
     s.add(pack)
     s.flush()
     sec = PackSection(pack_id=pack.id, heading="H", position=0)

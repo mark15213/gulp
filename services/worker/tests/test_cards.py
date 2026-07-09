@@ -26,6 +26,7 @@ from gulp_shared.models.knowledge_pack import (
     PackBlockType,
     PackSection,
     PackStatus,
+    PackType,
 )
 from gulp_shared.models.pack_block_message import ChatRole, PackBlockMessage
 from gulp_shared.models.source import (
@@ -80,9 +81,12 @@ def _pack(s, snap, *, status=PackStatus.ready):  # type: ignore[no-untyped-def]
     pack = KnowledgePack(
         snapshot_id=snap.id,
         title="BERT",
-        key_insight="Bidirectional pretraining transfers.",
-        core_contributions=["MLM objective", "NSP task"],
-        references=[{"citation": "ELMo", "why_interesting": "context"}],
+        pack_type=PackType.paper,
+        extras={
+            "key_insight": "Bidirectional pretraining transfers.",
+            "core_contributions": ["MLM objective", "NSP task"],
+            "references": [{"citation": "ELMo", "why_interesting": "context"}],
+        },
         status=status,
     )
     s.add(pack)

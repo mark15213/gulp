@@ -12,6 +12,7 @@ from gulp_shared.models.knowledge_pack import (
     PackBlockType,
     PackSection,
     PackStatus,
+    PackType,
 )
 from gulp_shared.models.source import SnapshotStatus, Source, SourceKind
 from gulp_shared.models.source_figure import SourceFigure
@@ -33,8 +34,8 @@ def _pack_with_blocks(db):  # type: ignore[no-untyped-def]
                   status=SnapshotStatus.ready)
     db.add(snap)
     db.flush()
-    pack = KnowledgePack(snapshot_id=snap.id, title="T", key_insight="ki",
-                         core_contributions=[], references=[], status=PackStatus.ready)
+    pack = KnowledgePack(snapshot_id=snap.id, title="T", pack_type=PackType.paper,
+                         extras={"key_insight": "ki"}, status=PackStatus.ready)
     db.add(pack)
     db.flush()
     sec = PackSection(pack_id=pack.id, heading="H", position=0)
@@ -55,8 +56,8 @@ def _figure_block(db):  # type: ignore[no-untyped-def]
                   status=SnapshotStatus.ready)
     db.add(snap)
     db.flush()
-    pack = KnowledgePack(snapshot_id=snap.id, title="T", key_insight="ki",
-                         core_contributions=[], references=[], status=PackStatus.ready)
+    pack = KnowledgePack(snapshot_id=snap.id, title="T", pack_type=PackType.paper,
+                         extras={"key_insight": "ki"}, status=PackStatus.ready)
     db.add(pack)
     db.flush()
     sec = PackSection(pack_id=pack.id, heading="H", position=0)
