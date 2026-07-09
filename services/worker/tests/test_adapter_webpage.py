@@ -40,6 +40,26 @@ HTML_INLINE = """
 """
 
 
+HTML_META = """
+<html><head><title>Attention Explained</title>
+<meta name="description" content="A short primer on attention mechanisms.">
+</head>
+<body><article><h1>Attention</h1>
+<p>Attention lets a model weigh tokens by relevance in the input sequence.</p>
+</article></body></html>
+"""
+
+
+def test_webpage_carries_meta_description() -> None:
+    doc = webpage_to_normdoc(HTML_META, fallback_title="fb", url="https://x.example/a")
+    assert doc.description == "A short primer on attention mechanisms."
+
+
+def test_webpage_without_meta_description_defaults_none() -> None:
+    doc = webpage_to_normdoc(HTML, fallback_title="fb", url="https://x.example/a")
+    assert doc.description is None
+
+
 def test_webpage_extracts_main_content_into_sectioned_blocks() -> None:
     doc = webpage_to_normdoc(HTML, fallback_title="fallback", url="https://x.example/a")
     assert doc.media_type == "article"

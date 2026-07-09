@@ -45,6 +45,9 @@ class NormDoc(BaseModel):
     title: str
     lang: str | None = None
     media_type: str
+    # page/document metadata blurb (e.g. HTML meta description) when the
+    # adapter can supply one; the preserve strategy uses it as the pack summary
+    description: str | None = None
     content_body: str
     blocks: list[NormBlock]
 
@@ -54,6 +57,8 @@ class NormDoc(BaseModel):
         # NormDoc, so downstream (export JSON, DB persist, LLM) never sees an
         # un-encodable string. Length-preserving, so anchors stay valid.
         self.title = _clean_text(self.title)
+        if self.description is not None:
+            self.description = _clean_text(self.description)
         self.content_body = _clean_text(self.content_body)
         for block in self.blocks:
             block.text = _clean_text(block.text)

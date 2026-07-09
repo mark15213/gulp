@@ -53,11 +53,12 @@ def _dedupe(markdown: str) -> str:
     return "\n\n".join(kept)
 
 
-def extract_markdown(html: str) -> tuple[str, str | None]:
+def extract_markdown(html: str) -> tuple[str, str | None, str | None]:
     md = trafilatura.extract(html, output_format="markdown") or ""
     meta = trafilatura.extract_metadata(html)
     title = meta.title if meta is not None else None
-    return md, title
+    description = meta.description if meta is not None else None
+    return md, title, description
 
 
 def _split(markdown: str) -> list[NormBlock]:
@@ -85,12 +86,13 @@ def _split(markdown: str) -> list[NormBlock]:
 
 
 def webpage_to_normdoc(html: str, *, fallback_title: str, url: str) -> NormDoc:
-    raw, title = extract_markdown(html)
+    raw, title, description = extract_markdown(html)
     body = _dedupe(raw)
     return NormDoc(
         title=_clean_title(title) or fallback_title,
         lang=None,
         media_type="article",
+        description=description or None,
         content_body=body,
         blocks=_split(body),
     )
