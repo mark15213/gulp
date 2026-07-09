@@ -115,7 +115,8 @@ async def test_processing_keeps_user_corrected_genre() -> None:
     s.flush()
 
     async def _fetch(url: str) -> FetchedDoc:
-        html = "<html><body><article><p>Actually a paper hosted on a blog.</p></article></body></html>"
+        html = ("<html><body><article><p>Actually a paper hosted on a blog.</p>"
+                "</article></body></html>")
         return FetchedDoc(content=html.encode(), content_type="text/html")
 
     await process_source(s, snap, fetch=_fetch, provider=FakeProvider(_OK))

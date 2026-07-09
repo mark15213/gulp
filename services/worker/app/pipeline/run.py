@@ -18,9 +18,9 @@ from sqlalchemy.orm import Session
 
 from app.pipeline.adapters.fetch import FetchedDoc, fetch_document, is_pdf
 from app.pipeline.adapters.note import note_to_normdoc
-from app.pipeline.classify import detect_genre
 from app.pipeline.adapters.pdf import pdf_to_normdoc
 from app.pipeline.adapters.webpage import webpage_to_normdoc
+from app.pipeline.classify import detect_genre
 from app.pipeline.digest import run_digest
 from app.pipeline.figures.run import extract_arxiv_figures
 from app.pipeline.normdoc import NormDoc
