@@ -11,6 +11,7 @@ from gulp_shared.models.source import (
     MediaType,
     SnapshotStatus,
     Source,
+    SourceGenre,
     SourceKind,
 )
 from gulp_shared.models.user import DEV_USER_ID, User
@@ -85,6 +86,40 @@ async def test_link_pipeline_fetches_then_digests() -> None:
     assert snap.status == SnapshotStatus.ready
     assert snap.media_type == MediaType.article  # precise type set
     assert snap.content_body and "relevance" in snap.content_body  # extracted body stored
+
+
+async def test_processing_detects_genre_when_unset() -> None:
+    s = _session()
+    s.add(User(id=DEV_USER_ID, display_name="Dev"))
+    snap = Source(owner_id=DEV_USER_ID, kind=SourceKind.snapshot, title="L",
+                  status=SnapshotStatus.unprocessed, media_type=MediaType.webpage,
+                  origin_url="https://blog.example/post")
+    s.add(snap)
+    s.flush()
+
+    async def _fetch(url: str) -> FetchedDoc:
+        html = "<html><body><article><p>Some post body text.</p></article></body></html>"
+        return FetchedDoc(content=html.encode(), content_type="text/html")
+
+    await process_source(s, snap, fetch=_fetch, provider=FakeProvider(_OK))
+    assert snap.genre == SourceGenre.article
+
+
+async def test_processing_keeps_user_corrected_genre() -> None:
+    s = _session()
+    s.add(User(id=DEV_USER_ID, display_name="Dev"))
+    snap = Source(owner_id=DEV_USER_ID, kind=SourceKind.snapshot, title="L",
+                  status=SnapshotStatus.unprocessed, media_type=MediaType.webpage,
+                  origin_url="https://blog.example/post", genre=SourceGenre.paper)
+    s.add(snap)
+    s.flush()
+
+    async def _fetch(url: str) -> FetchedDoc:
+        html = "<html><body><article><p>Actually a paper hosted on a blog.</p></article></body></html>"
+        return FetchedDoc(content=html.encode(), content_type="text/html")
+
+    await process_source(s, snap, fetch=_fetch, provider=FakeProvider(_OK))
+    assert snap.genre == SourceGenre.paper  # correction survives re-processing
 
 
 async def test_failure_sets_needs_attention() -> None:

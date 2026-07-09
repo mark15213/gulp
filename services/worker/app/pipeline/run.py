@@ -18,6 +18,7 @@ from sqlalchemy.orm import Session
 
 from app.pipeline.adapters.fetch import FetchedDoc, fetch_document, is_pdf
 from app.pipeline.adapters.note import note_to_normdoc
+from app.pipeline.classify import detect_genre
 from app.pipeline.adapters.pdf import pdf_to_normdoc
 from app.pipeline.adapters.webpage import webpage_to_normdoc
 from app.pipeline.digest import run_digest
@@ -65,6 +66,8 @@ async def process_source(
             raise PipelineError("extraction produced no content")
         source.content_body = normdoc.content_body
         source.media_type = MediaType(normdoc.media_type)
+        if source.genre is None:  # never overwrite a user's correction
+            source.genre = detect_genre(source.origin_url, normdoc.media_type)
         if (
             source.origin_url
             and source.title == host_of(source.origin_url)
