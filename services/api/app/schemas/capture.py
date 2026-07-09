@@ -9,6 +9,7 @@ from gulp_shared.models.source import (
     CardsStatus,
     MediaType,
     SnapshotStatus,
+    SourceGenre,
     SourceKind,
 )
 from pydantic import BaseModel, ConfigDict, model_validator
@@ -42,6 +43,7 @@ class SnapshotOut(BaseModel):
     note: str | None
     status: SnapshotStatus
     media_type: MediaType | None
+    genre: SourceGenre | None
     origin_url: str | None
     content_body: str | None
     captured_via: CapturedVia | None
@@ -49,6 +51,13 @@ class SnapshotOut(BaseModel):
     tags: list[str]
     created_at: datetime
     updated_at: datetime
+
+
+class SnapshotPatch(BaseModel):
+    """Curation-time corrections; genre re-selects the processing strategy on
+    the next re-run."""
+
+    genre: SourceGenre
 
 
 class CaptureResponse(BaseModel):

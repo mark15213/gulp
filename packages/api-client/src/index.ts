@@ -60,6 +60,24 @@ export async function getSnapshot(id: string): Promise<Snapshot> {
   return data;
 }
 
+export type SnapshotPatchBody =
+  paths["/snapshots/{snapshot_id}"]["patch"]["requestBody"]["content"]["application/json"];
+export type SourceGenre = SnapshotPatchBody["genre"];
+
+// Curation-time corrections (currently: genre). Re-run processing afterwards
+// for the new genre's strategy to take effect.
+export async function updateSnapshot(
+  id: string,
+  patch: SnapshotPatchBody,
+): Promise<SnapshotOut> {
+  const { data, error } = await client.PATCH("/snapshots/{snapshot_id}", {
+    params: { path: { snapshot_id: id } },
+    body: patch,
+  });
+  if (error || !data) throw new Error("snapshot update failed");
+  return data;
+}
+
 // Cascade soft-delete: removes the snapshot and all its derivatives (pack, cards, …).
 export async function deleteSnapshot(id: string): Promise<void> {
   const { error } = await client.DELETE("/snapshots/{snapshot_id}", {

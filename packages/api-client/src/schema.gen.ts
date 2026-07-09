@@ -36,7 +36,8 @@ export interface paths {
         delete: operations["delete_snapshot_route_snapshots__snapshot_id__delete"];
         options?: never;
         head?: never;
-        patch?: never;
+        /** Patch Snapshot */
+        patch: operations["patch_snapshot_snapshots__snapshot_id__patch"];
         trace?: never;
     };
     "/snapshots/{snapshot_id}/cards/generate": {
@@ -509,14 +510,14 @@ export interface components {
         /** BlockCreate */
         BlockCreate: {
             /** Content */
-            content: components["schemas"]["ProseWrite"] | components["schemas"]["FormulaWrite"] | components["schemas"]["TableWrite"] | components["schemas"]["FigureWrite"] | components["schemas"]["ListWrite"];
+            content: components["schemas"]["ProseWrite"] | components["schemas"]["FormulaWrite"] | components["schemas"]["TableWrite"] | components["schemas"]["FigureWrite"] | components["schemas"]["ListWrite"] | components["schemas"]["CodeWrite"];
             /** Position */
             position: number;
         };
         /** BlockUpdate */
         BlockUpdate: {
             /** Content */
-            content?: (components["schemas"]["ProseWrite"] | components["schemas"]["FormulaWrite"] | components["schemas"]["TableWrite"] | components["schemas"]["FigureWrite"] | components["schemas"]["ListWrite"]) | null;
+            content?: (components["schemas"]["ProseWrite"] | components["schemas"]["FormulaWrite"] | components["schemas"]["TableWrite"] | components["schemas"]["FigureWrite"] | components["schemas"]["ListWrite"] | components["schemas"]["CodeWrite"]) | null;
             /** Position */
             position?: number | null;
         };
@@ -649,6 +650,35 @@ export interface components {
          * @enum {string}
          */
         CardsStatus: "generating" | "ready" | "failed";
+        /** CodeBlockOut */
+        CodeBlockOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "code";
+            /** Language */
+            language?: string | null;
+            /** Content */
+            content: string;
+        };
+        /** CodeWrite */
+        CodeWrite: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "code";
+            /** Language */
+            language?: string | null;
+            /** Content */
+            content: string;
+        };
         /** FigureAssetOut */
         FigureAssetOut: {
             /**
@@ -685,6 +715,8 @@ export interface components {
             explanation: string;
             /** Figure Id */
             figure_id?: string | null;
+            /** Url */
+            url?: string | null;
         };
         /** FigureWrite */
         FigureWrite: {
@@ -699,6 +731,8 @@ export interface components {
             explanation: string;
             /** Figure Id */
             figure_id?: string | null;
+            /** Url */
+            url?: string | null;
         };
         /** FormulaBlockOut */
         FormulaBlockOut: {
@@ -836,15 +870,24 @@ export interface components {
              */
             snapshot_id: string;
             status: components["schemas"]["PackStatus"];
+            pack_type: components["schemas"]["PackType"];
             /** Title */
             title: string;
-            /** Core Contributions */
+            /** Summary */
+            summary?: string | null;
+            /**
+             * Core Contributions
+             * @default []
+             */
             core_contributions: string[];
             /** Key Insight */
-            key_insight: string;
+            key_insight?: string | null;
             /** Sections */
             sections: components["schemas"]["PackSectionOut"][];
-            /** References */
+            /**
+             * References
+             * @default []
+             */
             references: components["schemas"]["PackReferenceOut"][];
         };
         /** PackReferenceOut */
@@ -864,13 +907,21 @@ export interface components {
             /** Heading */
             heading: string | null;
             /** Blocks */
-            blocks: (components["schemas"]["ProseBlockOut"] | components["schemas"]["FormulaBlockOut"] | components["schemas"]["TableBlockOut"] | components["schemas"]["FigureBlockOut"] | components["schemas"]["ListBlockOut"])[];
+            blocks: (components["schemas"]["ProseBlockOut"] | components["schemas"]["FormulaBlockOut"] | components["schemas"]["TableBlockOut"] | components["schemas"]["FigureBlockOut"] | components["schemas"]["ListBlockOut"] | components["schemas"]["CodeBlockOut"])[];
         };
         /**
          * PackStatus
          * @enum {string}
          */
         PackStatus: "generating" | "ready";
+        /**
+         * PackType
+         * @description Discriminator selecting the pack implementation (docs/02 §4.4):
+         *     `paper` = LLM-authored deep report; `article` = deterministic preserve
+         *     of the source's own structure.
+         * @enum {string}
+         */
+        PackType: "paper" | "article";
         /** ProseBlockOut */
         ProseBlockOut: {
             /**
@@ -994,6 +1045,7 @@ export interface components {
             note: string | null;
             status: components["schemas"]["SnapshotStatus"];
             media_type: components["schemas"]["MediaType"] | null;
+            genre: components["schemas"]["SourceGenre"] | null;
             /** Origin Url */
             origin_url: string | null;
             /** Content Body */
@@ -1014,6 +1066,14 @@ export interface components {
             updated_at: string;
         };
         /**
+         * SnapshotPatch
+         * @description Curation-time corrections; genre re-selects the processing strategy on
+         *     the next re-run.
+         */
+        SnapshotPatch: {
+            genre: components["schemas"]["SourceGenre"];
+        };
+        /**
          * SnapshotStatus
          * @description Single-gate lifecycle: `ready` IS "in the library" — the snapshot-level
          *     review gate is parked (spec 2026-07-02-single-gate-lifecycle-design.md).
@@ -1028,6 +1088,14 @@ export interface components {
              */
             card_id: string;
         };
+        /**
+         * SourceGenre
+         * @description Knowledge genre — what kind of knowledge artifact this is, not the media
+         *     format (that is `MediaType`). Detected at parse time, user-correctable;
+         *     selects the pack-production strategy (docs/02 §4.3-4.4).
+         * @enum {string}
+         */
+        SourceGenre: "paper" | "article" | "note";
         /**
          * SourceKind
          * @enum {string}
@@ -1207,6 +1275,41 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    patch_snapshot_snapshots__snapshot_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                snapshot_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SnapshotPatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SnapshotOut"];
+                };
             };
             /** @description Validation Error */
             422: {
@@ -1974,7 +2077,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ProseBlockOut"] | components["schemas"]["FormulaBlockOut"] | components["schemas"]["TableBlockOut"] | components["schemas"]["FigureBlockOut"] | components["schemas"]["ListBlockOut"];
+                    "application/json": components["schemas"]["ProseBlockOut"] | components["schemas"]["FormulaBlockOut"] | components["schemas"]["TableBlockOut"] | components["schemas"]["FigureBlockOut"] | components["schemas"]["ListBlockOut"] | components["schemas"]["CodeBlockOut"];
                 };
             };
             /** @description Validation Error */
@@ -2010,7 +2113,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ProseBlockOut"] | components["schemas"]["FormulaBlockOut"] | components["schemas"]["TableBlockOut"] | components["schemas"]["FigureBlockOut"] | components["schemas"]["ListBlockOut"];
+                    "application/json": components["schemas"]["ProseBlockOut"] | components["schemas"]["FormulaBlockOut"] | components["schemas"]["TableBlockOut"] | components["schemas"]["FigureBlockOut"] | components["schemas"]["ListBlockOut"] | components["schemas"]["CodeBlockOut"];
                 };
             };
             /** @description Validation Error */

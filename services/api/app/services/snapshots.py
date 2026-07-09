@@ -14,7 +14,14 @@ from gulp_shared.models.source_tag import SourceTag
 from sqlalchemy import ColumnElement, select, update
 from sqlalchemy.orm import Session
 
-from app.schemas.capture import SnapshotOut
+from app.schemas.capture import SnapshotOut, SnapshotPatch
+
+
+def update_snapshot(db: Session, source: Source, patch: SnapshotPatch) -> Source:
+    source.genre = patch.genre
+    db.commit()
+    db.refresh(source)
+    return source
 
 
 def _tags_for(db: Session, source_id: uuid.UUID) -> list[str]:
@@ -77,6 +84,7 @@ def to_out(db: Session, source: Source) -> SnapshotOut:
         note=source.note,
         status=source.status,
         media_type=source.media_type,
+        genre=source.genre,
         origin_url=source.origin_url,
         content_body=source.content_body,
         captured_via=source.captured_via,

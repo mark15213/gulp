@@ -10,9 +10,9 @@ from sqlalchemy.orm import Session
 
 from app.core.auth import get_current_user
 from app.deps import get_db, get_enqueue
-from app.schemas.capture import CaptureRequest, CaptureResponse, SnapshotOut
+from app.schemas.capture import CaptureRequest, CaptureResponse, SnapshotOut, SnapshotPatch
 from app.services.capture import create_snapshot
-from app.services.snapshots import delete_snapshot, to_out
+from app.services.snapshots import delete_snapshot, to_out, update_snapshot
 
 router = APIRouter()
 
@@ -40,6 +40,19 @@ def get_snapshot(
     if source is None or source.owner_id != user.id or source.deleted_at is not None:
         raise HTTPException(status_code=404, detail="snapshot not found")
     return to_out(db, source)
+
+
+@router.patch("/snapshots/{snapshot_id}", response_model=SnapshotOut)
+def patch_snapshot(
+    snapshot_id: uuid.UUID,
+    patch: SnapshotPatch,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> SnapshotOut:
+    source = db.get(Source, snapshot_id)
+    if source is None or source.owner_id != user.id or source.deleted_at is not None:
+        raise HTTPException(status_code=404, detail="snapshot not found")
+    return to_out(db, update_snapshot(db, source, patch))
 
 
 @router.delete("/snapshots/{snapshot_id}", status_code=204)
