@@ -45,7 +45,7 @@ grounded in the pack's domain, never obviously wrong.
 - Test understanding, not trivia: prefer the core ideas, mechanisms, and results \
 over incidental numbers.
 - Every card must be answerable from the pack alone. Never invent facts.
-- Prompts must stand alone: name the paper/method they refer to, since cards \
+- Prompts must stand alone: name the source/method they refer to, since cards \
 are reviewed weeks later without the pack at hand."""
 
 
