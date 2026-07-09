@@ -1,11 +1,13 @@
 import pytest
 from app.pipeline.schemas import (
+    FigureBlock,
     FormulaBlock,
     PaperReport,
     ProseBlock,
     Reference,
     Section,
     TableBlock,
+    draft_from_paper_report,
 )
 from pydantic import ValidationError
 
@@ -62,6 +64,48 @@ def test_core_contributions_bounds_enforced() -> None:
         PaperReport(core_contributions=[], **base)
     with pytest.raises(ValidationError):
         PaperReport(core_contributions=["1", "2", "3", "4", "5", "6"], **base)
+
+
+def test_code_block_in_union() -> None:
+    section = Section.model_validate(
+        {"heading": "h", "blocks": [{"type": "code", "language": "python", "content": "x = 1"}]}
+    )
+    blk = section.blocks[0]
+    assert blk.type == "code" and blk.language == "python" and blk.content == "x = 1"
+
+
+def test_code_block_language_optional() -> None:
+    section = Section.model_validate(
+        {"heading": "h", "blocks": [{"type": "code", "content": "make lint"}]}
+    )
+    assert section.blocks[0].language is None
+
+
+def test_figure_block_url_optional() -> None:
+    fig = FigureBlock(label="Figure 1", explanation="")
+    assert fig.url is None
+    with_url = FigureBlock(label="Fig", explanation="", url="https://x.test/a.png")
+    assert with_url.url == "https://x.test/a.png"
+
+
+def test_draft_from_paper_report() -> None:
+    report = _report()
+    draft = draft_from_paper_report(report)
+    assert draft.pack_type == "paper"
+    assert draft.summary is None
+    assert draft.extras["key_insight"] == report.key_insight
+    assert draft.extras["core_contributions"] == list(report.core_contributions)
+    assert draft.extras["references"] == [
+        {"citation": "Vaswani et al. (2017)", "why_interesting": "The Transformer."}
+    ]
+    assert draft.sections == report.sections
+
+
+def test_pack_draft_requires_a_section() -> None:
+    from app.pipeline.schemas import PackDraft
+
+    with pytest.raises(ValidationError):
+        PackDraft(title="T", pack_type="article", sections=[])
 
 
 def test_unknown_block_type_rejected() -> None:
