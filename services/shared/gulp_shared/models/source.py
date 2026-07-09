@@ -2,8 +2,9 @@
 
 import enum
 import uuid
+from datetime import datetime
 
-from sqlalchemy import Enum, ForeignKey, String, Text
+from sqlalchemy import DateTime, Enum, ForeignKey, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from gulp_shared.db import Base, TimestampedBase
@@ -65,6 +66,7 @@ class CapturedVia(enum.StrEnum):
     manual = "manual"
     screenshot = "screenshot"
     audio_memo = "audio_memo"
+    feed = "feed"
 
 
 class Source(TimestampedBase, Base):
@@ -93,4 +95,20 @@ class Source(TimestampedBase, Base):
     cards_status: Mapped[CardsStatus | None] = mapped_column(
         Enum(CardsStatus, name="cards_status"), default=None
     )
-    # 1–1 KnowledgePack is modeled from KnowledgePack.snapshot_id (S2). Deferred: emitted_by (S7).
+    # subscription-specific (spec 2026-07-09); nullable for other kinds.
+    # Health is derived: muted flag + last_fetch_error (no stored status).
+    feed_url: Mapped[str | None] = mapped_column(String, default=None, index=True)
+    muted: Mapped[bool | None] = mapped_column(default=None)
+    last_fetch_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), default=None
+    )
+    last_fetch_error: Mapped[str | None] = mapped_column(Text, default=None)
+    feed_etag: Mapped[str | None] = mapped_column(String, default=None)
+    feed_http_modified: Mapped[str | None] = mapped_column(String, default=None)
+    consecutive_failures: Mapped[int | None] = mapped_column(default=None)
+    # snapshot-side: the Subscription that produced it (docs/02 §4.3, live as of
+    # spec 2026-07-09); null for ad-hoc captures.
+    emitted_by: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("sources.id", ondelete="SET NULL"), default=None, index=True
+    )
+    # 1–1 KnowledgePack is modeled from KnowledgePack.snapshot_id (S2).
