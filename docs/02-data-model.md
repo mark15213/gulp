@@ -145,7 +145,8 @@ The frozen, point-in-time item — "the everyday thing you gulped" (`01 §4.2`).
 
 | Field | Type | Notes |
 |---|---|---|
-| `media_type` | `enum{article·pdf·video·podcast·note·screenshot·audio·webpage}` | |
+| `media_type` | `enum{article·pdf·video·podcast·note·screenshot·audio·webpage}` | the **media format** — how the bytes arrived |
+| `genre` | `enum{paper·article·note·…}?` | the **knowledge genre** — what kind of knowledge artifact this is; detected at parse time by heuristics, user-correctable, selects the pack-production strategy (§4.4). Null until first processed. Open / extensible. |
 | `origin_url` | `string?` | original reference (null for manual note / screenshot / audio memo) |
 | `content_body` | `text?` | **stored extracted content** — the link-rot-proof copy (§8 decision) |
 | `content_ref` | `string?` | pointer to the stored original/blob (media, raw file) |
@@ -168,30 +169,35 @@ The AI-generated **digest** of a `Snapshot` — "what I understood after reading
 |---|---|---|
 | `snapshot` | `→Source` | the `kind=snapshot` it digests (1–1) |
 | `title` | `text` | |
-| `summary` | `text` | one-paragraph gist — the skim / search / library-card entry; universal |
-| `pack_type` | `enum{paper·article·social_post·…}` | discriminator selecting the implementation; open / extensible |
+| `summary` | `text?` | one-paragraph gist — the skim / search / library-card entry; universal |
+| `pack_type` | `enum{paper·article·…}` | discriminator selecting the implementation; open / extensible |
+| `extras` | `json` | the per-`pack_type` additions (implemented 2026-07-09): `PaperPack` keeps `key_insight` / `core_contributions` / `references` here; `ArticlePack` leaves it empty. A new pack_type adds its fields here without a schema change. |
 | `status` | `enum{generating·ready}` | |
 
 Plus one behavioral contract every implementation satisfies:
 
-- **`render()` → readable content** (Markdown / a common block list). Every consumer — the web reader, card generation, search, curriculum — goes through `render()`, so nothing downstream dispatches on `pack_type`.
+- **`render()` → readable content** (Markdown / a common block list). Every consumer — the web reader, card generation, search, curriculum — goes through `render()`, so nothing downstream dispatches on `pack_type`. (The reader's *header* is the one exception: it projects `extras` per type.)
 
-**Per-type implementations** own their structured content and implement `render()`. The v1 (and only) implementation:
+**Production is strategy-dispatched on `Source.genre`** (§4.3): `paper → PaperPack` via the LLM deep-read; `article`/`note`/anything unknown `→ ArticlePack` via the deterministic preserve transform. The fallback is always preserve — the worst case is "no enrichment", never a misrepresenting rewrite.
 
-**`PaperPack` (`pack_type = paper`)** — the deep, re-authored **paper report**: `key_insight`, `core_contributions[]` (1–5), `references[]` (`{citation, why_interesting}`), and the sectioned body of typed blocks below. *(This is the shape shipped in v1 — one implementation of the abstract pack, not the definition of a pack.)*
+**Per-type implementations** own their structured content and implement `render()`:
 
-**`PackSection` / `PackBlock`** — `PaperPack`'s readable body: ordered sections of ordered, typed blocks.
+**`PaperPack` (`pack_type = paper`)** — the deep, LLM-re-authored **paper report**: `extras = {key_insight, core_contributions[] (1–5), references[] ({citation, why_interesting})}`, plus the sectioned body below.
+
+**`ArticlePack` (`pack_type = article`)** — the **preserved original** (implemented 2026-07-09): the source's own markdown deterministically re-shaped into the sectioned body — headings → sections; fenced code → `code` blocks; pipe tables → `table`; standalone images → `figure` (with remote `url`); `$$…$$` → `formula`; everything else verbatim `prose`. **Zero LLM in the pack path**; `summary` comes from the page's meta description or the first paragraph. This is the digest for content that is already well-authored (technical blogs, notes) — Gulp adds structure and learning machinery, not a rewrite.
+
+**`PackSection` / `PackBlock`** — the **shared readable body of every pack type** (not `PaperPack`'s private shape): ordered sections of ordered, typed blocks. Block editing, per-block chat, and figure linking all attach here, so every pack type gets them for free.
 
 | `PackSection` field | Type | Notes |
 |---|---|---|
-| `pack` | `→PaperPack` | parent |
-| `heading` | `string?` | |
+| `pack` | `→KnowledgePack` | parent |
+| `heading` | `string?` | null = an unlabelled lead-in section (e.g. an article's intro) |
 | `position` | `int` | order within the pack |
 
 | `PackBlock` field | Type | Notes |
 |---|---|---|
 | `section` | `→PackSection` | parent |
-| `block_type` | `enum{prose·formula·table·figure·list}` | |
+| `block_type` | `enum{prose·formula·table·figure·list·code}` | |
 | `data` | `json` | the variant fields per type (below) |
 | `position` | `int` | order within the section |
 
@@ -200,8 +206,9 @@ Plus one behavioral contract every implementation satisfies:
 | `prose` | `{content}` | Markdown; `**bold**`, inline `$math$` |
 | `formula` | `{latex, explanation}` | display equation + one-line explanation |
 | `table` | `{headers, rows, caption?}` | results / baseline comparisons |
-| `figure` | `{label, explanation}` | no image stored — the figure described in words |
+| `figure` | `{label, explanation, figure_id?, url?}` | `figure_id` → a stored `SourceFigure` asset; `url` → the original remote image (article packs); neither → described in words |
 | `list` | `{items, ordered?}` | hyperparameters, sub-points |
+| `code` | `{language?, content}` | verbatim code blocks (essential for technical articles) |
 
 **`PackBlockMessage`** — the per-block conversation (the web reader's "Discuss" panel; the S6 anchor made concrete).
 
@@ -211,9 +218,9 @@ Plus one behavioral contract every implementation satisfies:
 | `role` | `enum{user·assistant}` | |
 | `content` | `text` | grounded on the block + section + pack + source body |
 
-> **Extensible by design.** A new content type = a new `pack_type` implementation with its own fields + `render()`; the abstract base, the reader's entry point, card generation, and search do not change. Adding `XiaohongshuPack` / `XPostPack` touches only its own implementation.
+> **Extensible by design.** A new content type = a new `genre` value + a strategy that fills `extras` and the shared body; the abstract base, the reader's entry point, card generation, and search do not change. Adding `XiaohongshuPack` / `XPostPack` touches only its own strategy.
 >
-> **`PaperPack` is a living document:** blocks are editable in place, and can be added / deleted / reordered in the web reader (block ids are stable API objects). **Re-running processing replaces the pack wholesale** — manual edits and block chats are discarded (confirmed in the UI). There is **no facet layer** — Cards are generated *from* the pack's rendered content (plus the reader's conversation) on demand (§4.5, cards spec; `01 §F2`), not from an intermediate facet model.
+> **Every pack is a living document:** blocks are editable in place, and can be added / deleted / reordered in the web reader (block ids are stable API objects). **Re-running processing replaces the pack wholesale** — manual edits and block chats are discarded (confirmed in the UI). There is **no facet layer** — Cards are generated *from* the pack's rendered content (plus the reader's conversation) on demand (§4.5, cards spec; `01 §F2`), not from an intermediate facet model.
 
 ### 4.5 `Card`
 
@@ -509,6 +516,7 @@ Each resolves an open question from `01 §11` (or a modeling fork). **Reversible
 | D5 | **No `Insight`/`Claim`/`Question` entities.** Takeaways are `Card(origin=user)`; claims/counter-views live in the report prose; questions are `Card`s. | Follows `01 §4.2`'s pruning of `00`'s longer list. | Yes — could promote any to a first-class entity later. |
 | D6 | **`Card.scheduling` is a fold over append-only `ReviewEvent`s.** | Keeps history immutable and makes the FSRS swap (`01 §11`) a pure recompute, not a migration. | Yes. |
 | D7 | **`KnowledgePack` is a thin abstract type + per-`pack_type` implementations** (§4.4); the readable, block-editable paper report is the `PaperPack` implementation, not the definition. There is **no facet layer**. v1 processing is **manual-trigger** (relaxes `01` principle 2) and reports are authored in English. | Digestion must span content types (paper · article · social post), so the base stays type-agnostic and each type owns its shape; reading-first digestion is the product thesis (`00`); manual trigger controls API cost. | Yes — new `pack_type`s slot in without touching the base (§4.4). |
+| D8 | **Pack production dispatches on `Source.genre`, with the deterministic preserve strategy as the universal fallback** (2026-07-09, §4.3–4.4). `genre` (knowledge kind) is a separate axis from `media_type` (format), detected by pure heuristics at parse time and user-correctable; `paper` gets the LLM deep-read, `article`/`note`/unknown get the zero-LLM preserve transform into the shared block substrate. Per-type fields live in the base's `extras` json; the digest-export job applies to `genre=paper` only. | A well-authored technical article IS its own best pack — re-authoring it as a fake paper review destroys it; falling back to "preserve the original" guarantees every source gets appropriate (at worst neutral) processing, at zero AI cost; heuristics stay honest because misclassification is one visible, correctable field. | Yes — a genre is one strategy + enum value; swapping a genre's strategy (e.g. adding an LLM annotate pass for articles) touches only that strategy. |
 
 ---
 
