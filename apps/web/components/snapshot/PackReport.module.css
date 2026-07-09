@@ -144,6 +144,16 @@
   height: auto;
 }
 .list { line-height: 24px; margin: 0; padding-left: var(--space-5); }
+.code {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 20px;
+  background: var(--surface);
+  border: 1.5px solid var(--ink);
+  padding: var(--space-3);
+  overflow-x: auto;
+}
+.summary { color: var(--text-2); }
 
 .errorBar {
   display: flex; align-items: center; gap: var(--space-2);

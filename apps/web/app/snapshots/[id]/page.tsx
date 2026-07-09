@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getPack, getSnapshot } from "@gulp/api-client";
+import { GenreSelect } from "@/components/snapshot/GenreSelect";
 import { ReaderToggle } from "@/components/snapshot/ReaderToggle";
 import { StartButton } from "@/components/snapshot/StartButton";
 import { ExportActions } from "@/components/snapshot/ExportActions";
@@ -25,7 +26,9 @@ export default async function SnapshotPage({ params }: { params: Promise<{ id: s
     <div className={styles.page}>
       <Link href="/inbox" className={styles.back}>← Inbox</Link>
       <h1 className={`t-title-l ${styles.title}`}>{snap.title}</h1>
-      <p className={`t-data ${styles.source}`}>{source}</p>
+      <p className={`t-data ${styles.source}`}>
+        {source} <GenreSelect snapshotId={id} genre={snap.genre ?? null} />
+      </p>
 
       {snap.status === "unprocessed" && (
         <div className={styles.actions}>

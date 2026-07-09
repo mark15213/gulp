@@ -73,5 +73,7 @@ export function emptyContent(type: BlockType): BlockWrite {
       return { type: "figure", label: "", explanation: "", figure_id: null };
     case "list":
       return { type: "list", items: [""], ordered: false };
+    case "code":
+      return { type: "code", language: null, content: "" };
   }
 }

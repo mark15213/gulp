@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import type { BlockType } from "@/lib/packEdit";
 import styles from "./Editing.module.css";
 
-const TYPES: BlockType[] = ["prose", "formula", "table", "figure", "list"];
+const TYPES: BlockType[] = ["prose", "formula", "table", "figure", "list", "code"];
 
 export function AddBlockMenu({ onInsert }: { onInsert: (type: BlockType) => void }) {
   const [open, setOpen] = useState(false);

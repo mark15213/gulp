@@ -10,6 +10,7 @@ function pack(): PackOut {
   return {
     snapshot_id: "00000000-0000-0000-0000-000000000001",
     status: "ready",
+    pack_type: "paper",
     title: "T",
     core_contributions: [],
     key_insight: "",
@@ -72,5 +73,6 @@ describe("packEdit", () => {
       rows: [["", ""]],
       caption: null,
     });
+    expect(emptyContent("code")).toEqual({ type: "code", language: null, content: "" });
   });
 });

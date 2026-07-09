@@ -52,11 +52,20 @@ export function BlockView({ snapshotId, block }: { snapshotId: string; block: Pa
               src={figureUrl(snapshotId, block.figure_id)}
               alt={block.label}
             />
+          ) : block.url ? (
+            // article packs: the image stays at its original remote URL
+            <img className={styles.figureImage} src={block.url} alt={block.label} />
           ) : (
             <div className={styles.figureLabel}>{block.label}</div>
           )}
           <figcaption className={styles.explanation}>{block.explanation}</figcaption>
         </figure>
+      );
+    case "code":
+      return (
+        <pre className={styles.code}>
+          <code data-language={block.language ?? undefined}>{block.content}</code>
+        </pre>
       );
     case "list":
       return block.ordered ? (

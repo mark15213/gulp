@@ -31,4 +31,35 @@ describe("BlockView figure", () => {
     expect(screen.queryByRole("img")).toBeNull();
     expect(screen.getByText("Fig 1")).toBeTruthy();
   });
+
+  it("renders a remote img when url is set without figure_id", () => {
+    render(
+      <BlockView
+        snapshotId="snap-1"
+        block={{
+          id: "b1",
+          type: "figure",
+          label: "Diagram",
+          explanation: "",
+          figure_id: null,
+          url: "https://x.test/a.png",
+        }}
+      />,
+    );
+    expect(screen.getByRole("img").getAttribute("src")).toBe("https://x.test/a.png");
+  });
+});
+
+describe("BlockView code", () => {
+  it("renders code content inside pre/code with the language tagged", () => {
+    render(
+      <BlockView
+        snapshotId="snap-1"
+        block={{ id: "b2", type: "code", language: "python", content: "x = 1" }}
+      />,
+    );
+    const code = document.querySelector("pre > code")!;
+    expect(code.textContent).toBe("x = 1");
+    expect(code.getAttribute("data-language")).toBe("python");
+  });
 });

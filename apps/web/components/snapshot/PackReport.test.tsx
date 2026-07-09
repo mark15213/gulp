@@ -29,6 +29,7 @@ beforeEach(() => {
 const pack: PackOut = {
   snapshot_id: "00000000-0000-0000-0000-000000000001",
   status: "ready",
+  pack_type: "paper",
   title: "BERT",
   core_contributions: ["MLM enables **bidirectionality**."],
   key_insight: "Change the objective.",
@@ -87,6 +88,59 @@ describe("PackReport", () => {
     expect(html).toContain("Key insight");
     expect(html).toContain("Further reading");
     expect(html).toContain("t-title-m");         // section heading role kept
+  });
+});
+
+describe("PackReport article packs", () => {
+  const articlePack: PackOut = {
+    snapshot_id: "00000000-0000-0000-0000-000000000002",
+    status: "ready",
+    pack_type: "article",
+    title: "Harness Engineering",
+    summary: "A post about harnesses.",
+    core_contributions: [],
+    references: [],
+    sections: [
+      {
+        id: "00000000-0000-0000-0000-0000000000c1",
+        heading: null,
+        blocks: [
+          { id: "00000000-0000-0000-0000-0000000000d1", type: "prose", content: "Verbatim intro." },
+          {
+            id: "00000000-0000-0000-0000-0000000000d2",
+            type: "code",
+            language: "python",
+            content: "def f():\n    return 1",
+          },
+          {
+            id: "00000000-0000-0000-0000-0000000000d3",
+            type: "figure",
+            label: "Diagram",
+            explanation: "",
+            url: "https://x.test/fig1.png",
+          },
+        ],
+      },
+    ],
+  };
+
+  it("shows the summary and no paper header sections", () => {
+    const html = renderToStaticMarkup(<PackReport pack={articlePack} />);
+    expect(html).toContain("A post about harnesses.");
+    expect(html).not.toContain("Core contributions");
+    expect(html).not.toContain("Key insight");
+    expect(html).not.toContain("Further reading");
+  });
+
+  it("renders code blocks as <pre><code>", () => {
+    const html = renderToStaticMarkup(<PackReport pack={articlePack} />);
+    expect(html).toContain("<pre");
+    expect(html).toContain("return 1");
+  });
+
+  it("renders remote-url figures as images", () => {
+    const html = renderToStaticMarkup(<PackReport pack={articlePack} />);
+    expect(html).toContain('src="https://x.test/fig1.png"');
   });
 });
 

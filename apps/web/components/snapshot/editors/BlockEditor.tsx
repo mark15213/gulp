@@ -6,6 +6,7 @@ import { FormulaEditor } from "./FormulaEditor";
 import { FigureEditor } from "./FigureEditor";
 import { ListEditor } from "./ListEditor";
 import { TableEditor } from "./TableEditor";
+import { CodeEditor } from "./CodeEditor";
 
 export function BlockEditor({
   snapshotId,
@@ -29,6 +30,8 @@ export function BlockEditor({
       return <ListEditor block={block} onSave={onSave} onCancel={onCancel} />;
     case "table":
       return <TableEditor block={block} onSave={onSave} onCancel={onCancel} />;
+    case "code":
+      return <CodeEditor block={block} onSave={onSave} onCancel={onCancel} />;
     default:
       return null;
   }

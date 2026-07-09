@@ -106,6 +106,10 @@ export function PackReport({ pack: initialPack }: { pack: PackOut }) {
 
         <h1 className={styles.title}>{pack.title}</h1>
 
+        {pack.pack_type === "article" && pack.summary && (
+          <p className={`t-body-l ${styles.summary}`}>{pack.summary}</p>
+        )}
+
         {pack.core_contributions.length > 0 && (
           <section className={styles.block}>
             <h2 className={styles.heading}>Core contributions</h2>
