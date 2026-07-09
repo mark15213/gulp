@@ -6,6 +6,7 @@ from gulp_shared.models.knowledge_pack import (
     PackBlockType,
     PackSection,
     PackStatus,
+    PackType,
 )
 from gulp_shared.models.source import SnapshotStatus, Source, SourceKind
 from gulp_shared.models.user import DEV_USER_ID, User
@@ -30,9 +31,12 @@ def test_pack_stores_report_fields_and_typed_blocks():
     pack = KnowledgePack(
         snapshot_id=snap.id,
         title="BERT",
-        key_insight="Change the objective, not the architecture.",
-        core_contributions=["MLM enables bidirectionality."],
-        references=[{"citation": "Vaswani 2017", "why_interesting": "Transformer."}],
+        pack_type=PackType.paper,
+        extras={
+            "key_insight": "Change the objective, not the architecture.",
+            "core_contributions": ["MLM enables bidirectionality."],
+            "references": [{"citation": "Vaswani 2017", "why_interesting": "Transformer."}],
+        },
         status=PackStatus.ready,
     )
     s.add(pack)
@@ -47,8 +51,8 @@ def test_pack_stores_report_fields_and_typed_blocks():
     got = s.scalar(select(KnowledgePack).where(KnowledgePack.snapshot_id == snap.id))
     assert got is not None
     assert got.title == "BERT"
-    assert got.core_contributions == ["MLM enables bidirectionality."]
-    assert got.references[0]["citation"] == "Vaswani 2017"
+    assert got.extras["core_contributions"] == ["MLM enables bidirectionality."]
+    assert got.extras["references"][0]["citation"] == "Vaswani 2017"
     blk = s.scalar(select(PackBlock))
     assert blk.block_type == PackBlockType.formula
     assert blk.data == {"latex": "a=b", "explanation": "trivial"}

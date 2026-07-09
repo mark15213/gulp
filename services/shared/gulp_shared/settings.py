@@ -15,6 +15,10 @@ class Settings(BaseSettings):
     llm_model: str = "claude-sonnet-4-6"
     export_dir: str = "/tmp/gulp-exports"
     media_dir: str = "/tmp/gulp-media"
+    rsshub_base_url: str = "http://localhost:1200"
+    rsshub_routes_url: str = "https://docs.rsshub.app/routes.json"
+    feed_poll_interval_minutes: int = 30
+    feed_entry_retention_days: int = 90
 
     @property
     def cors_origins(self) -> list[str]:

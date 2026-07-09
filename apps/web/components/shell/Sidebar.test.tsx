@@ -19,7 +19,7 @@ afterEach(() => {
 });
 
 describe("Sidebar", () => {
-  it("nav is Today · Inbox · Library, Today first, wired hrefs", async () => {
+  it("nav is Today · Inbox · Library · Feeds, Today first, wired hrefs", async () => {
     (api.getInbox as ReturnType<typeof vi.fn>).mockResolvedValue({ items: [], count: 2 });
     render(await Sidebar());
     const nav = screen.getByRole("navigation", { name: "Primary" });
@@ -28,8 +28,14 @@ describe("Sidebar", () => {
       "Today",
       "Inbox",
       "Library",
+      "Feeds",
     ]);
-    expect(links.map((l) => l.getAttribute("href"))).toEqual(["/", "/inbox", "/library"]);
+    expect(links.map((l) => l.getAttribute("href"))).toEqual([
+      "/",
+      "/inbox",
+      "/library",
+      "/feeds",
+    ]);
     expect(screen.getByText("2")).toBeTruthy(); // inbox to-do badge
   });
 });

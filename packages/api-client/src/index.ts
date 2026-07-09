@@ -366,3 +366,124 @@ export async function completeGulpSession(sessionId: string): Promise<GulpSummar
   if (error || !data) throw new Error("complete failed");
   return data;
 }
+
+// ── Feeds (spec 2026-07-09) ─────────────────────────────────────────────────
+
+export type SubscriptionsOut =
+  paths["/subscriptions"]["get"]["responses"]["200"]["content"]["application/json"];
+export type Subscription = SubscriptionsOut["items"][number];
+export type SubscriptionCreateResponse =
+  paths["/subscriptions"]["post"]["responses"]["200"]["content"]["application/json"];
+export type FeedEntriesOut =
+  paths["/feed-entries"]["get"]["responses"]["200"]["content"]["application/json"];
+export type FeedEntry = FeedEntriesOut["items"][number];
+export type CatalogSearchOut =
+  paths["/feeds/catalog/search"]["get"]["responses"]["200"]["content"]["application/json"];
+export type CatalogRoute = CatalogSearchOut["items"][number];
+
+export async function getSubscriptions(): Promise<SubscriptionsOut> {
+  const { data, error } = await client.GET("/subscriptions", { cache: "no-store" });
+  if (error || !data) throw new Error("subscriptions fetch failed");
+  return data;
+}
+
+export async function createSubscription(body: {
+  feed_url: string;
+  title?: string | null;
+}): Promise<SubscriptionCreateResponse> {
+  const { data, error } = await client.POST("/subscriptions", { body });
+  if (error || !data) throw new Error("subscription create failed");
+  return data;
+}
+
+export async function patchSubscription(
+  id: string,
+  body: { title?: string | null; muted?: boolean | null },
+): Promise<Subscription> {
+  const { data, error } = await client.PATCH("/subscriptions/{sub_id}", {
+    params: { path: { sub_id: id } },
+    body,
+  });
+  if (error || !data) throw new Error("subscription update failed");
+  return data;
+}
+
+export async function deleteSubscription(id: string): Promise<void> {
+  const { error } = await client.DELETE("/subscriptions/{sub_id}", {
+    params: { path: { sub_id: id } },
+  });
+  if (error) throw new Error("subscription delete failed");
+}
+
+export async function refreshSubscription(id: string): Promise<void> {
+  const { error } = await client.POST("/subscriptions/{sub_id}/refresh", {
+    params: { path: { sub_id: id } },
+  });
+  if (error) throw new Error("subscription refresh failed");
+}
+
+export async function readAllSubscription(id: string): Promise<void> {
+  const { error } = await client.POST("/subscriptions/{sub_id}/read-all", {
+    params: { path: { sub_id: id } },
+  });
+  if (error) throw new Error("read-all failed");
+}
+
+export async function getFeedEntries(params?: {
+  subscriptionId?: string;
+  unreadOnly?: boolean;
+  limit?: number;
+  offset?: number;
+}): Promise<FeedEntriesOut> {
+  const query = {
+    unread_only: params?.unreadOnly,
+    limit: params?.limit,
+    offset: params?.offset,
+  };
+  if (params?.subscriptionId) {
+    const { data, error } = await client.GET("/subscriptions/{sub_id}/entries", {
+      params: { path: { sub_id: params.subscriptionId }, query },
+      cache: "no-store",
+    });
+    if (error || !data) throw new Error("entries fetch failed");
+    return data;
+  }
+  const { data, error } = await client.GET("/feed-entries", {
+    params: { query },
+    cache: "no-store",
+  });
+  if (error || !data) throw new Error("entries fetch failed");
+  return data;
+}
+
+export async function setEntryRead(id: string, read: boolean): Promise<void> {
+  if (read) {
+    const { error } = await client.POST("/feed-entries/{entry_id}/read", {
+      params: { path: { entry_id: id } },
+    });
+    if (error) throw new Error("read toggle failed");
+    return;
+  }
+  const { error } = await client.POST("/feed-entries/{entry_id}/unread", {
+    params: { path: { entry_id: id } },
+  });
+  if (error) throw new Error("read toggle failed");
+}
+
+export async function gulpEntry(
+  id: string,
+): Promise<{ snapshot_id: string; duplicate: boolean }> {
+  const { data, error } = await client.POST("/feed-entries/{entry_id}/gulp", {
+    params: { path: { entry_id: id } },
+  });
+  if (error || !data) throw new Error("gulp failed");
+  return data;
+}
+
+export async function searchCatalog(q: string, limit = 30): Promise<CatalogSearchOut> {
+  const { data, error } = await client.GET("/feeds/catalog/search", {
+    params: { query: { q, limit } },
+  });
+  if (error || !data) throw new Error("catalog search failed");
+  return data;
+}

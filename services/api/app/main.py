@@ -8,6 +8,7 @@ from app.routers import (
     capture,
     cards,
     export,
+    feeds,
     figures,
     gulp,
     inbox,
@@ -28,6 +29,7 @@ app.add_middleware(
 app.include_router(capture.router, tags=["capture"])
 app.include_router(cards.router, tags=["cards"])
 app.include_router(export.router, tags=["export"])
+app.include_router(feeds.router, tags=["feeds"])
 app.include_router(figures.router, tags=["figures"])
 app.include_router(gulp.router, tags=["gulp"])
 app.include_router(inbox.router, tags=["inbox"])

@@ -7,6 +7,7 @@ from gulp_shared.models.concept import (
     ConceptType,
     SourceConcept,
 )
+from gulp_shared.models.feed_entry import FeedEntry
 from gulp_shared.models.gulp_session import GulpSession, SessionScope, SessionStatus
 from gulp_shared.models.knowledge_pack import (
     KnowledgePack,
@@ -39,6 +40,7 @@ __all__ = [
     "CapturedVia",
     "SourceFigure",
     "SourceTag",
+    "FeedEntry",
     "Card",
     "CardType",
     "CardOrigin",

@@ -1,0 +1,73 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 18vh;
+  z-index: 50;
+}
+
+.dialog {
+  width: min(480px, 92vw);
+  background: var(--surface, #fff);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.heading {
+  margin: 0 0 4px;
+  font-size: 1.05em;
+}
+
+.input {
+  font: inherit;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: none;
+  color: inherit;
+}
+
+.error {
+  color: var(--red-500, #ef4444);
+  font-size: 0.85em;
+  margin: 0;
+}
+
+.buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.cancel {
+  font: inherit;
+  padding: 6px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: none;
+  cursor: pointer;
+}
+
+.confirm {
+  font: inherit;
+  font-weight: 600;
+  padding: 6px 18px;
+  border: none;
+  border-radius: 8px;
+  background: var(--blue-600, #2563eb);
+  color: #fff;
+  cursor: pointer;
+}
+
+.confirm:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

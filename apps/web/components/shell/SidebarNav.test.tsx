@@ -36,4 +36,11 @@ describe("SidebarNav", () => {
     render(<SidebarNav inboxCount={0} />);
     expect(screen.queryByRole("link", { current: "page" })).toBeNull();
   });
+
+  it("lights Feeds on its subtree", () => {
+    usePathname.mockReturnValue("/feeds/discover");
+    render(<SidebarNav inboxCount={0} />);
+    const current = screen.getByRole("link", { current: "page" });
+    expect(current.textContent).toContain("Feeds");
+  });
 });

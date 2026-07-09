@@ -195,6 +195,178 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/subscriptions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Subscriptions */
+        get: operations["list_subscriptions_subscriptions_get"];
+        put?: never;
+        /** Create Subscription */
+        post: operations["create_subscription_subscriptions_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/subscriptions/{sub_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Subscription */
+        delete: operations["delete_subscription_subscriptions__sub_id__delete"];
+        options?: never;
+        head?: never;
+        /** Patch Subscription */
+        patch: operations["patch_subscription_subscriptions__sub_id__patch"];
+        trace?: never;
+    };
+    "/subscriptions/{sub_id}/refresh": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Refresh Subscription */
+        post: operations["refresh_subscription_subscriptions__sub_id__refresh_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/subscriptions/{sub_id}/read-all": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Read All */
+        post: operations["read_all_subscriptions__sub_id__read_all_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/subscriptions/{sub_id}/entries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Subscription Entries */
+        get: operations["subscription_entries_subscriptions__sub_id__entries_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/feed-entries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** All Entries */
+        get: operations["all_entries_feed_entries_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/feed-entries/{entry_id}/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Mark Read */
+        post: operations["mark_read_feed_entries__entry_id__read_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/feed-entries/{entry_id}/unread": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Mark Unread */
+        post: operations["mark_unread_feed_entries__entry_id__unread_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/feed-entries/{entry_id}/gulp": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Gulp Entry */
+        post: operations["gulp_entry_feed_entries__entry_id__gulp_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/feeds/catalog/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Catalog Search */
+        get: operations["catalog_search_feeds_catalog_search_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/snapshots/{snapshot_id}/figures": {
         parameters: {
             query?: never;
@@ -554,7 +726,7 @@ export interface components {
          * CapturedVia
          * @enum {string}
          */
-        CapturedVia: "share_sheet" | "wechat" | "email" | "in_app" | "paste" | "manual" | "screenshot" | "audio_memo";
+        CapturedVia: "share_sheet" | "wechat" | "email" | "in_app" | "paste" | "manual" | "screenshot" | "audio_memo" | "feed";
         /** CardDraft */
         CardDraft: {
             card_type: components["schemas"]["CardType"];
@@ -650,6 +822,34 @@ export interface components {
          * @enum {string}
          */
         CardsStatus: "generating" | "ready" | "failed";
+        /** CatalogRouteOut */
+        CatalogRouteOut: {
+            /** Namespace */
+            namespace: string;
+            /** Namespace Name */
+            namespace_name: string;
+            /** Route Path */
+            route_path: string;
+            /** Route Name */
+            route_name: string | null;
+            /** Example */
+            example: string | null;
+            /** Parameters */
+            parameters: {
+                [key: string]: string;
+            } | null;
+            /** Require Config */
+            require_config: boolean;
+            /** Heat */
+            heat: number;
+        };
+        /** CatalogSearchOut */
+        CatalogSearchOut: {
+            /** Items */
+            items: components["schemas"]["CatalogRouteOut"][];
+            /** Count */
+            count: number;
+        };
         /** CodeBlockOut */
         CodeBlockOut: {
             /**
@@ -678,6 +878,47 @@ export interface components {
             language?: string | null;
             /** Content */
             content: string;
+        };
+        /** FeedEntriesOut */
+        FeedEntriesOut: {
+            /** Items */
+            items: components["schemas"]["FeedEntryOut"][];
+            /** Count */
+            count: number;
+        };
+        /** FeedEntryOut */
+        FeedEntryOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Subscription Id
+             * Format: uuid
+             */
+            subscription_id: string;
+            /** Subscription Title */
+            subscription_title: string;
+            /** Title */
+            title: string;
+            /** Url */
+            url: string | null;
+            /** Author */
+            author: string | null;
+            /** Published At */
+            published_at: string | null;
+            /** Content Html */
+            content_html: string | null;
+            /** Read */
+            read: boolean;
+            /** Promoted Source Id */
+            promoted_source_id: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
         };
         /** FigureAssetOut */
         FigureAssetOut: {
@@ -762,6 +1003,16 @@ export interface components {
             latex: string;
             /** Explanation */
             explanation: string;
+        };
+        /** GulpEntryResponse */
+        GulpEntryResponse: {
+            /**
+             * Snapshot Id
+             * Format: uuid
+             */
+            snapshot_id: string;
+            /** Duplicate */
+            duplicate: boolean;
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -1101,6 +1352,63 @@ export interface components {
          * @enum {string}
          */
         SourceKind: "snapshot" | "conversation" | "subscription";
+        /** SubscriptionCreate */
+        SubscriptionCreate: {
+            /** Feed Url */
+            feed_url: string;
+            /** Title */
+            title?: string | null;
+        };
+        /** SubscriptionCreateResponse */
+        SubscriptionCreateResponse: {
+            subscription: components["schemas"]["SubscriptionOut"];
+            /** Duplicate */
+            duplicate: boolean;
+        };
+        /** SubscriptionOut */
+        SubscriptionOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Title */
+            title: string;
+            /** Feed Url */
+            feed_url: string;
+            /**
+             * Health
+             * @enum {string}
+             */
+            health: "active" | "muted" | "error";
+            /** Muted */
+            muted: boolean;
+            /** Unread Count */
+            unread_count: number;
+            /** Last Fetch At */
+            last_fetch_at: string | null;
+            /** Last Fetch Error */
+            last_fetch_error: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /** SubscriptionPatch */
+        SubscriptionPatch: {
+            /** Title */
+            title?: string | null;
+            /** Muted */
+            muted?: boolean | null;
+        };
+        /** SubscriptionsOut */
+        SubscriptionsOut: {
+            /** Items */
+            items: components["schemas"]["SubscriptionOut"][];
+            /** Count */
+            count: number;
+        };
         /** SummaryOut */
         SummaryOut: {
             /** Reviewed Count */
@@ -1662,6 +1970,372 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SnapshotOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_subscriptions_subscriptions_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SubscriptionsOut"];
+                };
+            };
+        };
+    };
+    create_subscription_subscriptions_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SubscriptionCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SubscriptionCreateResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_subscription_subscriptions__sub_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sub_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    patch_subscription_subscriptions__sub_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sub_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SubscriptionPatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SubscriptionOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    refresh_subscription_subscriptions__sub_id__refresh_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sub_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_all_subscriptions__sub_id__read_all_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sub_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    subscription_entries_subscriptions__sub_id__entries_get: {
+        parameters: {
+            query?: {
+                unread_only?: boolean;
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path: {
+                sub_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeedEntriesOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    all_entries_feed_entries_get: {
+        parameters: {
+            query?: {
+                unread_only?: boolean;
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeedEntriesOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    mark_read_feed_entries__entry_id__read_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entry_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    mark_unread_feed_entries__entry_id__unread_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entry_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    gulp_entry_feed_entries__entry_id__gulp_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entry_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GulpEntryResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    catalog_search_feeds_catalog_search_get: {
+        parameters: {
+            query?: {
+                q?: string;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogSearchOut"];
                 };
             };
             /** @description Validation Error */
