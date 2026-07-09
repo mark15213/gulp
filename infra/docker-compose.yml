@@ -16,5 +16,20 @@ services:
     ports:
       - "6379:6379"
 
+  # Self-hosted RSSHub (spec 2026-07-09 §6) — resolves rsshub:// feed addresses.
+  # Pinned to the last gzip-layered tag: newer tags use zstd layers, which the
+  # locally installed Docker 20.10 cannot extract ("invalid tar header").
+  # After upgrading Docker Desktop (>= 23), feel free to move to `latest`.
+  rsshub:
+    image: diygod/rsshub:2025-10-20
+    ports:
+      - "1200:1200"
+    environment:
+      NODE_ENV: production
+      CACHE_TYPE: redis
+      REDIS_URL: redis://redis:6379/1
+    depends_on:
+      - redis
+
 volumes:
   gulp_pgdata:
