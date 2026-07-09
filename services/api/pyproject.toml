@@ -11,6 +11,8 @@ dependencies = [
     "arq>=0.26",
     "gulp-shared",
     "python-multipart>=0.0.9",
+    "httpx>=0.28",
+    "redis>=5",
 ]
 
 [tool.uv.sources]

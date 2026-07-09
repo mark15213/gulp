@@ -1,0 +1,37 @@
+{
+  "github": {
+    "name": "GitHub", "url": "github.com", "categories": ["programming"],
+    "routes": {
+      "/github/activity/:user": {
+        "path": "/activity/:user", "name": "User Activities",
+        "example": "/github/activity/DIYgod",
+        "parameters": {"user": "GitHub username"},
+        "features": {"requireConfig": false}, "heat": 4835
+      },
+      "/github/notifications": {
+        "path": "/notifications", "name": "Notifications",
+        "example": "/github/notifications", "parameters": {},
+        "features": {"requireConfig": true}, "heat": 900
+      }
+    }
+  },
+  "sspai": {
+    "name": "少数派 sspai", "url": "sspai.com", "categories": ["new-media"],
+    "routes": {
+      "/sspai/index": {
+        "path": "/index", "name": "首页", "example": "/sspai/index",
+        "parameters": null, "features": {"requireConfig": false}, "heat": 32039
+      }
+    }
+  },
+  "v2ex": {
+    "name": "V2EX", "url": "v2ex.com", "categories": ["bbs"],
+    "routes": {
+      "/v2ex/topics/:type": {
+        "path": "/topics/:type", "name": "最热 / 最新主题",
+        "example": "/v2ex/topics/latest", "parameters": {"type": "hot or latest"},
+        "features": {"requireConfig": false}, "heat": 23471
+      }
+    }
+  }
+}

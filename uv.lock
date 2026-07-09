@@ -365,8 +365,10 @@ dependencies = [
     { name = "arq" },
     { name = "fastapi" },
     { name = "gulp-shared" },
+    { name = "httpx" },
     { name = "psycopg", extra = ["binary"] },
     { name = "python-multipart" },
+    { name = "redis" },
     { name = "uvicorn", extra = ["standard"] },
 ]
 
@@ -376,8 +378,10 @@ requires-dist = [
     { name = "arq", specifier = ">=0.26" },
     { name = "fastapi", specifier = ">=0.115" },
     { name = "gulp-shared", editable = "services/shared" },
+    { name = "httpx", specifier = ">=0.28" },
     { name = "psycopg", extras = ["binary"], specifier = ">=3.2" },
     { name = "python-multipart", specifier = ">=0.0.9" },
+    { name = "redis", specifier = ">=5" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.32" },
 ]
 
