@@ -1,4 +1,4 @@
-"""Pipeline orchestration: Source -> (fetch -> adapt -> digest -> persist) -> status.
+"""Pipeline orchestration: Source -> fetch -> adapt -> classify -> build pack -> persist.
 
 Testable in isolation: pass an injected `fetch` and `provider`. The arq entry
 (app/tasks) provides the real ones and a real DB session.
@@ -21,11 +21,10 @@ from app.pipeline.adapters.note import note_to_normdoc
 from app.pipeline.adapters.pdf import pdf_to_normdoc
 from app.pipeline.adapters.webpage import webpage_to_normdoc
 from app.pipeline.classify import detect_genre
-from app.pipeline.digest import run_digest
 from app.pipeline.figures.run import extract_arxiv_figures
 from app.pipeline.normdoc import NormDoc
 from app.pipeline.persist import persist_pack
-from app.pipeline.schemas import draft_from_paper_report
+from app.pipeline.strategies import build_pack_draft
 
 logger = logging.getLogger("gulp.worker")
 
@@ -75,8 +74,8 @@ async def process_source(
             and normdoc.title != source.title
         ):
             source.title = normdoc.title
-        digest = await run_digest(normdoc, provider=provider, config=config)
-        persist_pack(db, source, draft_from_paper_report(digest))
+        draft = await build_pack_draft(source.genre, normdoc, provider=provider, config=config)
+        persist_pack(db, source, draft)
         source.status = SnapshotStatus.ready
         db.commit()
         await _maybe_extract_figures(db, source, fetch)

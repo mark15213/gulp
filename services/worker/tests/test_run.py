@@ -6,7 +6,7 @@ from app.pipeline.adapters.fetch import FetchedDoc
 from app.pipeline.run import process_source
 from gulp_shared.db import Base
 from gulp_shared.llm.base import Message, ModelConfig
-from gulp_shared.models.knowledge_pack import KnowledgePack
+from gulp_shared.models.knowledge_pack import KnowledgePack, PackType
 from gulp_shared.models.source import (
     MediaType,
     SnapshotStatus,
@@ -123,15 +123,86 @@ async def test_processing_keeps_user_corrected_genre() -> None:
     assert snap.genre == SourceGenre.paper  # correction survives re-processing
 
 
-async def test_failure_sets_needs_attention() -> None:
+class ExplodingProvider:
+    """Any LLM call is a test failure — non-paper genres must be LLM-free."""
+
+    async def complete_json(self, **kw: Any) -> dict[str, Any]:
+        raise AssertionError("LLM must not be called for this genre")
+
+
+async def test_article_source_builds_preserve_pack_without_llm() -> None:
+    s = _session()
+    s.add(User(id=DEV_USER_ID, display_name="Dev"))
+    snap = Source(owner_id=DEV_USER_ID, kind=SourceKind.snapshot, title="L",
+                  status=SnapshotStatus.unprocessed, media_type=MediaType.webpage,
+                  origin_url="https://blog.example/harness")
+    s.add(snap)
+    s.flush()
+
+    async def _fetch(url: str) -> FetchedDoc:
+        html = ("<html><head><title>Harness</title></head><body><article><h1>Harness</h1>"
+                "<p>Original prose that must survive verbatim.</p></article></body></html>")
+        return FetchedDoc(content=html.encode(), content_type="text/html")
+
+    await process_source(s, snap, fetch=_fetch, provider=ExplodingProvider())
+
+    assert snap.status == SnapshotStatus.ready
+    pack = s.scalar(select(KnowledgePack).where(KnowledgePack.snapshot_id == snap.id))
+    assert pack is not None and pack.pack_type == PackType.article
+    blocks = [b for sec in pack.sections for b in sec.blocks]
+    assert any("survive verbatim" in (b.data or {}).get("content", "") for b in blocks)
+
+
+async def test_arxiv_source_uses_paper_strategy() -> None:
+    s = _session()
+    s.add(User(id=DEV_USER_ID, display_name="Dev"))
+    snap = Source(owner_id=DEV_USER_ID, kind=SourceKind.snapshot, title="P",
+                  status=SnapshotStatus.unprocessed, media_type=MediaType.webpage,
+                  origin_url="https://arxiv.org/abs/2607.00123")
+    s.add(snap)
+    s.flush()
+
+    async def _fetch(url: str) -> FetchedDoc:
+        html = ("<html><body><article><p>Abstract of a serious paper.</p>"
+                "</article></body></html>")
+        return FetchedDoc(content=html.encode(), content_type="text/html")
+
+    await process_source(s, snap, fetch=_fetch, provider=FakeProvider(_OK))
+
+    assert snap.status == SnapshotStatus.ready
+    pack = s.scalar(select(KnowledgePack).where(KnowledgePack.snapshot_id == snap.id))
+    assert pack is not None and pack.pack_type == PackType.paper
+    assert pack.extras.get("key_insight") == "k"
+
+
+async def test_note_source_builds_preserve_pack() -> None:
     s = _session()
     snap = _note(s)
+    await process_source(s, snap, provider=ExplodingProvider())
+    assert snap.status == SnapshotStatus.ready
+    pack = s.scalar(select(KnowledgePack).where(KnowledgePack.snapshot_id == snap.id))
+    assert pack is not None and pack.pack_type == PackType.article
+
+
+async def test_failure_sets_needs_attention() -> None:
+    s = _session()
+    s.add(User(id=DEV_USER_ID, display_name="Dev"))
+    # paper genre: the digest is the LLM path, so an LLM failure must surface
+    snap = Source(owner_id=DEV_USER_ID, kind=SourceKind.snapshot, title="P",
+                  status=SnapshotStatus.unprocessed, media_type=MediaType.webpage,
+                  origin_url="https://arxiv.org/abs/2607.00999")
+    s.add(snap)
+    s.flush()
+
+    async def _fetch(url: str) -> FetchedDoc:
+        html = "<html><body><article><p>Paper body.</p></article></body></html>"
+        return FetchedDoc(content=html.encode(), content_type="text/html")
 
     class Boom:
         async def complete_json(self, **kw: Any) -> dict[str, Any]:
             raise RuntimeError("llm down")
 
-    await process_source(s, snap, provider=Boom())
+    await process_source(s, snap, fetch=_fetch, provider=Boom())
     assert snap.status == SnapshotStatus.needs_attention
 
 

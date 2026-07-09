@@ -6,7 +6,7 @@ import pytest
 from app.deps import get_db, get_enqueue
 from app.main import app
 from fastapi.testclient import TestClient
-from gulp_shared.models.source import SnapshotStatus, Source, SourceKind
+from gulp_shared.models.source import SnapshotStatus, Source, SourceGenre, SourceKind
 from gulp_shared.models.user import DEV_USER_ID
 
 
@@ -46,6 +46,27 @@ def test_export_enqueues_build(client, db):  # type: ignore[no-untyped-def]
     r = client.post(f"/snapshots/{sid}/export")
     assert r.status_code == 200
     assert client.enqueue_calls == [("build_export", sid)]
+
+
+def test_export_blocked_for_article_genre(client, db):  # type: ignore[no-untyped-def]
+    s = Source(owner_id=DEV_USER_ID, kind=SourceKind.snapshot, title="A",
+               status=SnapshotStatus.ready, genre=SourceGenre.article,
+               content_body="body")
+    db.add(s)
+    db.commit()
+    r = client.post(f"/snapshots/{s.id}/export")
+    assert r.status_code == 400
+    assert client.enqueue_calls == []
+
+
+def test_export_allowed_for_paper_genre(client, db):  # type: ignore[no-untyped-def]
+    s = Source(owner_id=DEV_USER_ID, kind=SourceKind.snapshot, title="P",
+               status=SnapshotStatus.ready, genre=SourceGenre.paper,
+               content_body="body")
+    db.add(s)
+    db.commit()
+    r = client.post(f"/snapshots/{s.id}/export")
+    assert r.status_code == 200
 
 
 def test_job_404_when_not_built(client, db):  # type: ignore[no-untyped-def]

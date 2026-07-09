@@ -6,7 +6,7 @@ from collections.abc import Callable
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from fastapi.responses import FileResponse
-from gulp_shared.models.source import Source
+from gulp_shared.models.source import Source, SourceGenre
 from gulp_shared.models.user import User
 from sqlalchemy.orm import Session
 
@@ -34,6 +34,13 @@ def export_snapshot(
     enqueue: Callable[..., None] = Depends(get_enqueue),
 ) -> SnapshotOut:
     source = _owned(db, snapshot_id, user)
+    # The exported job is an LLM deep-read (paper digest). Non-paper genres are
+    # digested locally without LLM, so outsourcing makes no sense for them.
+    # genre=None (not yet classified) stays exportable — the pre-processing flow.
+    if source.genre is not None and source.genre is not SourceGenre.paper:
+        raise HTTPException(
+            status_code=400, detail="digest jobs only apply to paper sources"
+        )
     enqueue("build_export", str(source.id))
     return to_out(db, source)
 
