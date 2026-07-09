@@ -43,5 +43,10 @@ exclude = ['alembic/', '/tests/']
 module = "fitz"
 ignore_missing_imports = true
 
+[[tool.mypy.overrides]]
+# feedparser ships no type stubs.
+module = "feedparser.*"
+ignore_missing_imports = true
+
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

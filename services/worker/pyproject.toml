@@ -9,6 +9,7 @@ dependencies = [
     "anthropic>=0.40",
     "pydantic>=2",
     "trafilatura>=1.12",
+    "feedparser>=6.0",
     "pypdf>=4.0",
     "pymupdf>=1.24",
     "gulp-shared",
