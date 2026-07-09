@@ -106,3 +106,11 @@ async def test_user_title_never_overwritten(db):
     body = (FIXTURES / "feed_rss2.xml").read_bytes()
     await run_fetch_feed(db, sub, http_get=_responder(body))
     assert sub.title == "My name"
+
+
+def test_loopback_targets_skip_proxy_env():
+    from app.pipeline.feeds import _use_proxy_env
+
+    assert _use_proxy_env("http://localhost:1200/sspai/index") is False
+    assert _use_proxy_env("http://127.0.0.1:1200/x") is False
+    assert _use_proxy_env("https://www.ruanyifeng.com/blog/atom.xml") is True

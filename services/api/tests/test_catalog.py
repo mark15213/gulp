@@ -31,3 +31,8 @@ def test_empty_query_returns_top_heat():
 
 def test_no_match_is_empty():
     assert search_catalog("zzzznope", catalog=CATALOG) == []
+
+
+def test_object_valued_parameters_flatten_to_strings():
+    items = search_catalog("Notifications", catalog=CATALOG)
+    assert items[0].parameters == {"type": "Event type (issue / discussion)"}

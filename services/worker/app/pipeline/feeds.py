@@ -19,9 +19,20 @@ logger = logging.getLogger("gulp.worker")
 
 HttpGet = Callable[[str, dict[str, str]], Awaitable[httpx.Response]]
 
+_LOOPBACK_HOSTS = {"localhost", "127.0.0.1", "::1"}
+
+
+def _use_proxy_env(url: str) -> bool:
+    """System/env proxies (VPN clients) commonly refuse loopback targets with a
+    bare 502 — the self-hosted RSSHub must be reached directly. Remote feeds
+    keep the proxy (it may be the only route out)."""
+    return httpx.URL(url).host not in _LOOPBACK_HOSTS
+
 
 async def _default_http_get(url: str, headers: dict[str, str]) -> httpx.Response:
-    async with httpx.AsyncClient(follow_redirects=True, timeout=30) as client:
+    async with httpx.AsyncClient(
+        follow_redirects=True, timeout=30, trust_env=_use_proxy_env(url)
+    ) as client:
         return await client.get(url, headers=headers)
 
 

@@ -10,7 +10,16 @@
       },
       "/github/notifications": {
         "path": "/notifications", "name": "Notifications",
-        "example": "/github/notifications", "parameters": {},
+        "example": "/github/notifications",
+        "parameters": {
+          "type": {
+            "description": "Event type",
+            "options": [
+              {"label": "Issue", "value": "issue"},
+              {"label": "Discussion", "value": "discussion"}
+            ]
+          }
+        },
         "features": {"requireConfig": true}, "heat": 900
       }
     }

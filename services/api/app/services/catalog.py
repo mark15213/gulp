@@ -50,6 +50,26 @@ def get_catalog() -> dict[str, Any]:
     return _memo
 
 
+def _param_docs(parameters: dict[str, Any] | None) -> dict[str, str] | None:
+    """routes.json parameter values are either doc strings or option objects
+    ({description, options: [...]}) — flatten to display strings."""
+    if not parameters:
+        return None
+    out: dict[str, str] = {}
+    for key, value in parameters.items():
+        if isinstance(value, str):
+            out[key] = value
+        elif isinstance(value, dict):
+            desc = value.get("description") or ""
+            options = value.get("options") or []
+            values = [str(o["value"]) for o in options if isinstance(o, dict) and o.get("value")]
+            hint = f" ({' / '.join(values[:6])})" if values else ""
+            out[key] = f"{desc}{hint}".strip() or key
+        else:
+            out[key] = str(value)
+    return out
+
+
 def search_catalog(
     q: str, limit: int = 30, catalog: dict[str, Any] | None = None
 ) -> list[CatalogRouteOut]:
@@ -75,7 +95,7 @@ def search_catalog(
                     route_path=route_path,
                     route_name=route_name,
                     example=route.get("example"),
-                    parameters=route.get("parameters") or None,
+                    parameters=_param_docs(route.get("parameters")),
                     require_config=bool(features.get("requireConfig")),
                     heat=int(route.get("heat") or 0),
                 )
