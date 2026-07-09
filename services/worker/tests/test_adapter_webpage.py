@@ -50,6 +50,21 @@ HTML_META = """
 """
 
 
+HTML_IMAGE = """
+<html><head><title>Post</title></head>
+<body><article><h1>Post</h1>
+<p>Intro paragraph that is long enough for trafilatura to keep around here.</p>
+<img src="https://x.example/diagram.png" alt="Architecture diagram"/>
+<p>Closing paragraph with more than a few words to retain in extraction.</p>
+</article></body></html>
+"""
+
+
+def test_webpage_keeps_images_as_markdown() -> None:
+    doc = webpage_to_normdoc(HTML_IMAGE, fallback_title="fb", url="https://x.example/p")
+    assert "![Architecture diagram](https://x.example/diagram.png)" in doc.content_body
+
+
 def test_webpage_carries_meta_description() -> None:
     doc = webpage_to_normdoc(HTML_META, fallback_title="fb", url="https://x.example/a")
     assert doc.description == "A short primer on attention mechanisms."

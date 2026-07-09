@@ -117,6 +117,37 @@ def test_heading_only_section_is_kept() -> None:
     assert draft.sections[1].blocks[0].content == "text"
 
 
+def test_relative_figure_urls_resolve_against_origin() -> None:
+    doc = _doc("![Diagram](diagram.png)")
+    doc.origin_url = "https://blog.example/posts/agents/"
+    draft = build_preserve_draft(doc)
+    fig = draft.sections[0].blocks[0]
+    assert fig.type == "figure"
+    assert fig.url == "https://blog.example/posts/agents/diagram.png"
+
+
+def test_relative_urls_resolve_from_slashless_pretty_url() -> None:
+    # capture normalizes trailing slashes away; the page is still a directory
+    doc = _doc("![Diagram](diagram.png)")
+    doc.origin_url = "https://blog.example/posts/agents"
+    draft = build_preserve_draft(doc)
+    assert draft.sections[0].blocks[0].url == "https://blog.example/posts/agents/diagram.png"
+
+
+def test_relative_urls_resolve_against_html_page_as_sibling() -> None:
+    doc = _doc("![Diagram](diagram.png)")
+    doc.origin_url = "https://blog.example/posts/agents.html"
+    draft = build_preserve_draft(doc)
+    assert draft.sections[0].blocks[0].url == "https://blog.example/posts/diagram.png"
+
+
+def test_absolute_figure_urls_kept_as_is() -> None:
+    doc = _doc("![Diagram](https://cdn.example/d.png)")
+    doc.origin_url = "https://blog.example/posts/agents/"
+    draft = build_preserve_draft(doc)
+    assert draft.sections[0].blocks[0].url == "https://cdn.example/d.png"
+
+
 def test_unclosed_fence_consumes_rest_as_code() -> None:
     draft = build_preserve_draft(_doc("prose\n\n```\ncode line\nmore code"))
     blocks = draft.sections[0].blocks

@@ -45,6 +45,9 @@ class NormDoc(BaseModel):
     title: str
     lang: str | None = None
     media_type: str
+    # the fetched page/document URL — the base for resolving relative asset
+    # links (e.g. article images) in downstream strategies
+    origin_url: str | None = None
     # page/document metadata blurb (e.g. HTML meta description) when the
     # adapter can supply one; the preserve strategy uses it as the pack summary
     description: str | None = None

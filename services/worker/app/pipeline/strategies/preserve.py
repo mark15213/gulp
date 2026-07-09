@@ -11,6 +11,7 @@ stays a verbatim prose block.
 
 import re
 from dataclasses import dataclass
+from urllib.parse import urljoin
 
 from app.pipeline.normdoc import NormDoc
 from app.pipeline.schemas import (
@@ -160,6 +161,19 @@ def _first_prose_excerpt(sections: list[Section]) -> str | None:
 
 def build_preserve_draft(normdoc: NormDoc) -> PackDraft:
     sections = _sections_from_markdown(normdoc.content_body)
+    if normdoc.origin_url:
+        # Blogs commonly use relative image srcs; the reader needs absolute
+        # URLs. Capture normalizes away trailing slashes, so an extension-less
+        # last segment ("/posts/agents") is a pretty-URL directory — restore
+        # the slash or urljoin would resolve siblings instead of children.
+        base = normdoc.origin_url
+        last = base.rsplit("/", 1)[-1]
+        if last and "." not in last:
+            base += "/"
+        for section in sections:
+            for block in section.blocks:
+                if isinstance(block, FigureBlock) and block.url:
+                    block.url = urljoin(base, block.url)
     summary = (normdoc.description or "").strip() or _first_prose_excerpt(sections)
     return PackDraft(
         title=normdoc.title,

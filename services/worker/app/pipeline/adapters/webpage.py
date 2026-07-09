@@ -54,7 +54,9 @@ def _dedupe(markdown: str) -> str:
 
 
 def extract_markdown(html: str) -> tuple[str, str | None, str | None]:
-    md = trafilatura.extract(html, output_format="markdown") or ""
+    # include_images: image paragraphs survive as ![alt](src) so the preserve
+    # strategy can turn them into figure blocks with their remote URL.
+    md = trafilatura.extract(html, output_format="markdown", include_images=True) or ""
     meta = trafilatura.extract_metadata(html)
     title = meta.title if meta is not None else None
     description = meta.description if meta is not None else None
@@ -92,6 +94,7 @@ def webpage_to_normdoc(html: str, *, fallback_title: str, url: str) -> NormDoc:
         title=_clean_title(title) or fallback_title,
         lang=None,
         media_type="article",
+        origin_url=url,
         description=description or None,
         content_body=body,
         blocks=_split(body),
