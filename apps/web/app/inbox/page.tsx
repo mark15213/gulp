@@ -1,17 +1,19 @@
 import { getInbox } from "@gulp/api-client";
 import { InboxList } from "@/components/inbox/InboxList";
+import { PageFrame, PageHeader } from "@/components/shell/PageFrame";
+import styles from "./page.module.css";
 
 export const dynamic = "force-dynamic"; // always reflect the latest captures
 
 export default async function InboxPage() {
   const inbox = await getInbox();
   return (
-    <div style={{ padding: "24px" }}>
-      <h1 className="t-title-l">Inbox</h1>
-      <p className="t-data" style={{ color: "var(--text-muted, #777)", marginBottom: 16 }}>
-        {inbox.count} awaiting
-      </p>
+    <PageFrame className={styles.page}>
+      <PageHeader
+        title="Inbox"
+        description={<span className="t-data">{inbox.count} awaiting</span>}
+      />
       <InboxList items={inbox.items} />
-    </div>
+    </PageFrame>
   );
 }

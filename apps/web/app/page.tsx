@@ -8,6 +8,7 @@ import { DigestCard } from "@/components/today/DigestCard";
 import { CapturePeek, type RecentItem } from "@/components/today/CapturePeek";
 import { getCurrentGulpSession, getToday } from "@gulp/api-client";
 import { timeAgo } from "@/lib/time";
+import { PageFrame, PageHeader } from "@/components/shell/PageFrame";
 import styles from "./page.module.css";
 
 // Today — the web "what should I do right now?" landing (docs/03 §7.9).
@@ -36,16 +37,12 @@ export default async function TodayPage() {
   }));
 
   return (
-    <div className={styles.page}>
-      <header className={styles.header}>
-        <div>
-          <h1 className="t-title-l">Today</h1>
-          <p className={styles.greeting}>
-            Here&apos;s what&apos;s worth your 5 minutes.
-          </p>
-        </div>
-        <span className={`t-data ${styles.dateChip}`}>{date}</span>
-      </header>
+    <PageFrame className={styles.page}>
+      <PageHeader
+        title="Today"
+        description={<>Here&apos;s what&apos;s worth your 5 minutes.</>}
+        meta={date}
+      />
 
       <StartGulpCard
         acceptedCards={today.accepted_cards}
@@ -90,6 +87,6 @@ export default async function TodayPage() {
           <p className={styles.empty}>Inbox is clear.</p>
         )}
       </section>
-    </div>
+    </PageFrame>
   );
 }
