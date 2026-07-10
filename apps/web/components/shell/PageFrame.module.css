@@ -12,7 +12,7 @@
   height: calc(100vh - 44px);
   height: calc(100dvh - 44px);
   min-height: 0;
-  max-width: 1440px;
+  max-width: 1040px;
   padding-bottom: var(--space-6);
 }
 
