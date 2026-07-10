@@ -27,6 +27,7 @@ class ConceptRelation(enum.StrEnum):
 class Concept(TimestampedBase, Base):
     __tablename__ = "concepts"
 
+    owner_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), index=True)
     concept_type: Mapped[ConceptType] = mapped_column(Enum(ConceptType, name="concept_type"))
     name: Mapped[str] = mapped_column(String, index=True)
     aliases: Mapped[list[str] | None] = mapped_column(JSON, default=None)
@@ -37,6 +38,7 @@ class Concept(TimestampedBase, Base):
 class ConceptEdge(TimestampedBase, Base):
     __tablename__ = "concept_edges"
 
+    owner_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), index=True)
     from_concept_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("concepts.id"), index=True)
     to_concept_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("concepts.id"), index=True)
     relation: Mapped[ConceptRelation] = mapped_column(

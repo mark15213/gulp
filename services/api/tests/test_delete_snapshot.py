@@ -79,7 +79,7 @@ def _library_snapshot_with_derivatives(db) -> Source:  # type: ignore[no-untyped
     )
     db.add(SourceFigure(source_id=src.id, ext="png", mime_type="image/png"))
     db.add(SourceTag(source_id=src.id, tag="t"))
-    concept = Concept(concept_type=ConceptType.term, name="c")
+    concept = Concept(owner_id=src.owner_id, concept_type=ConceptType.term, name="c")
     db.add(concept)
     db.flush()
     db.add(SourceConcept(source_id=src.id, concept_id=concept.id))

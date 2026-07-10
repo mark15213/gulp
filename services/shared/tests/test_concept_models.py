@@ -33,11 +33,20 @@ def test_concept_graph_and_links_persist():
     s.add(snap)
     s.flush()
 
-    a = Concept(concept_type=ConceptType.term, name="Transformer", aliases=["xformer"])
-    b = Concept(concept_type=ConceptType.idea, name="Attention")
+    a = Concept(
+        owner_id=DEV_USER_ID, concept_type=ConceptType.term, name="Transformer", aliases=["xformer"]
+    )
+    b = Concept(owner_id=DEV_USER_ID, concept_type=ConceptType.idea, name="Attention")
     s.add_all([a, b])
     s.flush()
-    s.add(ConceptEdge(from_concept_id=a.id, to_concept_id=b.id, relation=ConceptRelation.part_of))
+    s.add(
+        ConceptEdge(
+            owner_id=DEV_USER_ID,
+            from_concept_id=a.id,
+            to_concept_id=b.id,
+            relation=ConceptRelation.part_of,
+        )
+    )
 
     card = Card(source_id=snap.id, card_type=CardType.cloze, prompt="___", origin=CardOrigin.pack)
     s.add(card)

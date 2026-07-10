@@ -19,6 +19,12 @@ class Locale(enum.StrEnum):
 class User(TimestampedBase, Base):
     __tablename__ = "users"
 
+    # Identity/credentials (spec 2026-07-10). Defaults fire only for test/seed
+    # rows — `register` always sets both explicitly; prod emails are all real.
+    email: Mapped[str] = mapped_column(
+        String, unique=True, index=True, default=lambda: f"user-{uuid.uuid4()}@example.invalid"
+    )
+    password_hash: Mapped[str] = mapped_column(String, default="")
     display_name: Mapped[str | None] = mapped_column(String, default=None)
     locale: Mapped[Locale] = mapped_column(Enum(Locale, name="locale"), default=Locale.en)
     gulp_session_minutes: Mapped[int] = mapped_column(default=5)
