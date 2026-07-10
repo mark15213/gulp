@@ -4,15 +4,15 @@
   padding: var(--space-8) var(--space-6) var(--space-16);
 }
 
-.content {
-  max-width: 1040px;
+.content,
+.workspace {
+  max-width: 1440px;
 }
 
 .workspace {
   height: calc(100vh - 44px);
   height: calc(100dvh - 44px);
   min-height: 0;
-  max-width: 1040px;
   padding-bottom: var(--space-6);
 }
 
