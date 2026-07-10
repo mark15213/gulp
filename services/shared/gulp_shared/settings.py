@@ -9,6 +9,11 @@ class Settings(BaseSettings):
     database_url: str = "postgresql+psycopg://gulp:gulp@localhost:5432/gulp"
     redis_url: str = "redis://localhost:6379/0"
     auth_secret: str = "change-me"
+    session_ttl_days: int = 30
+    session_cookie_name: str = "gulp_session"
+    session_cookie_secure: bool = False  # True in production (HTTPS)
+    login_max_attempts: int = 10
+    login_lockout_seconds: int = 900
     anthropic_api_key: str = ""
     web_origin: str = "http://localhost:3000"
     llm_provider: str = "anthropic"
