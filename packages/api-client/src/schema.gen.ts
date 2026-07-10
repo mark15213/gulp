@@ -100,13 +100,13 @@ export interface paths {
             cookie?: never;
         };
         /** Download Cards Job Route */
-        get: operations["download_cards_job_route_snapshots__snapshot_id__cards_job_head"];
+        get: operations["download_cards_job_route_snapshots__snapshot_id__cards_job_get"];
         put?: never;
         post?: never;
         delete?: never;
         options?: never;
         /** Download Cards Job Route */
-        head: operations["download_cards_job_route_snapshots__snapshot_id__cards_job_head"];
+        head: operations["download_cards_job_route_snapshots__snapshot_id__cards_job_get"];
         patch?: never;
         trace?: never;
     };
@@ -624,18 +624,18 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/snapshots/{snapshot_id}/blocks/{block_id}/messages": {
+    "/snapshots/{snapshot_id}/messages": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** List Block Messages Route */
-        get: operations["list_block_messages_route_snapshots__snapshot_id__blocks__block_id__messages_get"];
+        /** List Messages Route */
+        get: operations["list_messages_route_snapshots__snapshot_id__messages_get"];
         put?: never;
-        /** Post Block Message Route */
-        post: operations["post_block_message_route_snapshots__snapshot_id__blocks__block_id__messages_post"];
+        /** Post Message Route */
+        post: operations["post_message_route_snapshots__snapshot_id__messages_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1108,6 +1108,11 @@ export interface components {
         MessageCreate: {
             /** Content */
             content: string;
+            /**
+             * Block Refs
+             * @default []
+             */
+            block_refs: string[];
         };
         /** MessageOut */
         MessageOut: {
@@ -1120,6 +1125,8 @@ export interface components {
             role: string;
             /** Content */
             content: string;
+            /** Block Refs */
+            block_refs: string[];
             /**
              * Created At
              * Format: date-time
@@ -1800,7 +1807,7 @@ export interface operations {
             };
         };
     };
-    download_cards_job_route_snapshots__snapshot_id__cards_job_head: {
+    download_cards_job_route_snapshots__snapshot_id__cards_job_get: {
         parameters: {
             query?: never;
             header?: never;
@@ -1831,7 +1838,7 @@ export interface operations {
             };
         };
     };
-    download_cards_job_route_snapshots__snapshot_id__cards_job_head: {
+    download_cards_job_route_snapshots__snapshot_id__cards_job_get: {
         parameters: {
             query?: never;
             header?: never;
@@ -2909,13 +2916,12 @@ export interface operations {
             };
         };
     };
-    list_block_messages_route_snapshots__snapshot_id__blocks__block_id__messages_get: {
+    list_messages_route_snapshots__snapshot_id__messages_get: {
         parameters: {
             query?: never;
             header?: never;
             path: {
                 snapshot_id: string;
-                block_id: string;
             };
             cookie?: never;
         };
@@ -2941,13 +2947,12 @@ export interface operations {
             };
         };
     };
-    post_block_message_route_snapshots__snapshot_id__blocks__block_id__messages_post: {
+    post_message_route_snapshots__snapshot_id__messages_post: {
         parameters: {
             query?: never;
             header?: never;
             path: {
                 snapshot_id: string;
-                block_id: string;
             };
             cookie?: never;
         };

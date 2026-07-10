@@ -278,32 +278,28 @@ export async function deleteCard(snapshotId: string, cardId: string): Promise<vo
 }
 
 export type MessageOut =
-  paths["/snapshots/{snapshot_id}/blocks/{block_id}/messages"]["get"]["responses"]["200"]["content"]["application/json"][number];
+  paths["/snapshots/{snapshot_id}/messages"]["get"]["responses"]["200"]["content"]["application/json"][number];
 export type MessageCreateBody =
-  paths["/snapshots/{snapshot_id}/blocks/{block_id}/messages"]["post"]["requestBody"]["content"]["application/json"];
+  paths["/snapshots/{snapshot_id}/messages"]["post"]["requestBody"]["content"]["application/json"];
 
-export async function getBlockMessages(
-  snapshotId: string,
-  blockId: string,
-): Promise<MessageOut[]> {
-  const { data, error } = await client.GET(
-    "/snapshots/{snapshot_id}/blocks/{block_id}/messages",
-    { params: { path: { snapshot_id: snapshotId, block_id: blockId } }, cache: "no-store" },
-  );
-  if (error || !data) throw new Error("fetch block messages failed");
+export async function getPackMessages(snapshotId: string): Promise<MessageOut[]> {
+  const { data, error } = await client.GET("/snapshots/{snapshot_id}/messages", {
+    params: { path: { snapshot_id: snapshotId } },
+    cache: "no-store",
+  });
+  if (error || !data) throw new Error("fetch messages failed");
   return data;
 }
 
-export async function postBlockMessage(
+export async function postPackMessage(
   snapshotId: string,
-  blockId: string,
   body: MessageCreateBody,
 ): Promise<MessageOut> {
-  const { data, error } = await client.POST(
-    "/snapshots/{snapshot_id}/blocks/{block_id}/messages",
-    { params: { path: { snapshot_id: snapshotId, block_id: blockId } }, body },
-  );
-  if (error || !data) throw new Error("post block message failed");
+  const { data, error } = await client.POST("/snapshots/{snapshot_id}/messages", {
+    params: { path: { snapshot_id: snapshotId } },
+    body,
+  });
+  if (error || !data) throw new Error("post message failed");
   return data;
 }
 
