@@ -1,17 +1,20 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
-import { getBlockMessages, postBlockMessage, type MessageOut } from "@gulp/api-client";
+import { getPackMessages, postPackMessage, type MessageOut } from "@gulp/api-client";
 import { Button } from "@/components/ui/Button";
+import type { ChatAttachment } from "./ReaderChatContext";
 import styles from "./ChatPanel.module.css";
 
 export function ChatPanel({
   snapshotId,
-  blockId,
+  attachments,
+  onRemoveAttachment,
   onClose,
 }: {
   snapshotId: string;
-  blockId: string;
+  attachments: ChatAttachment[];
+  onRemoveAttachment: (id: string) => void;
   onClose: () => void;
 }) {
   const [messages, setMessages] = useState<MessageOut[]>([]);
@@ -24,28 +27,25 @@ export function ChatPanel({
     let active = true;
     setMessages([]);
     setError(null);
-    getBlockMessages(snapshotId, blockId)
-      .then((m) => {
-        if (active) setMessages(m);
-      })
-      .catch(() => {
-        if (active) setError("Couldn't load the conversation.");
-      });
-    return () => {
-      active = false;
-    };
-  }, [snapshotId, blockId]);
+    getPackMessages(snapshotId)
+      .then((m) => { if (active) setMessages(m); })
+      .catch(() => { if (active) setError("Couldn't load the conversation."); });
+    return () => { active = false; };
+  }, [snapshotId]);
 
   async function send() {
     const q = draft.trim();
     if (!q || sending) return;
+    const refs = attachments.map((a) => a.id);
     setError(null);
     setSending(true);
     setDraft("");
-    const optimistic: MessageOut = { id: `tmp-${tmpIdRef.current++}`, role: "user", content: q, created_at: "" };
+    const optimistic: MessageOut = {
+      id: `tmp-${tmpIdRef.current++}`, role: "user", content: q, block_refs: refs, created_at: "",
+    };
     setMessages((m) => [...m, optimistic]);
     try {
-      const answer = await postBlockMessage(snapshotId, blockId, { content: q });
+      const answer = await postPackMessage(snapshotId, { content: q, block_refs: refs });
       setMessages((m) => [...m, answer]);
     } catch {
       setMessages((m) => m.filter((x) => x.id !== optimistic.id));
@@ -57,9 +57,9 @@ export function ChatPanel({
   }
 
   return (
-    <aside className={styles.panel} aria-label="Block chat">
+    <aside className={styles.panel} aria-label="Article chat">
       <div className={styles.header}>
-        <span className="t-label">Discuss</span>
+        <span className="t-label">Chat</span>
         <button type="button" className={styles.close} aria-label="Close chat" onClick={onClose}>
           ✕
         </button>
@@ -77,9 +77,21 @@ export function ChatPanel({
           {error}
         </div>
       )}
+      {attachments.length > 0 && (
+        <div className={styles.attachments}>
+          {attachments.map((a) => (
+            <span key={a.id} className={styles.chip}>
+              {a.label}
+              <button type="button" aria-label={`Remove ${a.label}`} onClick={() => onRemoveAttachment(a.id)}>
+                ×
+              </button>
+            </span>
+          ))}
+        </div>
+      )}
       <div className={styles.composer}>
         <textarea
-          aria-label="Ask about this block"
+          aria-label="Ask about this article"
           className={styles.input}
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
