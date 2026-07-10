@@ -7,7 +7,7 @@ from gulp_shared.db import TimestampedBase
 from gulp_shared.models.card import Card
 from gulp_shared.models.concept import SourceConcept
 from gulp_shared.models.knowledge_pack import KnowledgePack, PackBlock, PackSection
-from gulp_shared.models.pack_block_message import PackBlockMessage
+from gulp_shared.models.pack_message import PackMessage
 from gulp_shared.models.source import Source
 from gulp_shared.models.source_figure import SourceFigure
 from gulp_shared.models.source_tag import SourceTag
@@ -90,13 +90,13 @@ def delete_snapshot(db: Session, source: Source) -> None:
     )
 
     if block_ids:
-        _stamp(PackBlockMessage, PackBlockMessage.block_id.in_(block_ids))
         _stamp(PackBlock, PackBlock.id.in_(block_ids))
     if section_ids:
         _stamp(PackSection, PackSection.id.in_(section_ids))
     if pack_ids:
         _stamp(KnowledgePack, KnowledgePack.id.in_(pack_ids))
 
+    _stamp(PackMessage, PackMessage.snapshot_id == source.id)
     _stamp(Card, Card.source_id == source.id)
     _stamp(SourceFigure, SourceFigure.source_id == source.id)
     _stamp(SourceTag, SourceTag.source_id == source.id)

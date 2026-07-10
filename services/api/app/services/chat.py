@@ -1,17 +1,16 @@
-"""Per-block grounded chat: assemble context, call the LLM, persist the thread."""
+"""Snapshot-scoped article chat: assemble context (+ attached blocks), call the
+LLM, persist the thread (spec 2026-07-10 reader redesign)."""
 
 import uuid
 
 from gulp_shared.llm import LLMProvider, ModelConfig, complete_structured
 from gulp_shared.models.knowledge_pack import KnowledgePack, PackBlock, PackSection
-from gulp_shared.models.pack_block_message import ChatRole, PackBlockMessage
+from gulp_shared.models.pack_message import ChatRole, PackMessage
 from gulp_shared.models.source import Source
 from gulp_shared.settings import settings
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.orm import Session
-
-from app.services.pack import load_block_scoped
 
 _MAX_SOURCE_CHARS = 6000
 
@@ -36,57 +35,81 @@ def _block_text(block: PackBlock) -> str:
     return ""
 
 
-def list_messages(
-    db: Session, snapshot_id: uuid.UUID, block_id: uuid.UUID
-) -> list[PackBlockMessage]:
-    load_block_scoped(db, snapshot_id, block_id)  # raises LookupError if not owned/in snapshot
+def list_messages(db: Session, snapshot_id: uuid.UUID) -> list[PackMessage]:
     return list(
         db.scalars(
-            select(PackBlockMessage)
-            .where(
-                PackBlockMessage.block_id == block_id,
-                PackBlockMessage.deleted_at.is_(None),
-            )
-            .order_by(PackBlockMessage.created_at)
+            select(PackMessage)
+            .where(PackMessage.snapshot_id == snapshot_id, PackMessage.deleted_at.is_(None))
+            .order_by(PackMessage.created_at)
         )
     )
 
 
-def _grounding_system(db: Session, snapshot_id: uuid.UUID, block: PackBlock) -> str:
-    section = db.get(PackSection, block.section_id)
+def _attached_blocks(
+    db: Session, snapshot_id: uuid.UUID, refs: list[uuid.UUID]
+) -> list[PackBlock]:
+    if not refs:
+        return []
+    return list(
+        db.scalars(
+            select(PackBlock)
+            .join(PackSection, PackBlock.section_id == PackSection.id)
+            .join(KnowledgePack, PackSection.pack_id == KnowledgePack.id)
+            .where(
+                PackBlock.id.in_(refs),
+                PackBlock.deleted_at.is_(None),
+                KnowledgePack.snapshot_id == snapshot_id,
+                KnowledgePack.deleted_at.is_(None),
+            )
+        )
+    )
+
+
+def _grounding_system(
+    db: Session, snapshot_id: uuid.UUID, attached: list[PackBlock]
+) -> str:
     pack = db.scalar(select(KnowledgePack).where(KnowledgePack.snapshot_id == snapshot_id))
-    source = db.scalar(select(Source).where(Source.id == snapshot_id))
+    source = db.get(Source, snapshot_id)
     body = (source.content_body or "") if source else ""
     key_insight = (pack.extras or {}).get("key_insight", "") if pack else ""
-    return (
-        "You are helping the reader understand one block of a knowledge pack. "
-        "Answer the question grounded in the provided source and block; if the "
-        "source does not cover it, say so plainly.\n"
-        f"Pack title: {pack.title if pack else ''}\n"
-        f"Key insight: {key_insight}\n"
-        f"Section: {section.heading if section else ''}\n"
-        f"Block ({block.block_type.value}): {_block_text(block)}\n"
-        f"Source excerpt:\n{body[:_MAX_SOURCE_CHARS]}"
-    )
+    parts = [
+        "You are helping the reader understand and discuss a knowledge pack (a "
+        "digested article/paper). Answer grounded in the provided source and pack; "
+        "if the source does not cover it, say so plainly.",
+        f"Pack title: {pack.title if pack else ''}",
+        f"Summary: {pack.summary if pack else ''}",
+        f"Key insight: {key_insight}",
+    ]
+    if attached:
+        blocks_txt = "\n".join(f"- ({b.block_type.value}) {_block_text(b)}" for b in attached)
+        parts.append("The reader is asking specifically about these blocks:\n" + blocks_txt)
+    parts.append(f"Source excerpt:\n{body[:_MAX_SOURCE_CHARS]}")
+    return "\n".join(parts)
 
 
 async def answer_question(
     db: Session,
     snapshot_id: uuid.UUID,
-    block_id: uuid.UUID,
     question: str,
+    block_refs: list[uuid.UUID] | None = None,
     *,
     provider: LLMProvider | None = None,
-) -> PackBlockMessage:
-    block = load_block_scoped(db, snapshot_id, block_id)
+) -> PackMessage:
+    refs = [uuid.UUID(str(r)) for r in (block_refs or [])]
+    attached = _attached_blocks(db, snapshot_id, refs)
 
-    user_msg = PackBlockMessage(block_id=block_id, role=ChatRole.user, content=question)
+    user_msg = PackMessage(
+        snapshot_id=snapshot_id,
+        role=ChatRole.user,
+        content=question,
+        block_refs=[str(r) for r in refs],
+    )
     db.add(user_msg)
     db.flush()
 
-    history = list_messages(db, snapshot_id, block_id)
+    history = list_messages(db, snapshot_id)
     messages = [{"role": m.role.value, "content": m.content} for m in history]
-    system = _grounding_system(db, snapshot_id, block)
+    system = _grounding_system(db, snapshot_id, attached)
 
     result = await complete_structured(
         response_model=ChatAnswer,
@@ -96,8 +119,8 @@ async def answer_question(
         provider=provider,
     )
 
-    assistant_msg = PackBlockMessage(
-        block_id=block_id, role=ChatRole.assistant, content=result.answer
+    assistant_msg = PackMessage(
+        snapshot_id=snapshot_id, role=ChatRole.assistant, content=result.answer, block_refs=[]
     )
     db.add(assistant_msg)
     db.commit()

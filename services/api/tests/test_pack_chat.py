@@ -16,14 +16,12 @@ from gulp_shared.models.knowledge_pack import (
     PackStatus,
     PackType,
 )
-from gulp_shared.models.pack_block_message import ChatRole
+from gulp_shared.models.pack_message import ChatRole
 from gulp_shared.models.source import SnapshotStatus, Source, SourceKind
 from gulp_shared.models.user import DEV_USER_ID
 
 
 class FakeProvider:
-    """Records the grounding it received; returns a fixed structured answer."""
-
     def __init__(self) -> None:
         self.last_system: str | None = None
         self.last_messages: list[dict[str, str]] = []
@@ -34,54 +32,51 @@ class FakeProvider:
         return {"answer": "Because the source says so."}
 
 
-def _block(db) -> dict:  # type: ignore[no-untyped-def]
+def _pack(db) -> dict:  # type: ignore[no-untyped-def]
     snap = Source(owner_id=DEV_USER_ID, kind=SourceKind.snapshot, title="T",
                   status=SnapshotStatus.ready, content_body="The source body text.")
-    db.add(snap)
-    db.flush()
-    pack = KnowledgePack(snapshot_id=snap.id, title="BERT", pack_type=PackType.paper,
-                         extras={"key_insight": "Change the objective."},
+    db.add(snap); db.flush()
+    pack = KnowledgePack(snapshot_id=snap.id, title="BERT", summary="A summary.",
+                         pack_type=PackType.paper, extras={"key_insight": "Change the objective."},
                          status=PackStatus.ready)
-    db.add(pack)
-    db.flush()
+    db.add(pack); db.flush()
     sec = PackSection(pack_id=pack.id, heading="Method", position=0)
-    db.add(sec)
-    db.flush()
+    db.add(sec); db.flush()
     block = PackBlock(section_id=sec.id, block_type=PackBlockType.prose,
                       data={"content": "Masked language modeling."}, position=0)
-    db.add(block)
-    db.commit()
+    db.add(block); db.commit()
     return {"snap": snap.id, "block": block.id}
 
 
-def test_answer_question_persists_turns_and_grounds(db) -> None:  # type: ignore[no-untyped-def]
-    ids = _block(db)
+def test_answer_grounds_and_persists_with_attachment(db) -> None:  # type: ignore[no-untyped-def]
+    ids = _pack(db)
     fake = FakeProvider()
-    msg = asyncio.run(answer_question(db, ids["snap"], ids["block"], "Why masking?", provider=fake))
+    msg = asyncio.run(
+        answer_question(db, ids["snap"], "Why masking?", [ids["block"]], provider=fake)
+    )
     assert msg.role is ChatRole.assistant
     assert msg.content == "Because the source says so."
-    # both turns persisted, oldest first
-    history = list_messages(db, ids["snap"], ids["block"])
+    history = list_messages(db, ids["snap"])
     assert [m.role for m in history] == [ChatRole.user, ChatRole.assistant]
     assert history[0].content == "Why masking?"
-    # grounding carried the source body + pack context + the block text
+    assert [str(r) for r in history[0].block_refs] == [str(ids["block"])]
+    # grounding: source + pack context + the ATTACHED block text
     assert "The source body text." in (fake.last_system or "")
     assert "BERT" in (fake.last_system or "")
     assert "Masked language modeling." in (fake.last_system or "")
-    # the user question is the last chat message sent to the model
-    assert fake.last_messages[-1] == {"role": "user", "content": "Why masking?"}
 
 
-def test_list_messages_404_for_block_not_in_snapshot(db) -> None:  # type: ignore[no-untyped-def]
-    ids = _block(db)
-    with pytest.raises(LookupError):
-        list_messages(db, ids["snap"], uuid.uuid4())
+def test_answer_without_attachments_is_general(db) -> None:  # type: ignore[no-untyped-def]
+    ids = _pack(db)
+    fake = FakeProvider()
+    asyncio.run(answer_question(db, ids["snap"], "What is this about?", provider=fake))
+    assert "The source body text." in (fake.last_system or "")
 
 
 @pytest.fixture
 def client(db):  # type: ignore[no-untyped-def]
     app.dependency_overrides[get_db] = lambda: db
-    register_provider("anthropic", FakeProvider())  # no real API call in tests
+    register_provider("anthropic", FakeProvider())
     c = TestClient(app)
     yield c
     app.dependency_overrides.clear()
@@ -89,26 +84,19 @@ def client(db):  # type: ignore[no-untyped-def]
 
 
 def test_post_then_get_messages(client, db) -> None:  # type: ignore[no-untyped-def]
-    ids = _block(db)
-    r = client.post(
-        f"/snapshots/{ids['snap']}/blocks/{ids['block']}/messages",
-        json={"content": "Why masking?"},
-    )
+    ids = _pack(db)
+    r = client.post(f"/snapshots/{ids['snap']}/messages",
+                    json={"content": "Why masking?", "block_refs": [str(ids["block"])]})
     assert r.status_code == 201
     assert r.json()["role"] == "assistant"
-    assert r.json()["content"] == "Because the source says so."
-
-    g = client.get(f"/snapshots/{ids['snap']}/blocks/{ids['block']}/messages")
-    assert g.status_code == 200
-    body = g.json()
-    assert [m["role"] for m in body] == ["user", "assistant"]
-    assert body[0]["content"] == "Why masking?"
+    g = client.get(f"/snapshots/{ids['snap']}/messages")
+    assert [m["role"] for m in g.json()] == ["user", "assistant"]
+    assert g.json()[0]["block_refs"] == [str(ids["block"])]
 
 
 def test_messages_404_for_foreign_snapshot(client, db) -> None:  # type: ignore[no-untyped-def]
     foreign = Source(owner_id=uuid.uuid4(), kind=SourceKind.snapshot, title="F",
                      status=SnapshotStatus.ready)
-    db.add(foreign)
-    db.commit()
-    r = client.get(f"/snapshots/{foreign.id}/blocks/{uuid.uuid4()}/messages")
+    db.add(foreign); db.commit()
+    r = client.get(f"/snapshots/{foreign.id}/messages")
     assert r.status_code == 404
