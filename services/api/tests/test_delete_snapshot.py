@@ -16,7 +16,7 @@ from gulp_shared.models.knowledge_pack import (
     PackStatus,
     PackType,
 )
-from gulp_shared.models.pack_block_message import ChatRole, PackBlockMessage
+from gulp_shared.models.pack_message import ChatRole, PackMessage
 from gulp_shared.models.source import SnapshotStatus, Source, SourceKind
 from gulp_shared.models.source_figure import SourceFigure
 from gulp_shared.models.source_tag import SourceTag
@@ -59,7 +59,7 @@ def _library_snapshot_with_derivatives(db) -> Source:  # type: ignore[no-untyped
     block = PackBlock(section_id=section.id, block_type=PackBlockType.prose, data={}, position=0)
     db.add(block)
     db.flush()
-    db.add(PackBlockMessage(block_id=block.id, role=ChatRole.user, content="hi"))
+    db.add(PackMessage(snapshot_id=src.id, role=ChatRole.user, content="hi", block_refs=[str(block.id)]))
 
     db.add(
         Card(
@@ -105,7 +105,7 @@ def test_delete_library_snapshot_cascades(client, db) -> None:  # type: ignore[n
         assert rows and all(row.deleted_at is not None for row in rows), model.__name__
 
     # The whole pack tree is stamped too — no live section/block/message left behind.
-    for tree_model in (PackSection, PackBlock, PackBlockMessage):
+    for tree_model in (PackSection, PackBlock, PackMessage):
         live = list(db.scalars(select(tree_model).where(tree_model.deleted_at.is_(None))))
         assert live == [], tree_model.__name__
 

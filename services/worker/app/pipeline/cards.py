@@ -23,7 +23,7 @@ from gulp_shared.models.knowledge_pack import (
     PackBlockType,
     PackStatus,
 )
-from gulp_shared.models.pack_block_message import PackBlockMessage
+from gulp_shared.models.pack_message import PackMessage
 from gulp_shared.models.source import CardsStatus, Source
 from gulp_shared.settings import settings
 from pydantic import BaseModel, Field
@@ -96,29 +96,30 @@ def render_pack_text(pack: KnowledgePack) -> str:
 
 
 def render_conversation(db: Session, pack: KnowledgePack) -> str:
-    """The learner's per-block chat, grouped by block in reading order — a signal
-    of what confused or interested them. Empty when there is no conversation."""
-    block_ids = [b.id for s in pack.sections for b in s.blocks]
-    if not block_ids:
-        return ""
+    """The learner's article chat in reading order — a signal of what confused or
+    interested them; user turns note any blocks they attached. Empty when none."""
     messages = db.scalars(
-        select(PackBlockMessage)
-        .where(PackBlockMessage.block_id.in_(block_ids))
-        .order_by(PackBlockMessage.created_at, PackBlockMessage.id)
+        select(PackMessage)
+        .where(
+            PackMessage.snapshot_id == pack.snapshot_id,
+            PackMessage.deleted_at.is_(None),
+        )
+        .order_by(PackMessage.created_at, PackMessage.id)
     ).all()
     if not messages:
         return ""
-    by_block: dict[uuid.UUID, list[PackBlockMessage]] = {}
-    for m in messages:
-        by_block.setdefault(m.block_id, []).append(m)
+    blocks_by_id = {b.id: b for s in pack.sections for b in s.blocks}
     parts: list[str] = []
-    for section in sorted(pack.sections, key=lambda s: s.position):
-        for block in sorted(section.blocks, key=lambda b: b.position):
-            turns = by_block.get(block.id)
-            if not turns:
-                continue
-            parts.append(f"[On: {_render_block(block)[:120]}]")
-            parts += [f"{t.role.value}: {t.content}" for t in turns]
+    for m in messages:
+        if m.role.value == "user" and m.block_refs:
+            refs = [
+                _render_block(blocks_by_id[bid])[:120]
+                for r in m.block_refs
+                if (bid := uuid.UUID(str(r))) in blocks_by_id
+            ]
+            if refs:
+                parts.append("[On: " + " | ".join(refs) + "]")
+        parts.append(f"{m.role.value}: {m.content}")
     return "\n".join(parts)
 
 

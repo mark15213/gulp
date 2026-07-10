@@ -28,7 +28,7 @@ from gulp_shared.models.knowledge_pack import (
     PackStatus,
     PackType,
 )
-from gulp_shared.models.pack_block_message import ChatRole, PackBlockMessage
+from gulp_shared.models.pack_message import ChatRole, PackMessage
 from gulp_shared.models.source import (
     CardsStatus,
     SnapshotStatus,
@@ -162,20 +162,24 @@ async def test_run_cards_returns_generation_with_curriculum_and_cards():
     assert prov.last_body is not None and "PACK TEXT" in prov.last_body
 
 
-def test_render_conversation_groups_turns_by_block():
+def test_render_conversation_includes_turns_and_attachment():
     s = _session()
     snap = _snapshot(s)
     pack = _pack(s, snap)
     block = pack.sections[0].blocks[0]
     s.add_all(
         [
-            PackBlockMessage(
-                block_id=block.id, role=ChatRole.user, content="Why masked LM?"
+            PackMessage(
+                snapshot_id=snap.id,
+                role=ChatRole.user,
+                content="Why masked LM?",
+                block_refs=[str(block.id)],
             ),
-            PackBlockMessage(
-                block_id=block.id,
+            PackMessage(
+                snapshot_id=snap.id,
                 role=ChatRole.assistant,
                 content="Because bidirectional context.",
+                block_refs=[],
             ),
         ]
     )
@@ -183,6 +187,7 @@ def test_render_conversation_groups_turns_by_block():
     text = render_conversation(s, pack)
     assert "Why masked LM?" in text
     assert "Because bidirectional context." in text
+    assert "[On:" in text  # the attached block is annotated
 
 
 def test_render_conversation_empty_when_no_messages():
@@ -197,10 +202,11 @@ async def test_generate_feeds_conversation_into_prompt():
     snap = _snapshot(s)
     pack = _pack(s, snap)
     s.add(
-        PackBlockMessage(
-            block_id=pack.sections[0].blocks[0].id,
+        PackMessage(
+            snapshot_id=snap.id,
             role=ChatRole.user,
             content="Why masked LM?",
+            block_refs=[str(pack.sections[0].blocks[0].id)],
         )
     )
     s.commit()

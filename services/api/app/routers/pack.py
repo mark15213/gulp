@@ -87,37 +87,22 @@ def create_block_route(
         raise HTTPException(status_code=404, detail="section not found") from None
 
 
-@router.get(
-    "/snapshots/{snapshot_id}/blocks/{block_id}/messages",
-    response_model=list[MessageOut],
-)
-def list_block_messages_route(
+@router.get("/snapshots/{snapshot_id}/messages", response_model=list[MessageOut])
+def list_messages_route(
     snapshot_id: uuid.UUID,
-    block_id: uuid.UUID,
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> list[Any]:
     _owned_snapshot(db, snapshot_id, user)
-    try:
-        return list_messages(db, snapshot_id, block_id)
-    except LookupError:
-        raise HTTPException(status_code=404, detail="block not found") from None
+    return list_messages(db, snapshot_id)
 
 
-@router.post(
-    "/snapshots/{snapshot_id}/blocks/{block_id}/messages",
-    response_model=MessageOut,
-    status_code=201,
-)
-async def post_block_message_route(
+@router.post("/snapshots/{snapshot_id}/messages", response_model=MessageOut, status_code=201)
+async def post_message_route(
     snapshot_id: uuid.UUID,
-    block_id: uuid.UUID,
     body: MessageCreate,
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> Any:
     _owned_snapshot(db, snapshot_id, user)
-    try:
-        return await answer_question(db, snapshot_id, block_id, body.content)
-    except LookupError:
-        raise HTTPException(status_code=404, detail="block not found") from None
+    return await answer_question(db, snapshot_id, body.content, body.block_refs)

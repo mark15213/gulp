@@ -1,4 +1,4 @@
-"""Per-block chat contract — becomes the OpenAPI types the web client reads."""
+"""Article-chat contract — becomes the OpenAPI types the web client reads."""
 
 import datetime
 import uuid
@@ -12,8 +12,10 @@ class MessageOut(BaseModel):
     id: uuid.UUID
     role: str
     content: str
+    block_refs: list[uuid.UUID]
     created_at: datetime.datetime
 
 
 class MessageCreate(BaseModel):
     content: str
+    block_refs: list[uuid.UUID] = []
