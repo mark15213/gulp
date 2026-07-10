@@ -187,7 +187,7 @@ Plus one behavioral contract every implementation satisfies:
 
 **`ArticlePack` (`pack_type = article`)** — the **preserved original** (implemented 2026-07-09): the source's own markdown deterministically re-shaped into the sectioned body — headings → sections; fenced code → `code` blocks; pipe tables → `table`; standalone images → `figure` (with remote `url`); `$$…$$` → `formula`; everything else verbatim `prose`. **Zero LLM in the pack path**; `summary` comes from the page's meta description or the first paragraph. This is the digest for content that is already well-authored (technical blogs, notes) — Gulp adds structure and learning machinery, not a rewrite.
 
-**`PackSection` / `PackBlock`** — the **shared readable body of every pack type** (not `PaperPack`'s private shape): ordered sections of ordered, typed blocks. Block editing, per-block chat, and figure linking all attach here, so every pack type gets them for free.
+**`PackSection` / `PackBlock`** — the **shared readable body of every pack type** (not `PaperPack`'s private shape): ordered sections of ordered, typed blocks. Block editing, article-chat attachment (`PackMessage.block_refs`), and figure linking all attach here, so every pack type gets them for free.
 
 | `PackSection` field | Type | Notes |
 |---|---|---|
@@ -211,7 +211,7 @@ Plus one behavioral contract every implementation satisfies:
 | `list` | `{items, ordered?}` | hyperparameters, sub-points |
 | `code` | `{language?, content}` | verbatim code blocks (essential for technical articles) |
 
-**`PackBlockMessage`** — the per-block conversation (the web reader's "Discuss" panel; the S6 anchor made concrete).
+**`PackMessage`** — the snapshot-scoped **article chat** (the web reader's chat panel; supersedes the per-block `PackBlockMessage` as of spec 2026-07-10). One thread per snapshot (`snapshot_id → Source`); a user turn may attach blocks via `block_refs` ("add to chat" / per-paragraph Q&A). The S6 anchor made concrete.
 
 | Field | Type | Notes |
 |---|---|---|
@@ -221,7 +221,7 @@ Plus one behavioral contract every implementation satisfies:
 
 > **Extensible by design.** A new content type = a new `genre` value + a strategy that fills `extras` and the shared body; the abstract base, the reader's entry point, card generation, and search do not change. Adding `XiaohongshuPack` / `XPostPack` touches only its own strategy.
 >
-> **Every pack is a living document:** blocks are editable in place, and can be added / deleted / reordered in the web reader (block ids are stable API objects). **Re-running processing replaces the pack wholesale** — manual edits and block chats are discarded (confirmed in the UI). There is **no facet layer** — Cards are generated *from* the pack's rendered content (plus the reader's conversation) on demand (§4.5, cards spec; `01 §F2`), not from an intermediate facet model.
+> **Every pack is a living document:** blocks are editable in place, and can be added / deleted / reordered in the web reader (block ids are stable API objects). **Re-running processing replaces the pack wholesale** — manual edits are discarded (confirmed in the UI); the article chat is snapshot-scoped and survives (its `block_refs` may dangle after a re-run). There is **no facet layer** — Cards are generated *from* the pack's rendered content (plus the reader's conversation) on demand (§4.5, cards spec; `01 §F2`), not from an intermediate facet model.
 
 ### 4.5 `Card`
 
@@ -500,7 +500,7 @@ These realize the cross-cutting states in `01 §7` (Loading/Empty/Processing/Err
 | `Source(snapshot)` | `KnowledgePack` | 1 — 0..1 | `Snapshot.pack` | pack only for snapshots (abstract; a per-`pack_type` impl) |
 | `PaperPack` | `PackSection` | 1 — N | `PackSection.pack` | the paper report spine (paper impl) |
 | `PackSection` | `PackBlock` | 1 — N | `PackBlock.section` | ordered blocks |
-| `PackBlock` | `PackBlockMessage` | 1 — N | `PackBlockMessage.block` | per-block conversation |
+| `Source(snapshot)` | `PackMessage` | 1 — N | `PackMessage.snapshot_id` | article chat; user turns attach blocks via `block_refs` |
 | `Source` | `Card` | 1 — N | `Card.source` | a Card may be sourceless (`user` takeaway) |
 | `Card` | `Concept` | N — M | `CardConcept` | what a Card tests |
 | `Source` | `Concept` | N — M | `SourceConcept` | what a Source is about |

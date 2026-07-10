@@ -139,9 +139,9 @@ Each flow: **trigger → steps → key screens → states → edge cases**, with
 
 **Steps:**
 1. On trigger (§F1), the Snapshot enters `Processing`; Gulp **digests the source into a knowledge pack** whose shape fits the content type (`02 §4.4`). For a paper (the `PaperPack` implementation) that is a re-authored report — title, `summary`, 1–5 **core contributions**, the single **key insight**, a sectioned body (prose · formula · table · figure · list blocks), and follow-up **references**; a lighter source yields a lighter pack.
-2. Candidate **Cards** are generated from the pack **on demand** (or imported, step 5 — not yet scheduled). Generation grounds on the pack's rendered content plus the user's per-block conversation, reasoning a per-source **curriculum** — what would best help *this* user master the material — as an internal step (a chain-of-thought, **not stored**) before emitting the cards. *(Future inputs: block annotations, a user model.)*
+2. Candidate **Cards** are generated from the pack **on demand** (or imported, step 5 — not yet scheduled). Generation grounds on the pack's rendered content plus the user's article chat (with any block attachments), reasoning a per-source **curriculum** — what would best help *this* user master the material — as an internal step (a chain-of-thought, **not stored**) before emitting the cards. *(Future inputs: block annotations, a user model.)*
 3. On `Ready`, the Snapshot **is in the library** — with manual-trigger processing (S2 §2.4) the user requested and reads every pack, so a separate approval act would confirm nothing.
-4. User reads the report, edits blocks in place, and discusses blocks in the side panel (the pack is a living document).
+4. User reads the report, edits blocks in place, and chats about the article in a collapsible side panel — hovering a block offers **"add to chat"** to pull it (or a paragraph) into the conversation (the pack is a living document). *(Reader is an adaptive three-zone layout — nav + chat each collapse, reading column reflows; spec 2026-07-10.)*
 5. Cards arrive as `draft` (generated on demand from the pack, or imported as `cards.json`); the user **accepts/rejects per card** — accepted Cards enter scheduling at §F7.
 
 **Review model (amended 2026-07-02 — single gate; see [`superpowers/specs/2026-07-02-single-gate-lifecycle-design.md`](superpowers/specs/2026-07-02-single-gate-lifecycle-design.md)):**
@@ -149,7 +149,7 @@ Each flow: **trigger → steps → key screens → states → edge cases**, with
 - **The only gate is per-card accept/reject**, because it guards what enters practice/scheduling (§F4/§F7).
 - **The gate re-enters** if `auto_process` or Feeds (§F6) create packs the user never asked for: one status value + one Inbox filter + a confirm surface (both views are derived queries).
 
-**Key screens:** Snapshot detail (reader · original · cards; web) · per-card accept/reject in the Cards view.
+**Key screens:** Snapshot detail (reader · cards; web — the source opens via an origin-link icon, not an "Original" tab) · per-card accept/reject in the Cards view.
 
 **States:** Snapshot = `ready` (= in library); Card = `draft` → `accepted` (enters queue) / `rejected`.
 

@@ -368,7 +368,7 @@ The product's most-repeated component (interaction spec §2.3).
 
 ### 7.6 Snapshot detail & knowledge pack (interaction spec §F2)
 
-- **Web (deep curation):** the **pack reader** — the pack rendered as editable, per-block content (add / edit / reorder blocks, discuss a block in the side panel); a **draft-cards review strip** along the bottom (`draft → accepted / rejected`). *(For a paper this is the `PaperPack` sectioned report; other `pack_type`s render their own `render()` output — `02 §4.4`. There is no facet keep/dismiss layer.)*
+- **Web (deep curation):** the **pack reader** — the pack rendered as editable, per-block content (add / edit / reorder blocks, **add a block to the article chat** from its hover control); a **draft-cards review strip** along the bottom (`draft → accepted / rejected`). *(Reader is an adaptive three-zone layout (spec 2026-07-10): a collapsible left nav and a collapsible right chat panel, with the reading column reflowing to a comfortable measure; the source opens via an `↗` origin icon — there is no "Original" tab.)* *(For a paper this is the `PaperPack` sectioned report; other `pack_type`s render their own `render()` output — `02 §4.4`. There is no facet keep/dismiss layer.)*
 - **Mobile (quick look):** stacked **segmented control** `Read · Pack · Cards`; full curation stays on web.
 - Card review (`accept` / `reject`) uses subtle check / strike affordances, not destructive color.
 
@@ -398,7 +398,7 @@ The product's signature screen; **one thing per screen, full-bleed, no competing
 ### 7.10 Conversation & sediment (interaction spec §F5)
 
 - **Thread:** message list with **citation chips** (linking to the underlying Source/pack/Concept); anchored-object context peek.
-- **Web:** chat panel beside the reader. **Mobile:** full-screen chat with a collapsible "context" peek.
+- **Web:** one article-scoped chat panel beside the reader; attached blocks show as removable **context chips** above the composer. **Mobile:** full-screen chat with a collapsible "context" peek.
 - **Sediment review sheet (identical both surfaces):** proposed new points, corrected misconceptions, candidate Cards, Concepts touched, "questions to review" — each `suggested → kept / dismissed`. Discard keeps the thread, creates nothing (no silent loss, §8).
 
 ### 7.11 Feeds & digest (interaction spec §F6)
