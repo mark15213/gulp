@@ -4,10 +4,17 @@
 import createClient from "openapi-fetch";
 import type { paths } from "./schema.gen";
 
+// Browser: same-origin "/api" (proxied by the Next rewrite) so the httpOnly
+// session cookie is first-party. Server (SSR): absolute API URL — apps/web
+// forwards the incoming cookie via openapi-fetch middleware (see web layout).
 export const baseUrl =
-  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+  typeof window === "undefined"
+    ? process.env.API_INTERNAL_URL ??
+      process.env.NEXT_PUBLIC_API_URL ??
+      "http://localhost:8000"
+    : "/api";
 
-export const client = createClient<paths>({ baseUrl });
+export const client = createClient<paths>({ baseUrl, credentials: "include" });
 
 export type CaptureBody =
   paths["/capture"]["post"]["requestBody"]["content"]["application/json"];
@@ -141,7 +148,11 @@ export function jobDownloadUrl(id: string): string {
 export async function importResult(id: string, file: File): Promise<SnapshotOut> {
   const body = new FormData();
   body.append("file", file);
-  const res = await fetch(`${baseUrl}/snapshots/${id}/import`, { method: "POST", body });
+  const res = await fetch(`${baseUrl}/snapshots/${id}/import`, {
+    method: "POST",
+    body,
+    credentials: "include",
+  });
   if (!res.ok) throw new Error(`import failed (${res.status})`);
   return (await res.json()) as SnapshotOut;
 }
@@ -225,7 +236,10 @@ export function cardsJobDownloadUrl(snapshotId: string): string {
 
 /** True once the worker has finished building the zip (GET 200 vs 404). */
 export async function cardsJobReady(snapshotId: string): Promise<boolean> {
-  const res = await fetch(cardsJobDownloadUrl(snapshotId), { method: "HEAD" });
+  const res = await fetch(cardsJobDownloadUrl(snapshotId), {
+    method: "HEAD",
+    credentials: "include",
+  });
   return res.ok;
 }
 
@@ -500,5 +514,37 @@ export async function searchCatalog(q: string, limit = 30): Promise<CatalogSearc
     params: { query: { q, limit } },
   });
   if (error || !data) throw new Error("catalog search failed");
+  return data;
+}
+
+// ── Auth (spec 2026-07-10) ──────────────────────────────────────────────────
+
+export type UserPublic =
+  paths["/auth/me"]["get"]["responses"]["200"]["content"]["application/json"];
+export type RegisterBody =
+  paths["/auth/register"]["post"]["requestBody"]["content"]["application/json"];
+export type LoginBody =
+  paths["/auth/login"]["post"]["requestBody"]["content"]["application/json"];
+
+export async function register(body: RegisterBody): Promise<UserPublic> {
+  const { data, error } = await client.POST("/auth/register", { body });
+  if (error || !data) throw new Error("register failed");
+  return data;
+}
+
+export async function login(body: LoginBody): Promise<UserPublic> {
+  const { data, error } = await client.POST("/auth/login", { body });
+  if (error || !data) throw new Error("login failed");
+  return data;
+}
+
+export async function logout(): Promise<void> {
+  await client.POST("/auth/logout", {});
+}
+
+/** Current user, or null if unauthenticated (401). */
+export async function getMe(): Promise<UserPublic | null> {
+  const { data, error } = await client.GET("/auth/me", { cache: "no-store" });
+  if (error || !data) return null;
   return data;
 }
