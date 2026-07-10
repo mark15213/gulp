@@ -19,7 +19,7 @@ Gulp's data model is already multi-tenant-shaped — a real `User` model exists 
 | D3 | Recovery scope for v1 | **Auth core now; recovery later.** Ship register / login / logout / session / route-protection. **Defer** email verification and password reset (no outbound email infra exists yet). |
 | D4 | Session architecture | **Opaque server-side session token in an httpOnly cookie**, Redis-backed (already in the stack). Web reaches the API **same-origin via a Next.js rewrite** so the cookie is first-party. Revocable + XSS-safe. |
 | D5 | Concept-graph ownership | Add `owner_id` to the two currently user-less tables (`concepts`, `concept_edges`) now, while they are empty (S3 unbuilt), to keep the isolation invariant uniform. |
-| D6 | Existing data | The seeded **dev user becomes a real account** (`dev@gulp.local` + a documented dev password). All existing local data (snapshots, cards, packs) stays owned by it — the owner logs in as `dev@gulp.local` to retain it. Production starts empty. |
+| D6 | Existing data | The seeded **dev user becomes a real account** (`dev@example.com` + a documented dev password). All existing local data (snapshots, cards, packs) stays owned by it — the owner logs in as `dev@example.com` to retain it. Production starts empty. |
 
 **Non-goals (deferred):** email verification, password reset / forgot-password, social OAuth, magic links, "active sessions" management UI, team/sharing (`docs/01 §11`), the mobile client (web-first, `docs/04 §5`).
 
@@ -41,7 +41,7 @@ A `UserPublic` projection (id, email, display_name, locale, gulp_session_minutes
 
 Single revision, `down_revision` = current head (`033e0b57ef69`, `reader_chat_pack_messages`):
 
-1. **users:** add `email` and `password_hash` as **nullable** → backfill the existing `DEV_USER_ID` row (`email='dev@gulp.local'`, `password_hash=<argon2id of a documented dev password>`) → `ALTER COLUMN ... SET NOT NULL` → add unique index on `email`.
+1. **users:** add `email` and `password_hash` as **nullable** → backfill the existing `DEV_USER_ID` row (`email='dev@example.com'`, `password_hash=<argon2id of a documented dev password>`) → `ALTER COLUMN ... SET NOT NULL` → add unique index on `email`.
 2. **concepts / concept_edges:** add `owner_id` (`NOT NULL`, FK → `users.id`, indexed). Tables are empty (S3 unbuilt), so no backfill is needed; if any rows exist locally, backfill to `DEV_USER_ID` before `SET NOT NULL`.
 3. `downgrade()` drops the columns/indexes in reverse.
 
@@ -102,7 +102,7 @@ Per-package (`cd services/api && uv run pytest`; `cd services/shared && uv run p
 - **shared:** `User.email` uniqueness + lowercasing; concept `owner_id` present.
 - **api:** register (success / duplicate-email `409` / weak-password `400`); login (success / bad creds `401`, generic message); logout revokes session; `/auth/me`; unauthenticated protected request → `401`; session expiry / sliding TTL; **cross-user isolation** — user A cannot read user B's `Source` (→ `404`/`401`); password hash round-trip; session store create/resolve/revoke/revoke_all; login throttle locks after N failures.
 - **web** (vitest, classic JSX transform — `import React` in JSX files per repo convention): login/register form + auth-context render/redirect behavior.
-- **migration:** `just migrate-up` succeeds and `dev@gulp.local` logs in with existing data intact.
+- **migration:** `just migrate-up` succeeds and `dev@example.com` logs in with existing data intact.
 - Keep `just lint` green (ruff/mypy/eslint) and add the new `argon2-cffi` dependency to `services/api` (and `services/shared` if hashing utilities land there).
 
 ## 10. Rollout order (feeds the implementation plan)

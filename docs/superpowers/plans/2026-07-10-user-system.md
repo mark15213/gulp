@@ -19,7 +19,7 @@
 - **Keep `just lint` green** (ruff + mypy-per-service + eslint) and `just test` green before every commit that closes a task.
 - **English** for all code/comments/commits/docs. UI copy is bilingual eventually, but the web app has **no i18n framework** — the entire existing UI is English string literals, so auth UI copy is English too (the account still stores a `locale`; app-wide i18n is a separate future effort).
 - **Alembic head is `033e0b57ef69`** (`reader_chat_pack_messages`). The new migration's `down_revision` is this.
-- **Dev account:** `DEV_USER_ID = 00000000-0000-0000-0000-000000000001`; after migration it logs in as `dev@gulp.local` with password `gulp-dev-2026` (documented in `.env.example`).
+- **Dev account:** `DEV_USER_ID = 00000000-0000-0000-0000-000000000001`; after migration it logs in as `dev@example.com` with password `gulp-dev-2026` (documented in `.env.example`).
 - **api-client** package is `@gulp/api-client`, consumed as raw TS source (no build); imported via named exports.
 - **Session cookie name is `gulp_session`** (must match between API `settings.session_cookie_name` and web middleware).
 - Commit after each task. TDD: test first, watch it fail, implement, watch it pass.
@@ -297,7 +297,7 @@ In `.env.example`, under the Auth section, add:
 ```bash
 # Session cookie is Secure in production only (HTTPS). Set true when deployed.
 SESSION_COOKIE_SECURE=false
-# Seeded dev account after `just migrate-up`: dev@gulp.local / gulp-dev-2026
+# Seeded dev account after `just migrate-up`: dev@example.com / gulp-dev-2026
 ```
 
 - [ ] **Step 3: Write the migration**
@@ -321,7 +321,7 @@ branch_labels = None
 depends_on = None
 
 DEV_USER_ID = "00000000-0000-0000-0000-000000000001"
-DEV_EMAIL = "dev@gulp.local"
+DEV_EMAIL = "dev@example.com"
 DEV_PASSWORD = "gulp-dev-2026"
 
 
@@ -377,7 +377,7 @@ just psql -c "SELECT email, left(password_hash, 12) FROM users WHERE id = '00000
 ```
 
 (If there is no `just psql` recipe, use `psql "$DATABASE_URL" -c "..."`.)
-Expected: one row, `email = dev@gulp.local`, `password_hash` starting `$argon2id$`.
+Expected: one row, `email = dev@example.com`, `password_hash` starting `$argon2id$`.
 
 - [ ] **Step 5: Commit**
 
@@ -911,7 +911,7 @@ def db():  # type: ignore[no-untyped-def]
     engine = create_engine("sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool)
     Base.metadata.create_all(engine)
     session = sessionmaker(bind=engine, expire_on_commit=False)()
-    session.add(User(id=DEV_USER_ID, display_name="Dev", email="dev@gulp.local", password_hash=hash_password("devpw")))
+    session.add(User(id=DEV_USER_ID, display_name="Dev", email="dev@example.com", password_hash=hash_password("devpw")))
     session.commit()
     try:
         yield session
@@ -1767,7 +1767,7 @@ Start the stack (`just dev`). Verify the whole flow:
 1. Visit `http://localhost:3000` → redirected to `/login`.
 2. Register a new account → lands on Today, sidebar shows the email.
 3. Reload → still logged in (cookie persists). Capture something → it appears; log out → redirected to `/login`.
-4. Log in as `dev@gulp.local` / `gulp-dev-2026` → your existing local data (snapshots, cards) is all there.
+4. Log in as `dev@example.com` / `gulp-dev-2026` → your existing local data (snapshots, cards) is all there.
 5. Register a second account → it sees none of the dev account's data.
 
 - [ ] **Step 8: Commit**

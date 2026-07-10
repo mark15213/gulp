@@ -32,7 +32,7 @@ def db():
         User(
             id=DEV_USER_ID,
             display_name="Dev",
-            email="dev@gulp.local",
+            email="dev@example.com",
             password_hash=hash_password("devpw"),
         )
     )

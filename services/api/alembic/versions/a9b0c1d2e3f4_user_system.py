@@ -14,7 +14,9 @@ branch_labels = None
 depends_on = None
 
 DEV_USER_ID = "00000000-0000-0000-0000-000000000001"
-DEV_EMAIL = "dev@gulp.local"
+# NB: not a .local/.test/.invalid domain — pydantic's EmailStr (email-validator)
+# rejects special-use TLDs, which would make the dev account unable to log in.
+DEV_EMAIL = "dev@example.com"
 DEV_PASSWORD = "gulp-dev-2026"
 
 
