@@ -20,15 +20,19 @@ export function ReaderToggle({
   const [view, setView] = useState<"pack" | "cards">("pack");
   return (
     <div>
-      <div className={styles.bar}>
+      <div className={styles.bar} role="group" aria-label="Reader view">
         <button
+          type="button"
           className={`${styles.tab} ${view === "pack" ? styles.active : ""}`}
+          aria-pressed={view === "pack"}
           onClick={() => setView("pack")}
         >
           Pack
         </button>
         <button
+          type="button"
           className={`${styles.tab} ${view === "cards" ? styles.active : ""}`}
+          aria-pressed={view === "cards"}
           onClick={() => setView("cards")}
         >
           Cards

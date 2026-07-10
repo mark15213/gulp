@@ -14,7 +14,9 @@ const facets: LibraryFacets = {
 
 describe("LibraryTagSidebar", () => {
   it("renders Sources, Mine, and a disabled Topics placeholder", () => {
-    render(<LibraryTagSidebar facets={facets} active={null} onSelect={() => {}} />);
+    render(
+      <LibraryTagSidebar facets={facets} active={null} onSelect={() => {}} />,
+    );
     expect(screen.getByText("Sources")).toBeTruthy();
     expect(screen.getByText("Mine")).toBeTruthy();
     expect(screen.getByText("Topics")).toBeTruthy();
@@ -24,9 +26,19 @@ describe("LibraryTagSidebar", () => {
 
   it("selects a source filter on click", async () => {
     const onSelect = vi.fn();
-    render(<LibraryTagSidebar facets={facets} active={null} onSelect={onSelect} />);
-    await userEvent.click(screen.getByText("HF Paper Daily"));
-    expect(onSelect).toHaveBeenCalledWith({ kind: "source", value: "HF Paper Daily" });
+    render(
+      <LibraryTagSidebar facets={facets} active={null} onSelect={onSelect} />,
+    );
+    const source = screen.getByRole("button", { name: /HF Paper Daily/ });
+    expect(source.getAttribute("aria-pressed")).toBe("false");
+    expect(
+      screen.getByRole("button", { name: "All" }).getAttribute("aria-pressed"),
+    ).toBe("true");
+    await userEvent.click(source);
+    expect(onSelect).toHaveBeenCalledWith({
+      kind: "source",
+      value: "HF Paper Daily",
+    });
   });
 
   it("toggles the active filter off when re-clicked", async () => {
@@ -38,7 +50,9 @@ describe("LibraryTagSidebar", () => {
         onSelect={onSelect}
       />,
     );
-    await userEvent.click(screen.getByText("pretrain"));
+    const activeTag = screen.getByRole("button", { name: /pretrain/ });
+    expect(activeTag.getAttribute("aria-pressed")).toBe("true");
+    await userEvent.click(activeTag);
     expect(onSelect).toHaveBeenCalledWith(null);
   });
 });

@@ -34,7 +34,10 @@ describe("EntryReader", () => {
   it("shows Processing while the promoted snapshot is still in the pipeline", () => {
     render(
       <EntryReader
-        entry={entry({ promoted_source_id: "snap1", promoted_status: "processing" })}
+        entry={entry({
+          promoted_source_id: "snap1",
+          promoted_status: "processing",
+        })}
         onGulp={noop}
         onToggleRead={noop}
       />,
@@ -55,5 +58,33 @@ describe("EntryReader", () => {
     );
     const link = screen.getByText(/In library/);
     expect(link.getAttribute("href")).toBe("/snapshots/snap1");
+  });
+
+  it("shows needs-attention status without restoring Forward", () => {
+    render(
+      <EntryReader
+        entry={entry({
+          promoted_source_id: "snap1",
+          promoted_status: "needs_attention",
+        })}
+        onGulp={noop}
+        onToggleRead={noop}
+      />,
+    );
+    expect(screen.getByRole("link", { name: /Needs attention/ })).toBeDefined();
+    expect(screen.queryByRole("button", { name: "Forward" })).toBeNull();
+  });
+
+  it("disables Forward when an entry has no URL", () => {
+    render(
+      <EntryReader
+        entry={entry({ url: null })}
+        onGulp={noop}
+        onToggleRead={noop}
+      />,
+    );
+    expect(
+      screen.getByRole("button", { name: "Forward" }).hasAttribute("disabled"),
+    ).toBe(true);
   });
 });

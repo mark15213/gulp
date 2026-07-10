@@ -43,15 +43,17 @@ describe("TodayPage", () => {
       new_count: 3,
       mastery: { new: 15, learning: 29, known: 84, at_risk: 5 },
     });
-    (api.getCurrentGulpSession as ReturnType<typeof vi.fn>).mockResolvedValue(null);
+    (api.getCurrentGulpSession as ReturnType<typeof vi.fn>).mockResolvedValue(
+      null,
+    );
     render(await TodayPage());
     expect(screen.getByText("4")).toBeTruthy();
     expect(screen.getByText("The Bitter Lesson")).toBeTruthy();
     expect(screen.getByText("Import AI")).toBeTruthy();
     // Start/Resume CTA: live due/new counts, "Start" when no session in progress.
-    expect(screen.getByRole("link", { name: /Start Gulp/ }).getAttribute("href")).toBe(
-      "/gulp",
-    );
+    const startLink = screen.getByRole("link", { name: /Start Gulp/ });
+    expect(startLink.getAttribute("href")).toBe("/gulp");
+    expect(startLink.querySelector("button")).toBeNull();
     expect(screen.getByText("12")).toBeTruthy();
     expect(screen.getByText("3")).toBeTruthy();
     // Mastery tally.
@@ -59,6 +61,35 @@ describe("TodayPage", () => {
     expect(screen.getByText("29 learning")).toBeTruthy();
     expect(screen.getByText("15 new")).toBeTruthy();
     expect(screen.getByText("5 at risk")).toBeTruthy();
+  });
+
+  it("falls back to Note when a recent item has a malformed origin URL", async () => {
+    (api.getToday as ReturnType<typeof vi.fn>).mockResolvedValue({
+      accepted_cards: 0,
+      card_sources: 0,
+      ready_count: 0,
+      digest: [],
+      inbox_count: 1,
+      recent: [
+        snap({
+          id: "s2",
+          title: "Malformed source",
+          status: "processing",
+          origin_url: "not a valid URL",
+        }),
+      ],
+      due_count: 0,
+      new_count: 0,
+      mastery: { new: 0, learning: 0, known: 0, at_risk: 0 },
+    });
+    (api.getCurrentGulpSession as ReturnType<typeof vi.fn>).mockResolvedValue(
+      null,
+    );
+
+    render(await TodayPage());
+
+    expect(screen.getByText("Malformed source")).toBeTruthy();
+    expect(screen.getByText("Note")).toBeTruthy();
   });
 
   it("shows Resume when a session is already in progress", async () => {
@@ -82,7 +113,9 @@ describe("TodayPage", () => {
       cards: [],
     });
     render(await TodayPage());
-    expect(screen.getByRole("link", { name: /Resume Gulp/ })).toBeTruthy();
+    const resumeLink = screen.getByRole("link", { name: /Resume Gulp/ });
+    expect(resumeLink.getAttribute("href")).toBe("/gulp");
+    expect(resumeLink.querySelector("button")).toBeNull();
   });
 
   it("still renders when the session lookup fails", async () => {

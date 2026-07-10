@@ -29,13 +29,18 @@ export function EntryList({
         <h2 className={styles.heading}>{title ?? "All entries"}</h2>
         <span className={styles.controls}>
           {onMarkAllRead && (
-            <button type="button" className={styles.control} onClick={onMarkAllRead}>
+            <button
+              type="button"
+              className={styles.control}
+              onClick={onMarkAllRead}
+            >
               Mark all read
             </button>
           )}
           <button
             type="button"
             className={`${styles.control} ${unreadOnly ? styles.controlActive : ""}`}
+            aria-pressed={unreadOnly}
             onClick={onToggleUnreadOnly}
           >
             Unread
@@ -50,10 +55,13 @@ export function EntryList({
               className={`${styles.row} ${selectedId === entry.id ? styles.active : ""} ${
                 entry.read ? styles.read : ""
               }`}
+              aria-pressed={selectedId === entry.id}
               onClick={() => onSelect(entry.id)}
             >
               <span className={styles.titleLine}>
-                {!entry.read && <span className={styles.unreadDot} aria-label="unread" />}
+                {!entry.read && (
+                  <span className={styles.unreadDot} aria-label="unread" />
+                )}
                 <span className={styles.title}>{entry.title}</span>
                 {entry.promoted_source_id && (
                   <span className={styles.forwarded} aria-label="forwarded">
@@ -71,7 +79,9 @@ export function EntryList({
       </ul>
       {entries.length === 0 && (
         <p className={styles.empty}>
-          {unreadOnly ? "Nothing unread." : "No entries yet — feeds fill in after a fetch."}
+          {unreadOnly
+            ? "Nothing unread."
+            : "No entries yet — feeds fill in after a fetch."}
         </p>
       )}
     </section>

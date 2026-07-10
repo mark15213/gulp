@@ -30,8 +30,14 @@ const PACK = {
 describe("ReaderToggle", () => {
   it("shows Pack and Cards tabs but not Original", () => {
     render(<ReaderToggle pack={PACK} snapshotId="s1" cardsStatus={null} />);
-    expect(screen.getByRole("button", { name: "Pack" })).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Cards" })).toBeTruthy();
+    expect(
+      screen.getByRole("button", { name: "Pack" }).getAttribute("aria-pressed"),
+    ).toBe("true");
+    expect(
+      screen
+        .getByRole("button", { name: "Cards" })
+        .getAttribute("aria-pressed"),
+    ).toBe("false");
     expect(screen.queryByRole("button", { name: "Original" })).toBeNull();
   });
 
@@ -39,6 +45,13 @@ describe("ReaderToggle", () => {
     (api.getCards as ReturnType<typeof vi.fn>).mockResolvedValue([]);
     render(<ReaderToggle pack={PACK} snapshotId="s1" cardsStatus={null} />);
     await userEvent.click(screen.getByRole("button", { name: "Cards" }));
-    expect(await screen.findByRole("button", { name: "Generate cards" })).toBeTruthy();
+    expect(
+      screen
+        .getByRole("button", { name: "Cards" })
+        .getAttribute("aria-pressed"),
+    ).toBe("true");
+    expect(
+      await screen.findByRole("button", { name: "Generate cards" }),
+    ).toBeTruthy();
   });
 });

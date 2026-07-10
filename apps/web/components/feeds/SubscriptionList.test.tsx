@@ -36,6 +36,11 @@ describe("SubscriptionList", () => {
       />,
     );
     expect(screen.getByText("3")).toBeDefined();
+    expect(
+      screen
+        .getByRole("button", { name: "All feeds" })
+        .getAttribute("aria-pressed"),
+    ).toBe("true");
     fireEvent.click(screen.getByText("Anthropic Research"));
     expect(onSelect).toHaveBeenCalledWith("s1");
   });
@@ -52,6 +57,16 @@ describe("SubscriptionList", () => {
       />,
     );
     expect(screen.getByTitle("boom")).toBeDefined();
+    expect(screen.getByText("Error")).toBeDefined();
+    expect(screen.getByText(/Feed status: error, boom/)).toBeDefined();
+    expect(
+      screen.getByRole("button", { name: "Mute Anthropic Research" }),
+    ).toBeDefined();
+    expect(
+      screen.getByRole("button", {
+        name: "Unsubscribe from Anthropic Research",
+      }),
+    ).toBeDefined();
   });
 
   it("shows the empty state without feeds", () => {

@@ -4,9 +4,16 @@
   padding: var(--space-8) var(--space-6) var(--space-16);
 }
 
-.content,
+.dashboard {
+  max-width: var(--dashboard-max);
+}
+
+.content {
+  max-width: var(--content-max);
+}
+
 .workspace {
-  max-width: 1440px;
+  max-width: var(--workspace-max);
 }
 
 .workspace {
@@ -44,11 +51,37 @@
 
 @media (max-width: 720px) {
   .frame {
+    padding-top: var(--space-6);
     padding-right: var(--space-4);
     padding-left: var(--space-4);
+    padding-bottom: var(--space-10);
   }
 
   .header {
+    min-height: 0;
+    flex-wrap: wrap;
     gap: var(--space-3);
+  }
+
+  .heading {
+    flex: 1 1 220px;
+  }
+
+  .meta {
+    padding-top: 4px;
+  }
+}
+
+@media (max-width: 480px) {
+  .meta {
+    flex-basis: 100%;
+    padding-top: 0;
+  }
+}
+
+@media (max-width: 960px) {
+  .workspace {
+    height: auto;
+    min-height: calc(100dvh - 110px);
   }
 }

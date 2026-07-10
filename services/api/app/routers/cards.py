@@ -83,7 +83,14 @@ def export_cards_job_route(
 
 # GET streams the built zip; HEAD is the client's readiness probe (cardsJobReady),
 # so the route must answer HEAD (200 vs 404) rather than 405 Method Not Allowed.
-@router.api_route("/snapshots/{snapshot_id}/cards/job", methods=["GET", "HEAD"])
+@router.get(
+    "/snapshots/{snapshot_id}/cards/job",
+    operation_id="download_cards_job_route",
+)
+@router.head(
+    "/snapshots/{snapshot_id}/cards/job",
+    operation_id="head_cards_job_route",
+)
 def download_cards_job_route(
     snapshot_id: uuid.UUID,
     db: Session = Depends(get_db),

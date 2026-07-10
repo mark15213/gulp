@@ -1,4 +1,5 @@
 import React from "react";
+import { IconConversation } from "@/components/ui/icons";
 import styles from "./Editing.module.css";
 
 export function BlockToolbar({
@@ -20,7 +21,12 @@ export function BlockToolbar({
 }) {
   return (
     <div className={styles.toolbar}>
-      <button type="button" className={styles.iconBtn} aria-label="Edit block" onClick={onEdit}>
+      <button
+        type="button"
+        className={styles.iconBtn}
+        aria-label="Edit block"
+        onClick={onEdit}
+      >
         Edit
       </button>
       <button
@@ -41,10 +47,20 @@ export function BlockToolbar({
       >
         ↓
       </button>
-      <button type="button" className={styles.iconBtn} aria-label="Add to chat" onClick={onAddToChat}>
-        💬
+      <button
+        type="button"
+        className={styles.iconBtn}
+        aria-label="Add to chat"
+        onClick={onAddToChat}
+      >
+        <IconConversation />
       </button>
-      <button type="button" className={styles.iconBtn} aria-label="Delete block" onClick={onDelete}>
+      <button
+        type="button"
+        className={styles.iconBtn}
+        aria-label="Delete block"
+        onClick={onDelete}
+      >
         Delete
       </button>
     </div>

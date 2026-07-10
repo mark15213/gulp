@@ -70,4 +70,26 @@ describe("EntryList", () => {
     fireEvent.click(screen.getByText("Mark all read"));
     expect(onMarkAllRead).toHaveBeenCalled();
   });
+
+  it("exposes selected entry and unread-filter state", () => {
+    render(
+      <EntryList
+        entries={[entry({})]}
+        selectedId="e1"
+        onSelect={noop}
+        unreadOnly
+        onToggleUnreadOnly={noop}
+      />,
+    );
+    expect(
+      screen
+        .getByRole("button", { name: /A post/ })
+        .getAttribute("aria-pressed"),
+    ).toBe("true");
+    expect(
+      screen
+        .getByRole("button", { name: "Unread" })
+        .getAttribute("aria-pressed"),
+    ).toBe("true");
+  });
 });

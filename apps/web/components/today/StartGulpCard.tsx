@@ -1,6 +1,5 @@
 import React from "react";
 import Link from "next/link";
-import { Button } from "@/components/ui/Button";
 import { IconArrowRight } from "@/components/ui/icons";
 import styles from "./StartGulpCard.module.css";
 
@@ -42,10 +41,9 @@ export function StartGulpCard({
       </div>
 
       <div className={styles.action}>
-        <Link href="/gulp">
-          <Button variant="primary" size="lg" iconRight={<IconArrowRight />}>
-            {hasResumable ? "Resume Gulp" : "Start Gulp"}
-          </Button>
+        <Link href="/gulp" className={styles.cta}>
+          {hasResumable ? "Resume Gulp" : "Start Gulp"}
+          <IconArrowRight />
         </Link>
         <p className={styles.actionHint}>
           <span className="t-data">{dueCount}</span> due ·{" "}

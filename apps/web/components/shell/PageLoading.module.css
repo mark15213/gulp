@@ -1,0 +1,171 @@
+.page,
+.loading {
+  width: 100%;
+}
+
+.loading {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.header {
+  min-height: 48px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-6);
+}
+
+.block {
+  display: block;
+  border: 1px solid color-mix(in srgb, var(--border) 75%, transparent);
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--fill) 76%, var(--surface));
+  animation: loading-pulse 1.4s ease-in-out infinite alternate;
+}
+
+.title {
+  width: 180px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+}
+
+.meta {
+  width: 116px;
+  height: 16px;
+  border-radius: var(--radius-sm);
+}
+
+.dashboardOverview {
+  display: grid;
+  grid-template-columns: minmax(0, 1.65fr) minmax(260px, 0.85fr);
+  gap: var(--space-4);
+}
+
+.hero,
+.summary {
+  min-height: 188px;
+}
+
+.label {
+  width: 124px;
+  height: 12px;
+  border-radius: var(--radius-sm);
+}
+
+.cardGrid,
+.libraryGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+.card {
+  min-height: 164px;
+}
+
+.library {
+  display: grid;
+  grid-template-columns: 184px minmax(0, 1fr);
+  gap: var(--space-8);
+}
+
+.filters {
+  min-height: 260px;
+}
+
+.libraryCard {
+  min-height: 190px;
+}
+
+.workspace {
+  display: grid;
+  grid-template-columns: 240px 320px minmax(0, 1fr);
+  gap: var(--space-3);
+  flex: 1;
+  min-height: 480px;
+}
+
+.pane,
+.reader {
+  height: 100%;
+}
+
+@keyframes loading-pulse {
+  from {
+    opacity: 0.58;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (max-width: 1280px) {
+  .workspace {
+    grid-template-columns: 220px minmax(0, 1fr);
+    grid-template-rows: 280px minmax(360px, 1fr);
+  }
+
+  .reader {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 900px) {
+  .dashboardOverview {
+    grid-template-columns: 1fr;
+  }
+
+  .cardGrid,
+  .libraryGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .library {
+    grid-template-columns: 1fr;
+    gap: var(--space-4);
+  }
+
+  .filters {
+    min-height: 52px;
+  }
+}
+
+@media (max-width: 620px) {
+  .header {
+    min-height: 36px;
+  }
+
+  .cardGrid,
+  .libraryGrid,
+  .workspace {
+    grid-template-columns: 1fr;
+  }
+
+  .workspace {
+    grid-template-rows: 180px 280px 380px;
+  }
+
+  .reader {
+    grid-column: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .block {
+    animation: none;
+  }
+}

@@ -2,6 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
+import { IconConversation } from "@/components/ui/icons";
 import { GenreSelect } from "./GenreSelect";
 import styles from "./ReaderTopBar.module.css";
 
@@ -30,9 +31,9 @@ export function ReaderTopBar({
     <header className={styles.bar}>
       <button
         type="button"
-        className={styles.icon}
+        className={`${styles.icon} ${styles.navToggle}`}
         aria-label={navOpen ? "Hide sidebar" : "Show sidebar"}
-        aria-pressed={!navOpen}
+        aria-pressed={navOpen}
         onClick={onToggleNav}
       >
         ⇤
@@ -63,7 +64,7 @@ export function ReaderTopBar({
           aria-pressed={chatOpen}
           onClick={onToggleChat}
         >
-          💬
+          <IconConversation />
         </button>
       )}
     </header>

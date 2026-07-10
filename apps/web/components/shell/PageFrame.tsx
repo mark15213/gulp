@@ -9,7 +9,7 @@ export function PageFrame({
 }: {
   children: ReactNode;
   className?: string;
-  variant?: "content" | "workspace";
+  variant?: "dashboard" | "content" | "workspace";
 }) {
   return (
     <div

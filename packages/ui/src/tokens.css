@@ -104,7 +104,14 @@
   --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
   --shadow-overlay: 0 8px 28px rgba(15, 23, 42, 0.14);
 
+  /* Motion is intentionally quiet on the web workbench. */
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --duration-fast: 140ms;
+
   /* ── Layout (§5.2) ──────────────────────────────────────────── */
   --sidebar-w: 240px;
   --measure: 720px;
+  --dashboard-max: 1080px;
+  --content-max: 1200px;
+  --workspace-max: 1440px;
 }

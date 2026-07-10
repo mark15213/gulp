@@ -13,7 +13,7 @@ const IN_LIBRARY = new Set(["ready", "exported"]);
 
 function promotedMarker(status: FeedEntry["promoted_status"]): {
   label: string;
-  className: string;
+  className: string | undefined;
 } {
   if (status && IN_LIBRARY.has(status)) {
     return { label: "In library →", className: styles.statusReady };
@@ -43,57 +43,81 @@ export function EntryReader({
       </section>
     );
   }
-  const marker = entry.promoted_source_id ? promotedMarker(entry.promoted_status) : null;
+  const marker = entry.promoted_source_id
+    ? promotedMarker(entry.promoted_status)
+    : null;
   return (
     <section className={styles.pane} aria-label="Reader">
       <header className={styles.header}>
-        <h1 className={styles.title}>
-          {entry.url ? (
-            <a href={entry.url} target="_blank" rel="noreferrer">
-              {entry.title}
-            </a>
-          ) : (
-            entry.title
-          )}
-        </h1>
-        <p className={`t-data ${styles.meta}`}>
-          {entry.subscription_title}
-          {entry.author ? ` · ${entry.author}` : ""}
-          {entry.published_at ? ` · ${timeAgo(entry.published_at)}` : ""}
-        </p>
-        <div className={styles.actions}>
-          {marker ? (
-            <Link href={`/snapshots/${entry.promoted_source_id}`} className={marker.className}>
-              {marker.label}
-            </Link>
-          ) : (
+        <div className={styles.headerInner}>
+          <h1 className={styles.title}>
+            {entry.url ? (
+              <a href={entry.url} target="_blank" rel="noreferrer">
+                {entry.title}
+              </a>
+            ) : (
+              entry.title
+            )}
+          </h1>
+          <p className={`t-data ${styles.meta}`}>
+            {entry.subscription_title}
+            {entry.author ? ` · ${entry.author}` : ""}
+            {entry.published_at ? ` · ${timeAgo(entry.published_at)}` : ""}
+          </p>
+          <div className={styles.actions}>
+            {marker ? (
+              <Link
+                href={`/snapshots/${entry.promoted_source_id}`}
+                className={marker.className}
+              >
+                {marker.label}
+              </Link>
+            ) : (
+              <button
+                type="button"
+                className={styles.forward}
+                disabled={!entry.url}
+                title={
+                  entry.url
+                    ? "Forward into your Inbox and digest it"
+                    : "Entry has no URL"
+                }
+                onClick={() => onGulp(entry)}
+              >
+                Forward
+              </button>
+            )}
             <button
               type="button"
-              className={styles.forward}
-              disabled={!entry.url}
-              title={entry.url ? "Forward into your Inbox and digest it" : "Entry has no URL"}
-              onClick={() => onGulp(entry)}
+              className={styles.secondary}
+              onClick={() => onToggleRead(entry)}
             >
-              Forward
+              {entry.read ? "Mark unread" : "Mark read"}
             </button>
-          )}
-          <button type="button" className={styles.secondary} onClick={() => onToggleRead(entry)}>
-            {entry.read ? "Mark unread" : "Mark read"}
-          </button>
-          {entry.url && (
-            <a className={styles.secondary} href={entry.url} target="_blank" rel="noreferrer">
-              Open original ↗
-            </a>
-          )}
+            {entry.url && (
+              <a
+                className={styles.secondary}
+                href={entry.url}
+                target="_blank"
+                rel="noreferrer"
+              >
+                Open original ↗
+              </a>
+            )}
+          </div>
         </div>
       </header>
       {entry.content_html ? (
         <article
           className={styles.body}
-          dangerouslySetInnerHTML={{ __html: sanitizeFeedHtml(entry.content_html) }}
+          dangerouslySetInnerHTML={{
+            __html: sanitizeFeedHtml(entry.content_html),
+          }}
         />
       ) : (
-        <p className={styles.placeholder}>No content in the feed — open the original.</p>
+        <p className={styles.placeholder}>
+          No content in the feed — open the original.
+        </p>
       )}
     </section>
   );

@@ -1,23 +1,34 @@
 .bar {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 20px;
-  border-bottom: 1px solid var(--border);
   position: sticky;
   top: 0;
-  background: var(--bg, #fbf7ea);
   z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  height: var(--reader-toolbar-h);
+  padding: 0 var(--space-4);
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
 }
 
 .back {
-  color: var(--text-muted, #777);
-  text-decoration: none;
+  flex: none;
+  color: var(--text-2);
+  font-size: 13px;
   white-space: nowrap;
+  transition: color var(--duration-fast) var(--ease-standard);
+}
+
+.back:hover {
+  color: var(--text-1);
 }
 
 .title {
+  flex: 0 1 420px;
+  min-width: 0;
   overflow: hidden;
+  font-size: 15px;
+  line-height: 20px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -30,23 +41,59 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  width: 34px;
+  height: 34px;
+  flex: none;
+  padding: 0;
   border: 1px solid transparent;
-  border-radius: 6px;
-  background: none;
-  cursor: pointer;
-  text-decoration: none;
-  color: inherit;
-  font-size: 1rem;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text-2);
+  font-size: 15px;
+  transition:
+    color var(--duration-fast) var(--ease-standard),
+    background var(--duration-fast) var(--ease-standard),
+    border-color var(--duration-fast) var(--ease-standard);
+}
+
+.icon svg {
+  width: 17px;
+  height: 17px;
 }
 
 .icon:hover {
-  background: var(--surface, #fffdf6);
-  border-color: var(--border);
+  color: var(--text-1);
+  background: var(--fill);
+  border-color: var(--border-strong);
 }
 
 .icon[aria-pressed="true"] {
-  background: var(--blue-50, #fff4c2);
-  border-color: var(--border-strong, #d8cca8);
+  color: var(--text-1);
+  background: var(--blue-50);
+  border-color: var(--border-strong);
+}
+
+@media (max-width: 960px) {
+  .navToggle {
+    display: none;
+  }
+
+  .title {
+    flex-basis: 280px;
+  }
+}
+
+@media (max-width: 560px) {
+  .bar {
+    padding-right: var(--space-3);
+    padding-left: var(--space-3);
+  }
+
+  .title {
+    display: none;
+  }
+
+  .back {
+    font-size: 12px;
+  }
 }

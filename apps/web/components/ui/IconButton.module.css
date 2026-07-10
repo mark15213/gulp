@@ -45,3 +45,10 @@
 .danger.active {
   border-color: var(--danger);
 }
+
+@media (max-width: 720px) {
+  .btn {
+    width: 44px;
+    height: 44px;
+  }
+}

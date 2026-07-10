@@ -1,7 +1,9 @@
 .badges {
   display: inline-flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: var(--space-2, 8px);
+  justify-content: flex-end;
+  gap: var(--space-1);
   flex: none;
 }
 
@@ -9,8 +11,8 @@
 .cards {
   display: inline-flex;
   align-items: center;
-  padding: 2px var(--space-2, 8px);
-  border-radius: var(--radius-pill, 999px);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-pill);
   font-size: 12px;
   line-height: 16px;
   font-weight: 500;
@@ -19,24 +21,24 @@
 
 /* media_type — quiet grayscale metadata pill */
 .media {
-  background: var(--fill, #f1f5f9);
-  color: var(--text-2, #64748b);
+  background: var(--fill);
+  color: var(--text-2);
 }
 
 /* cards states — grayscale + blue accent; red only for the error */
 .generating {
-  background: var(--blue-50, #eff5ff);
-  color: var(--blue-700, #1d4ed8);
+  background: var(--blue-50);
+  color: var(--blue-700);
 }
 
 .ready {
   background: transparent;
-  color: var(--muted, #94a3b8);
+  color: var(--muted);
   padding-left: 0;
   padding-right: 0;
 }
 
 .failed {
-  background: var(--state-risk-tint, #fee2e2);
-  color: var(--state-risk-on, #991b1b);
+  background: var(--state-risk-tint);
+  color: var(--state-risk-on);
 }

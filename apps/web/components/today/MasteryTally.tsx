@@ -8,11 +8,17 @@ import styles from "./MasteryTally.module.css";
 // not just what's due today.
 export function MasteryTally({ mastery }: { mastery: TodayOut["mastery"] }) {
   return (
-    <div className={styles.tally}>
-      <StateChip state="known" count={mastery.known} />
-      <StateChip state="learning" count={mastery.learning} />
-      <StateChip state="new" count={mastery.new} />
-      <StateChip state="at-risk" count={mastery.at_risk} />
-    </div>
+    <section className={styles.panel} aria-label="Mastery overview">
+      <div>
+        <p className="t-label">Mastery</p>
+        <p className={styles.description}>Across your library</p>
+      </div>
+      <div className={styles.tally}>
+        <StateChip state="known" count={mastery.known} />
+        <StateChip state="learning" count={mastery.learning} />
+        <StateChip state="new" count={mastery.new} />
+        <StateChip state="at-risk" count={mastery.at_risk} />
+      </div>
+    </section>
   );
 }

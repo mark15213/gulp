@@ -14,9 +14,14 @@
   align-items: center;
   gap: var(--space-3);
   padding: var(--space-3) var(--space-4);
+  transition: background var(--duration-fast) var(--ease-standard);
 }
 .row + .row {
   border-top: 1px solid var(--border);
+}
+
+.row:hover {
+  background: color-mix(in srgb, var(--fill) 60%, transparent);
 }
 
 /* Needs-attention — amber left edge (docs/03 §8). */
@@ -101,4 +106,34 @@
 .attentionIcon {
   width: 13px;
   height: 13px;
+}
+
+@media (max-width: 620px) {
+  .row {
+    align-items: flex-start;
+    flex-wrap: wrap;
+    padding: var(--space-4);
+  }
+
+  .text {
+    width: calc(100% - 40px);
+  }
+
+  .processing,
+  .attention,
+  .ready {
+    margin-left: 40px;
+  }
+
+  .meta {
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .meta > span:not(.dot) {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 }

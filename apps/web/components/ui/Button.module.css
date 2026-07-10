@@ -81,3 +81,12 @@
 .danger:hover {
   background: var(--state-risk-tint);
 }
+
+@media (max-width: 720px) {
+  .md,
+  .lg {
+    min-height: 44px;
+    padding-right: var(--space-4);
+    padding-left: var(--space-4);
+  }
+}

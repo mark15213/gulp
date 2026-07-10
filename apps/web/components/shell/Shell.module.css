@@ -13,3 +13,13 @@
   justify-content: flex-end;
   padding: 12px 24px 0;
 }
+
+@media (max-width: 960px) {
+  .shell {
+    display: block;
+  }
+
+  .captureRow {
+    padding: var(--space-3) var(--space-4) 0;
+  }
+}

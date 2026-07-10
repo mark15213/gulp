@@ -7,6 +7,7 @@ import { MasteryTally } from "@/components/today/MasteryTally";
 import { DigestCard } from "@/components/today/DigestCard";
 import { CapturePeek, type RecentItem } from "@/components/today/CapturePeek";
 import { getCurrentGulpSession, getToday } from "@gulp/api-client";
+import { safeHost } from "@/lib/pack";
 import { timeAgo } from "@/lib/time";
 import { PageFrame, PageHeader } from "@/components/shell/PageFrame";
 import styles from "./page.module.css";
@@ -26,7 +27,7 @@ export default async function TodayPage() {
     id: s.id,
     type: "snapshot",
     title: s.title,
-    source: s.origin_url ? new URL(s.origin_url).host : "Note",
+    source: safeHost(s.origin_url),
     time: timeAgo(s.created_at),
     status:
       s.status === "needs_attention"
@@ -37,22 +38,24 @@ export default async function TodayPage() {
   }));
 
   return (
-    <PageFrame className={styles.page}>
+    <PageFrame variant="dashboard" className={styles.page}>
       <PageHeader
         title="Today"
         description={<>Here&apos;s what&apos;s worth your 5 minutes.</>}
         meta={date}
       />
 
-      <StartGulpCard
-        acceptedCards={today.accepted_cards}
-        cardSources={today.card_sources}
-        dueCount={today.due_count}
-        newCount={today.new_count}
-        hasResumable={!!current}
-      />
+      <div className={styles.overview}>
+        <StartGulpCard
+          acceptedCards={today.accepted_cards}
+          cardSources={today.card_sources}
+          dueCount={today.due_count}
+          newCount={today.new_count}
+          hasResumable={!!current}
+        />
 
-      <MasteryTally mastery={today.mastery} />
+        <MasteryTally mastery={today.mastery} />
+      </div>
 
       <section className={styles.section}>
         <div className={styles.sectionHead}>

@@ -501,7 +501,9 @@ export async function setEntryRead(id: string, read: boolean): Promise<void> {
 
 export async function gulpEntry(
   id: string,
-): Promise<{ snapshot_id: string; duplicate: boolean }> {
+): Promise<
+  paths["/feed-entries/{entry_id}/gulp"]["post"]["responses"]["200"]["content"]["application/json"]
+> {
   const { data, error } = await client.POST("/feed-entries/{entry_id}/gulp", {
     params: { path: { entry_id: id } },
   });

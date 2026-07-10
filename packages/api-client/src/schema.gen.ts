@@ -168,13 +168,13 @@ export interface paths {
             cookie?: never;
         };
         /** Download Cards Job Route */
-        get: operations["download_cards_job_route_snapshots__snapshot_id__cards_job_head"];
+        get: operations["download_cards_job_route"];
         put?: never;
         post?: never;
         delete?: never;
         options?: never;
         /** Download Cards Job Route */
-        head: operations["download_cards_job_route_snapshots__snapshot_id__cards_job_head"];
+        head: operations["head_cards_job_route"];
         patch?: never;
         trace?: never;
     };
@@ -2028,7 +2028,7 @@ export interface operations {
             };
         };
     };
-    download_cards_job_route_snapshots__snapshot_id__cards_job_head: {
+    download_cards_job_route: {
         parameters: {
             query?: never;
             header?: never;
@@ -2059,7 +2059,7 @@ export interface operations {
             };
         };
     };
-    download_cards_job_route_snapshots__snapshot_id__cards_job_head: {
+    head_cards_job_route: {
         parameters: {
             query?: never;
             header?: never;

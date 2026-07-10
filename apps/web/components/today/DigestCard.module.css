@@ -6,13 +6,20 @@
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
+  min-height: 164px;
   transition:
-    box-shadow 140ms cubic-bezier(0.2, 0, 0, 1),
-    border-color 140ms cubic-bezier(0.2, 0, 0, 1);
+    box-shadow var(--duration-fast) var(--ease-standard),
+    border-color var(--duration-fast) var(--ease-standard),
+    transform var(--duration-fast) var(--ease-standard);
 }
 .card:hover {
   border-color: var(--border-strong);
   box-shadow: var(--shadow-sm);
+  transform: translateY(-1px);
+}
+
+.card:focus-visible {
+  border-color: var(--border-strong);
 }
 
 .top {
@@ -60,4 +67,14 @@
 .cards {
   margin-left: auto;
   color: var(--text-2);
+}
+
+@media (max-width: 620px) {
+  .card {
+    min-height: 148px;
+  }
+
+  .meta {
+    flex-wrap: wrap;
+  }
 }

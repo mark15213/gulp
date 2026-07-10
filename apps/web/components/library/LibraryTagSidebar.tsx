@@ -1,5 +1,9 @@
 import React from "react";
-import type { ActiveFilter, FacetEntry, LibraryFacets } from "@/lib/libraryFacets";
+import type {
+  ActiveFilter,
+  FacetEntry,
+  LibraryFacets,
+} from "@/lib/libraryFacets";
 import styles from "./LibraryTagSidebar.module.css";
 
 function Group({
@@ -18,7 +22,7 @@ function Group({
   if (entries.length === 0) return null;
   return (
     <div className={styles.group}>
-      <div className={styles.groupTitle}>{title}</div>
+      <div className={`t-label ${styles.groupTitle}`}>{title}</div>
       {entries.map((e) => {
         const on = active?.kind === kind && active.value === e.value;
         return (
@@ -26,6 +30,7 @@ function Group({
             key={e.value}
             type="button"
             className={`${styles.entry} ${on ? styles.entryActive : ""}`}
+            aria-pressed={on}
             onClick={() => onSelect(on ? null : { kind, value: e.value })}
           >
             <span className={styles.entryLabel}>{e.value}</span>
@@ -51,14 +56,27 @@ export function LibraryTagSidebar({
       <button
         type="button"
         className={`${styles.entry} ${active === null ? styles.entryActive : ""}`}
+        aria-pressed={active === null}
         onClick={() => onSelect(null)}
       >
         <span className={styles.entryLabel}>All</span>
       </button>
-      <Group title="Sources" kind="source" entries={facets.sources} active={active} onSelect={onSelect} />
-      <Group title="Mine" kind="tag" entries={facets.tags} active={active} onSelect={onSelect} />
+      <Group
+        title="Sources"
+        kind="source"
+        entries={facets.sources}
+        active={active}
+        onSelect={onSelect}
+      />
+      <Group
+        title="Mine"
+        kind="tag"
+        entries={facets.tags}
+        active={active}
+        onSelect={onSelect}
+      />
       <div className={styles.group}>
-        <div className={styles.groupTitle}>Topics</div>
+        <div className={`t-label ${styles.groupTitle}`}>Topics</div>
         <div className={styles.comingSoon}>coming soon</div>
       </div>
     </aside>

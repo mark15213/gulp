@@ -1,73 +1,127 @@
 .backdrop {
   position: fixed;
+  z-index: 50;
   inset: 0;
-  background: rgba(0, 0, 0, 0.35);
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  padding-top: 18vh;
-  z-index: 50;
+  padding: 18vh var(--space-4) var(--space-4);
+  background: var(--overlay-scrim);
 }
 
 .dialog {
-  width: min(480px, 92vw);
-  background: var(--surface, #fff);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 20px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: var(--space-3);
+  width: min(480px, 100%);
+  padding: var(--space-6);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  background: var(--surface);
+  box-shadow: var(--shadow-overlay);
 }
 
 .heading {
-  margin: 0 0 4px;
-  font-size: 1.05em;
+  margin-bottom: var(--space-1);
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 24px;
 }
 
 .input {
-  font: inherit;
-  padding: 8px 12px;
+  min-height: 40px;
+  padding: 0 var(--space-3);
   border: 1px solid var(--border);
-  border-radius: 8px;
-  background: none;
-  color: inherit;
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--text-1);
+  font: inherit;
+  transition:
+    background 120ms cubic-bezier(0.2, 0, 0, 1),
+    border-color 120ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+.input:hover {
+  border-color: var(--border-strong);
+}
+
+.input:focus {
+  background: var(--bg);
+  border-color: var(--border-strong);
 }
 
 .error {
-  color: var(--red-500, #ef4444);
-  font-size: 0.85em;
-  margin: 0;
+  color: var(--danger);
+  font-size: 13px;
 }
 
 .buttons {
   display: flex;
   justify-content: flex-end;
-  gap: 8px;
-  margin-top: 4px;
+  gap: var(--space-2);
+  margin-top: var(--space-1);
+}
+
+.cancel,
+.confirm {
+  min-height: 36px;
+  padding: 0 var(--space-4);
+  border-radius: var(--radius-md);
+  font-weight: 500;
+  transition:
+    color 120ms cubic-bezier(0.2, 0, 0, 1),
+    background 120ms cubic-bezier(0.2, 0, 0, 1),
+    border-color 120ms cubic-bezier(0.2, 0, 0, 1);
 }
 
 .cancel {
-  font: inherit;
-  padding: 6px 14px;
   border: 1px solid var(--border);
-  border-radius: 8px;
-  background: none;
-  cursor: pointer;
+  background: var(--surface);
+}
+
+.cancel:hover {
+  background: var(--fill);
+  border-color: var(--border-strong);
 }
 
 .confirm {
-  font: inherit;
-  font-weight: 600;
-  padding: 6px 18px;
-  border: none;
-  border-radius: 8px;
-  background: var(--blue-600, #2563eb);
-  color: #fff;
-  cursor: pointer;
+  border: 1px solid var(--ink);
+  background: var(--ink);
+  color: var(--surface);
+}
+
+.confirm:hover:not(:disabled) {
+  border-color: var(--ink-hi);
+  background: var(--ink-hi);
+}
+
+.confirm:active:not(:disabled) {
+  border-color: var(--ink-lo);
+  background: var(--ink-lo);
 }
 
 .confirm:disabled {
-  opacity: 0.5;
+  opacity: 0.55;
   cursor: not-allowed;
+}
+
+@media (max-width: 760px) {
+  .backdrop {
+    align-items: center;
+    padding-top: var(--space-4);
+  }
+
+  .dialog {
+    padding: var(--space-5);
+  }
+
+  .input,
+  .cancel,
+  .confirm {
+    min-height: 44px;
+  }
+
+  .buttons {
+    flex-wrap: wrap-reverse;
+  }
 }
