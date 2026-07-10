@@ -31,7 +31,7 @@ export function SubscriptionList({
         className={`${styles.allRow} ${selectedId === null ? styles.active : ""}`}
         onClick={() => onSelect(null)}
       >
-        All entries
+        All feeds
       </button>
       <ul className={styles.list}>
         {subscriptions.map((sub) => (
