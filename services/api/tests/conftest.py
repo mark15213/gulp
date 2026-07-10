@@ -4,9 +4,12 @@ import sys
 # Both gulp-api and gulp-worker expose a top-level `app`; put services/api first.
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 
+import fakeredis
 import gulp_shared.models  # noqa: F401
 import pytest
-from app.deps import get_db, get_enqueue
+from app.core.auth import get_current_user
+from app.core.security import hash_password
+from app.deps import get_db, get_enqueue, get_redis
 from app.main import app
 from fastapi.testclient import TestClient
 from gulp_shared.db import Base
@@ -25,7 +28,14 @@ def db():
     )
     Base.metadata.create_all(engine)
     session = sessionmaker(bind=engine, expire_on_commit=False)()
-    session.add(User(id=DEV_USER_ID, display_name="Dev"))
+    session.add(
+        User(
+            id=DEV_USER_ID,
+            display_name="Dev",
+            email="dev@gulp.local",
+            password_hash=hash_password("devpw"),
+        )
+    )
     session.commit()
     try:
         yield session
@@ -39,9 +49,39 @@ def owner(db):  # type: ignore[no-untyped-def]
 
 
 @pytest.fixture
+def redis_fake():  # type: ignore[no-untyped-def]
+    return fakeredis.FakeStrictRedis(decode_responses=True)
+
+
+@pytest.fixture(autouse=True)
+def _default_overrides(db, redis_fake):  # type: ignore[no-untyped-def]
+    """The API is multi-user, but feature tests are auth-agnostic: default every
+    request to the seeded dev user and a fake redis. Many test modules define
+    their own `client` fixture, so this autouse hook (not the `client` fixture)
+    is what keeps them green. `auth_client` drops the auth override to exercise
+    real sign-in."""
+    dev = db.get(User, DEV_USER_ID)
+    app.dependency_overrides[get_current_user] = lambda: dev
+    app.dependency_overrides[get_redis] = lambda: redis_fake
+    yield
+    app.dependency_overrides.pop(get_current_user, None)
+    app.dependency_overrides.pop(get_redis, None)
+
+
+@pytest.fixture
 def client(db):  # type: ignore[no-untyped-def]
     app.dependency_overrides[get_db] = lambda: db
-    app.dependency_overrides[get_enqueue] = lambda: (lambda *a: None)
+    app.dependency_overrides[get_enqueue] = lambda: lambda *a: None
+    c = TestClient(app)
+    yield c
+    app.dependency_overrides.clear()
+
+
+@pytest.fixture
+def auth_client(db):  # type: ignore[no-untyped-def]
+    app.dependency_overrides[get_db] = lambda: db
+    app.dependency_overrides[get_enqueue] = lambda: lambda *a: None
+    app.dependency_overrides.pop(get_current_user, None)  # exercise real cookie auth
     c = TestClient(app)
     yield c
     app.dependency_overrides.clear()
@@ -63,14 +103,20 @@ def make_accepted_card(db):  # type: ignore[no-untyped-def]
 
     def _make(db_, owner_, **kw):  # type: ignore[no-untyped-def]
         s = Source(
-            owner_id=owner_.id, kind=SourceKind.snapshot, title="src",
+            owner_id=owner_.id,
+            kind=SourceKind.snapshot,
+            title="src",
             status=SnapshotStatus.ready,
         )
         db_.add(s)
         db_.flush()
         c = Card(
-            source_id=s.id, card_type=CardType.flashcard, prompt="q",
-            origin=CardOrigin.pack, status=CardStatus.accepted, **kw,
+            source_id=s.id,
+            card_type=CardType.flashcard,
+            prompt="q",
+            origin=CardOrigin.pack,
+            status=CardStatus.accepted,
+            **kw,
         )
         db_.add(c)
         db_.flush()

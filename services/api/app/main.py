@@ -13,6 +13,7 @@ from starlette.requests import Request
 from starlette.responses import Response
 
 from app.routers import (
+    auth,
     capture,
     cards,
     export,
@@ -37,6 +38,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.include_router(auth.router, tags=["auth"])
 app.include_router(capture.router, tags=["capture"])
 app.include_router(cards.router, tags=["cards"])
 app.include_router(export.router, tags=["export"])

@@ -4,6 +4,74 @@
  */
 
 export interface paths {
+    "/auth/register": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Register */
+        post: operations["register_auth_register_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/login": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Login */
+        post: operations["login_auth_login_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/logout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Logout */
+        post: operations["logout_auth_logout_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Me */
+        get: operations["me_auth_me_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/capture": {
         parameters: {
             query?: never;
@@ -100,13 +168,13 @@ export interface paths {
             cookie?: never;
         };
         /** Download Cards Job Route */
-        get: operations["download_cards_job_route_snapshots__snapshot_id__cards_job_get"];
+        get: operations["download_cards_job_route_snapshots__snapshot_id__cards_job_head"];
         put?: never;
         post?: never;
         delete?: never;
         options?: never;
         /** Download Cards Job Route */
-        head: operations["download_cards_job_route_snapshots__snapshot_id__cards_job_get"];
+        head: operations["download_cards_job_route_snapshots__snapshot_id__cards_job_head"];
         patch?: never;
         trace?: never;
     };
@@ -1088,6 +1156,21 @@ export interface components {
              */
             ordered: boolean;
         };
+        /**
+         * Locale
+         * @enum {string}
+         */
+        Locale: "zh" | "en";
+        /** LoginRequest */
+        LoginRequest: {
+            /**
+             * Email
+             * Format: email
+             */
+            email: string;
+            /** Password */
+            password: string;
+        };
         /** MasteryTally */
         MasteryTally: {
             /** New */
@@ -1224,6 +1307,20 @@ export interface components {
             type: "prose";
             /** Content */
             content: string;
+        };
+        /** RegisterRequest */
+        RegisterRequest: {
+            /**
+             * Email
+             * Format: email
+             */
+            email: string;
+            /** Password */
+            password: string;
+            /** Display Name */
+            display_name?: string | null;
+            /** @default en */
+            locale: components["schemas"]["Locale"];
         };
         /** ReviewIn */
         ReviewIn: {
@@ -1527,6 +1624,26 @@ export interface components {
             new_count: number;
             mastery: components["schemas"]["MasteryTally"];
         };
+        /** UserPublic */
+        UserPublic: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Email */
+            email: string;
+            /** Display Name */
+            display_name: string | null;
+            locale: components["schemas"]["Locale"];
+            /** Gulp Session Minutes */
+            gulp_session_minutes: number;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
         /** ValidationError */
         ValidationError: {
             /** Location */
@@ -1549,6 +1666,110 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    register_auth_register_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RegisterRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserPublic"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    login_auth_login_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LoginRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserPublic"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    logout_auth_logout_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    me_auth_me_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserPublic"];
+                };
+            };
+        };
+    };
     capture_capture_post: {
         parameters: {
             query?: never;
@@ -1807,7 +2028,7 @@ export interface operations {
             };
         };
     };
-    download_cards_job_route_snapshots__snapshot_id__cards_job_get: {
+    download_cards_job_route_snapshots__snapshot_id__cards_job_head: {
         parameters: {
             query?: never;
             header?: never;
@@ -1838,7 +2059,7 @@ export interface operations {
             };
         };
     };
-    download_cards_job_route_snapshots__snapshot_id__cards_job_get: {
+    download_cards_job_route_snapshots__snapshot_id__cards_job_head: {
         parameters: {
             query?: never;
             header?: never;
