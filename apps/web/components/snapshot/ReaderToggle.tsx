@@ -10,16 +10,14 @@ type CardsStatus = "generating" | "ready" | "failed" | null;
 
 export function ReaderToggle({
   pack,
-  original,
   snapshotId,
   cardsStatus,
 }: {
   pack: PackOut;
-  original: string | null;
   snapshotId: string;
   cardsStatus: CardsStatus;
 }) {
-  const [view, setView] = useState<"pack" | "original" | "cards">("pack");
+  const [view, setView] = useState<"pack" | "cards">("pack");
   return (
     <div>
       <div className={styles.bar}>
@@ -28,13 +26,6 @@ export function ReaderToggle({
           onClick={() => setView("pack")}
         >
           Pack
-        </button>
-        <button
-          className={`${styles.tab} ${view === "original" ? styles.active : ""}`}
-          onClick={() => setView("original")}
-          disabled={!original}
-        >
-          Original
         </button>
         <button
           className={`${styles.tab} ${view === "cards" ? styles.active : ""}`}
@@ -47,9 +38,6 @@ export function ReaderToggle({
         <div className={styles.main}>
           <PackReport pack={pack} />
         </div>
-      )}
-      {view === "original" && (
-        <div className={styles.original}>{original ?? "No original text stored."}</div>
       )}
       {view === "cards" && (
         <div className={styles.main}>
