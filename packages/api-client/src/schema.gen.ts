@@ -40,6 +40,24 @@ export interface paths {
         patch: operations["patch_snapshot_snapshots__snapshot_id__patch"];
         trace?: never;
     };
+    "/snapshots/{snapshot_id}/tags": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add Snapshot Tag */
+        post: operations["add_snapshot_tag_snapshots__snapshot_id__tags_post"];
+        /** Remove Snapshot Tag */
+        delete: operations["remove_snapshot_tag_snapshots__snapshot_id__tags_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/snapshots/{snapshot_id}/cards/generate": {
         parameters: {
             query?: never;
@@ -1307,6 +1325,7 @@ export interface components {
             cards_status: components["schemas"]["CardsStatus"] | null;
             /** Tags */
             tags: string[];
+            source_feed?: components["schemas"]["SourceFeedOut"] | null;
             /**
              * Created At
              * Format: date-time
@@ -1340,6 +1359,20 @@ export interface components {
              * Format: uuid
              */
             card_id: string;
+        };
+        /**
+         * SourceFeedOut
+         * @description The subscription feed that produced a snapshot (derived from
+         *     Source.emitted_by); null for ad-hoc captures.
+         */
+        SourceFeedOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Title */
+            title: string;
         };
         /**
          * SourceGenre
@@ -1455,6 +1488,11 @@ export interface components {
             rows: string[][];
             /** Caption */
             caption?: string | null;
+        };
+        /** TagCreate */
+        TagCreate: {
+            /** Tag */
+            tag: string;
         };
         /** TodayDigestItem */
         TodayDigestItem: {
@@ -1611,6 +1649,74 @@ export interface operations {
                 "application/json": components["schemas"]["SnapshotPatch"];
             };
         };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SnapshotOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_snapshot_tag_snapshots__snapshot_id__tags_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                snapshot_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TagCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SnapshotOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    remove_snapshot_tag_snapshots__snapshot_id__tags_delete: {
+        parameters: {
+            query: {
+                tag: string;
+            };
+            header?: never;
+            path: {
+                snapshot_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
         responses: {
             /** @description Successful Response */
             200: {

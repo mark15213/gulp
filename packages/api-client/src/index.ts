@@ -86,6 +86,25 @@ export async function deleteSnapshot(id: string): Promise<void> {
   if (error) throw new Error("delete snapshot failed");
 }
 
+// User tags on a snapshot (the Library's "Mine" facet). Add is idempotent;
+// remove soft-deletes. Both return the updated snapshot.
+export async function addSnapshotTag(id: string, tag: string): Promise<SnapshotOut> {
+  const { data, error } = await client.POST("/snapshots/{snapshot_id}/tags", {
+    params: { path: { snapshot_id: id } },
+    body: { tag },
+  });
+  if (error || !data) throw new Error("add tag failed");
+  return data;
+}
+
+export async function removeSnapshotTag(id: string, tag: string): Promise<SnapshotOut> {
+  const { data, error } = await client.DELETE("/snapshots/{snapshot_id}/tags", {
+    params: { path: { snapshot_id: id }, query: { tag } },
+  });
+  if (error || !data) throw new Error("remove tag failed");
+  return data;
+}
+
 // v1 limitation: ALL error responses (404, 5xx, network) collapse to `null`.
 // This is fine while "no pack yet" is the only expected error state.
 // Plan B must distinguish a real 404 from a 5xx/4xx before shipping production
