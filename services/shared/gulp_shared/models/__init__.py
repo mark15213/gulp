@@ -16,7 +16,7 @@ from gulp_shared.models.knowledge_pack import (
     PackSection,
     PackStatus,
 )
-from gulp_shared.models.pack_block_message import ChatRole, PackBlockMessage
+from gulp_shared.models.pack_message import ChatRole, PackMessage
 from gulp_shared.models.review_event import ReviewEvent, ReviewGrade
 from gulp_shared.models.source import (
     CapturedVia,
@@ -60,7 +60,7 @@ __all__ = [
     "PackSection",
     "PackBlock",
     "PackBlockType",
-    "PackBlockMessage",
+    "PackMessage",
     "ChatRole",
     "ReviewEvent",
     "ReviewGrade",
