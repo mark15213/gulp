@@ -1,5 +1,6 @@
 import { getLibrary } from "@gulp/api-client";
 import { LibraryList } from "@/components/library/LibraryList";
+import { PageFrame, PageHeader } from "@/components/shell/PageFrame";
 import styles from "./page.module.css";
 
 export const dynamic = "force-dynamic";
@@ -8,12 +9,12 @@ export const dynamic = "force-dynamic";
 export default async function LibraryPage() {
   const { items, count } = await getLibrary();
   return (
-    <div className={styles.page}>
-      <header className={styles.header}>
-        <h1 className="t-title-l">Library</h1>
-        <span className={`t-data ${styles.count}`}>{count}</span>
-      </header>
+    <PageFrame className={styles.page}>
+      <PageHeader
+        title="Library"
+        description={<span className="t-data">{count} ready</span>}
+      />
       <LibraryList items={items} />
-    </div>
+    </PageFrame>
   );
 }

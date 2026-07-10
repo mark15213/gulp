@@ -3,7 +3,6 @@
   grid-template-columns: 200px 1fr;
   gap: 24px;
   align-items: start;
-  padding-top: 12px;
 }
 
 .listCol {
@@ -50,10 +49,10 @@
 }
 
 .meta {
-  color: var(--text-muted, #777);
+  color: var(--text-2);
 }
 
 .empty {
-  color: var(--text-muted, #777);
-  padding: 32px 0;
+  color: var(--text-2);
+  padding: var(--space-8) 0;
 }

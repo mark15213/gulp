@@ -3,5 +3,7 @@
   grid-template-columns: 250px 340px minmax(0, 1fr);
   flex: 1;
   min-height: 0;
-  border-top: 1px solid var(--border);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
 }
