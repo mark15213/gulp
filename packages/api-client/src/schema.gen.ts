@@ -914,6 +914,7 @@ export interface components {
             read: boolean;
             /** Promoted Source Id */
             promoted_source_id: string | null;
+            promoted_status: components["schemas"]["SnapshotStatus"] | null;
             /**
              * Created At
              * Format: date-time
@@ -1013,6 +1014,7 @@ export interface components {
             snapshot_id: string;
             /** Duplicate */
             duplicate: boolean;
+            status: components["schemas"]["SnapshotStatus"];
         };
         /** HTTPValidationError */
         HTTPValidationError: {

@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import type { FeedEntry, Subscription } from "@gulp/api-client";
 import {
   createSubscription,
   deleteSubscription,
   getFeedEntries,
+  getSnapshot,
   getSubscriptions,
   gulpEntry,
   patchSubscription,
@@ -18,6 +19,9 @@ import { EntryList } from "./EntryList";
 import { EntryReader } from "./EntryReader";
 import { AddFeedDialog } from "./AddFeedDialog";
 import styles from "./FeedsWorkspace.module.css";
+
+// Snapshot statuses that no longer change on their own — stop polling once reached.
+const TERMINAL_STATUS = new Set(["ready", "exported", "needs_attention"]);
 
 // Three panes: subscriptions | entries | reader. Selection is client state;
 // mutations call the api-client then refetch the affected list.
@@ -125,10 +129,12 @@ export function FeedsWorkspace({
   }, [refreshEntries, selectedSubId, unreadOnly]);
 
   const onGulp = useCallback(async (entry: FeedEntry) => {
-    const { snapshot_id } = await gulpEntry(entry.id);
+    const { snapshot_id, status } = await gulpEntry(entry.id);
     setEntries((es) =>
       es.map((e) =>
-        e.id === entry.id ? { ...e, promoted_source_id: snapshot_id, read: true } : e,
+        e.id === entry.id
+          ? { ...e, promoted_source_id: snapshot_id, promoted_status: status, read: true }
+          : e,
       ),
     );
   }, []);
@@ -153,6 +159,55 @@ export function FeedsWorkspace({
     },
     [refreshSubs],
   );
+
+  // Live-follow forwarded entries: poll each promoted snapshot until it reaches a
+  // terminal status, so the reader flips Processing… -> In library on its own.
+  // Runs only while /feeds is mounted; a stuck worker just keeps a cheap 3s GET
+  // going until the user navigates away.
+  const entriesRef = useRef(entries);
+  entriesRef.current = entries;
+  const inflightKey = entries
+    .filter((e) => e.promoted_source_id && !TERMINAL_STATUS.has(e.promoted_status ?? ""))
+    .map((e) => e.promoted_source_id)
+    .sort()
+    .join(",");
+  useEffect(() => {
+    if (!inflightKey) return;
+    let cancelled = false;
+    const tick = async () => {
+      const targets = entriesRef.current.filter(
+        (e) => e.promoted_source_id && !TERMINAL_STATUS.has(e.promoted_status ?? ""),
+      );
+      const results = await Promise.all(
+        targets.map(async (e) => {
+          try {
+            const snap = await getSnapshot(e.promoted_source_id as string);
+            return { id: e.id, status: snap.status };
+          } catch {
+            return null;
+          }
+        }),
+      );
+      if (cancelled) return;
+      setEntries((es) => {
+        let changed = false;
+        const next = es.map((e) => {
+          const hit = results.find((r) => r && r.id === e.id);
+          if (hit && hit.status !== e.promoted_status) {
+            changed = true;
+            return { ...e, promoted_status: hit.status };
+          }
+          return e;
+        });
+        return changed ? next : es;
+      });
+    };
+    const id = window.setInterval(tick, 3000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(id);
+    };
+  }, [inflightKey]);
 
   const selectedEntry = entries.find((e) => e.id === selectedEntryId) ?? null;
   const selectedSub = subs.find((s) => s.id === selectedSubId) ?? null;

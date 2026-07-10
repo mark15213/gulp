@@ -7,6 +7,23 @@ import { sanitizeFeedHtml } from "@/lib/feeds";
 import { timeAgo } from "@/lib/time";
 import styles from "./EntryReader.module.css";
 
+// A forwarded entry's snapshot moves queued/processing (Inbox) -> ready (Library).
+// Show that live so the marker never claims the library before processing is done.
+const IN_LIBRARY = new Set(["ready", "exported"]);
+
+function promotedMarker(status: FeedEntry["promoted_status"]): {
+  label: string;
+  className: string;
+} {
+  if (status && IN_LIBRARY.has(status)) {
+    return { label: "In library →", className: styles.statusReady };
+  }
+  if (status === "needs_attention") {
+    return { label: "Needs attention →", className: styles.statusAttention };
+  }
+  return { label: "Processing… →", className: styles.statusProcessing };
+}
+
 // Right pane: feed-provided content + the one decisive action — Forward (the
 // internal "gulp"): send this entry into the capture pipeline. It lands in the
 // Inbox and reaches the Library only once processing completes (spec 2026-07-09 §5).
@@ -26,6 +43,7 @@ export function EntryReader({
       </section>
     );
   }
+  const marker = entry.promoted_source_id ? promotedMarker(entry.promoted_status) : null;
   return (
     <section className={styles.pane} aria-label="Reader">
       <header className={styles.header}>
@@ -44,9 +62,9 @@ export function EntryReader({
           {entry.published_at ? ` · ${timeAgo(entry.published_at)}` : ""}
         </p>
         <div className={styles.actions}>
-          {entry.promoted_source_id ? (
-            <Link href={`/snapshots/${entry.promoted_source_id}`} className={styles.forwarded}>
-              Forwarded ✓ →
+          {marker ? (
+            <Link href={`/snapshots/${entry.promoted_source_id}`} className={marker.className}>
+              {marker.label}
             </Link>
           ) : (
             <button

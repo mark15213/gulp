@@ -87,6 +87,8 @@ def test_entries_listing_and_read_toggle(client, db):
     e = _mk_entry(db, sub)
     r = client.get(f"/subscriptions/{sub.id}/entries")
     assert r.json()["count"] == 1 and r.json()["items"][0]["read"] is False
+    # not forwarded yet -> no promoted snapshot status
+    assert r.json()["items"][0]["promoted_status"] is None
     client.post(f"/feed-entries/{e.id}/read")
     assert client.get("/feed-entries", params={"unread_only": True}).json()["count"] == 0
 
@@ -99,10 +101,16 @@ def test_gulp_promotes_and_is_idempotent(client, db):
     r = client.post(f"/feed-entries/{e.id}/gulp")
     assert r.status_code == 200
     snap_id = r.json()["snapshot_id"]
+    # forwarding reports the snapshot's live status — never "ready" at promote time
+    assert r.json()["status"] in ("queued", "unprocessed", "processing")
     snap = db.get(Source, uuid.UUID(snap_id))
     assert snap.kind == SourceKind.snapshot and snap.emitted_by == sub.id
     assert snap.captured_via.value == "feed"
     assert ("process_snapshot", snap_id) in calls
+    # the entry now carries that live status for the reader
+    listed = client.get("/feed-entries").json()["items"][0]
+    assert listed["promoted_source_id"] == snap_id
+    assert listed["promoted_status"] == r.json()["status"]
     # idempotent second gulp
     assert client.post(f"/feed-entries/{e.id}/gulp").json()["snapshot_id"] == snap_id
 

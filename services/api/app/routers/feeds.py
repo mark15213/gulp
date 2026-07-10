@@ -112,7 +112,7 @@ def subscription_entries(
 ) -> FeedEntriesOut:
     _sub_or_404(db, user, sub_id)
     rows, count = svc.list_entries(db, user.id, sub_id, unread_only, limit, offset)
-    return FeedEntriesOut(items=[svc.to_entry_out(e, t) for e, t in rows], count=count)
+    return FeedEntriesOut(items=[svc.to_entry_out(e, t, st) for e, t, st in rows], count=count)
 
 
 @router.get("/feed-entries", response_model=FeedEntriesOut)
@@ -124,7 +124,7 @@ def all_entries(
     user: User = Depends(get_current_user),
 ) -> FeedEntriesOut:
     rows, count = svc.list_entries(db, user.id, None, unread_only, limit, offset)
-    return FeedEntriesOut(items=[svc.to_entry_out(e, t) for e, t in rows], count=count)
+    return FeedEntriesOut(items=[svc.to_entry_out(e, t, st) for e, t, st in rows], count=count)
 
 
 def _entry_or_404(db: Session, user: User, entry_id: uuid.UUID) -> FeedEntry:
@@ -161,10 +161,10 @@ def gulp_entry(
 ) -> GulpEntryResponse:
     entry = _entry_or_404(db, user, entry_id)
     try:
-        snapshot_id, duplicate = svc.gulp_entry(db, user.id, entry, enqueue)
+        snapshot_id, duplicate, status = svc.gulp_entry(db, user.id, entry, enqueue)
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
-    return GulpEntryResponse(snapshot_id=snapshot_id, duplicate=duplicate)
+    return GulpEntryResponse(snapshot_id=snapshot_id, duplicate=duplicate, status=status)
 
 
 @router.get("/feeds/catalog/search", response_model=CatalogSearchOut)

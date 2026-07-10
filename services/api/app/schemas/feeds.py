@@ -4,6 +4,7 @@ import uuid
 from datetime import datetime
 from typing import Literal
 
+from gulp_shared.models import SnapshotStatus
 from pydantic import BaseModel
 
 SubscriptionHealth = Literal["active", "muted", "error"]
@@ -52,6 +53,9 @@ class FeedEntryOut(BaseModel):
     content_html: str | None
     read: bool
     promoted_source_id: uuid.UUID | None
+    # Live status of the promoted snapshot (null until forwarded). Lets the
+    # reader show Processing… vs In library instead of guessing (spec §5).
+    promoted_status: SnapshotStatus | None
     created_at: datetime
 
 
@@ -63,6 +67,9 @@ class FeedEntriesOut(BaseModel):
 class GulpEntryResponse(BaseModel):
     snapshot_id: uuid.UUID
     duplicate: bool
+    # Status the snapshot has right after forwarding (queued/processing, or the
+    # existing status when the entry was already forwarded).
+    status: SnapshotStatus
 
 
 class CatalogRouteOut(BaseModel):

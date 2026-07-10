@@ -9,7 +9,7 @@ from gulp_shared.domain.feeds import normalize_feed_url
 from gulp_shared.models import FeedEntry, SnapshotStatus, Source, SourceKind
 from gulp_shared.models.source import CapturedVia
 from sqlalchemy import delete, func, select, update
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, aliased
 
 from app.schemas.capture import CaptureRequest
 from app.schemas.feeds import (
@@ -129,7 +129,9 @@ def delete_subscription(db: Session, sub: Source) -> None:
     db.commit()
 
 
-def to_entry_out(entry: FeedEntry, subscription_title: str) -> FeedEntryOut:
+def to_entry_out(
+    entry: FeedEntry, subscription_title: str, promoted_status: SnapshotStatus | None
+) -> FeedEntryOut:
     return FeedEntryOut(
         id=entry.id,
         subscription_id=entry.subscription_id,
@@ -141,6 +143,7 @@ def to_entry_out(entry: FeedEntry, subscription_title: str) -> FeedEntryOut:
         content_html=entry.content_html,
         read=entry.read_at is not None,
         promoted_source_id=entry.promoted_source_id,
+        promoted_status=promoted_status,
         created_at=entry.created_at,
     )
 
@@ -152,10 +155,12 @@ def list_entries(
     unread_only: bool = False,
     limit: int = 50,
     offset: int = 0,
-) -> tuple[list[tuple[FeedEntry, str]], int]:
+) -> tuple[list[tuple[FeedEntry, str, SnapshotStatus | None]], int]:
+    promoted = aliased(Source)  # the snapshot this entry was forwarded into, if any
     q = (
-        select(FeedEntry, Source.title)
+        select(FeedEntry, Source.title, promoted.status)
         .join(Source, FeedEntry.subscription_id == Source.id)
+        .outerjoin(promoted, FeedEntry.promoted_source_id == promoted.id)
         .where(Source.owner_id == owner_id, Source.deleted_at.is_(None))
     )
     if subscription_id is not None:
@@ -168,7 +173,7 @@ def list_entries(
         .limit(limit)
         .offset(offset)
     ).all()
-    return [(e, title) for e, title in rows], count
+    return [(e, title, status) for e, title, status in rows], count
 
 
 def get_entry(db: Session, owner_id: uuid.UUID, entry_id: uuid.UUID) -> FeedEntry | None:
@@ -200,13 +205,13 @@ def gulp_entry(
     owner_id: uuid.UUID,
     entry: FeedEntry,
     enqueue: Callable[..., None],
-) -> tuple[uuid.UUID, bool]:
+) -> tuple[uuid.UUID, bool, SnapshotStatus]:
     """Promote an entry: snapshot via the capture path, then straight into
     processing — the feed gulp is the explicit 'Start' (spec §2)."""
     if entry.promoted_source_id is not None:
         existing = db.get(Source, entry.promoted_source_id)
         if existing is not None and existing.deleted_at is None:
-            return existing.id, True
+            return existing.id, True, existing.status
     if not entry.url:
         raise ValueError("entry has no URL to promote")
     req = CaptureRequest(url=entry.url, title=entry.title, captured_via=CapturedVia.feed)
@@ -220,4 +225,4 @@ def gulp_entry(
     if entry.read_at is None:
         entry.read_at = datetime.now(UTC)
     db.commit()
-    return source.id, duplicate
+    return source.id, duplicate, source.status
