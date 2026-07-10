@@ -1,7 +1,9 @@
 import React from "react";
 import type { ReactNode } from "react";
+import { getMe } from "@gulp/api-client";
 import { Sidebar } from "./Sidebar";
 import { FullBleedGate } from "./FullBleedGate";
+import { AuthProvider } from "@/lib/auth";
 import { CaptureProvider } from "@/components/capture/CaptureProvider";
 import { CaptureButton } from "@/components/capture/CaptureButton";
 
@@ -9,12 +11,15 @@ import { CaptureButton } from "@/components/capture/CaptureButton";
 // Full-bleed routes (e.g. /gulp, Task 15) opt out of the sidebar + capture
 // affordance via FullBleedGate — see that file for why the route check
 // lives in a small Client Component rather than here.
-export function Shell({ children }: { children: ReactNode }) {
+export async function Shell({ children }: { children: ReactNode }) {
+  const user = await getMe();
   return (
-    <CaptureProvider>
-      <FullBleedGate sidebar={<Sidebar />} captureButton={<CaptureButton />}>
-        {children}
-      </FullBleedGate>
-    </CaptureProvider>
+    <AuthProvider initialUser={user}>
+      <CaptureProvider>
+        <FullBleedGate sidebar={<Sidebar />} captureButton={<CaptureButton />}>
+          {children}
+        </FullBleedGate>
+      </CaptureProvider>
+    </AuthProvider>
   );
 }
