@@ -42,7 +42,7 @@
   gap: 10px;
 }
 
-.gulp {
+.forward {
   font: inherit;
   font-weight: 600;
   padding: 6px 20px;
@@ -53,12 +53,12 @@
   cursor: pointer;
 }
 
-.gulp:disabled {
+.forward:disabled {
   opacity: 0.45;
   cursor: not-allowed;
 }
 
-.inLibrary {
+.forwarded {
   font-weight: 600;
   color: var(--emerald-600, #059669);
   text-decoration: none;

@@ -41,7 +41,7 @@ describe("EntryList", () => {
     expect(onSelect).toHaveBeenCalledWith("e1");
   });
 
-  it("marks promoted entries as gulped", () => {
+  it("marks promoted entries as forwarded", () => {
     render(
       <EntryList
         entries={[entry({ promoted_source_id: "snap1", read: true })]}
@@ -51,7 +51,7 @@ describe("EntryList", () => {
         onToggleUnreadOnly={noop}
       />,
     );
-    expect(screen.getByLabelText("gulped")).toBeDefined();
+    expect(screen.getByLabelText("forwarded")).toBeDefined();
     expect(screen.queryByLabelText("unread")).toBeNull();
   });
 

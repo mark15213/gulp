@@ -172,10 +172,11 @@ Routers stay thin (repo Rule 3). After implementation: `just gen-client`.
 - **`/feeds`** (web-primary per `03 §7.11`) — three panes:
   left = subscription list (health dot, mono unread count, mute toggle);
   middle = entry list (All | per-subscription, unread filter);
-  right = reading pane rendering `content_html`, with actions **Gulp** /
-  open original / mark read. After gulp, the entry shows an "in library"
-  marker linking to the snapshot. Sidebar gains the `Feeds` item already
-  reserved in `03 §5`.
+  right = reading pane rendering `content_html`, with actions **Forward** /
+  open original / mark read. After forwarding, the entry shows a "Forwarded ✓"
+  marker linking to the snapshot — which lands in the **Inbox** and reaches the
+  **Library** only once processing completes (`status=ready`). Sidebar gains the
+  `Feeds` item already reserved in `03 §5`.
 - **`/feeds/discover`** — search box over the catalog; results grouped by
   namespace, heat-ranked; clicking an example prefills the subscribe dialog
   (parameters hand-editable); a persistent paste box accepts all three

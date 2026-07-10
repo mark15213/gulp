@@ -56,7 +56,7 @@ export function EntryList({
                 {!entry.read && <span className={styles.unreadDot} aria-label="unread" />}
                 <span className={styles.title}>{entry.title}</span>
                 {entry.promoted_source_id && (
-                  <span className={styles.gulped} aria-label="gulped">
+                  <span className={styles.forwarded} aria-label="forwarded">
                     ✓
                   </span>
                 )}

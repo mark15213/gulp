@@ -1960,9 +1960,9 @@ export default async function FeedsPage() {
 
 `SubscriptionList` — "All entries" row on top, then one row per subscription: health dot (`active` = accent, `error` = red with `title={last_fetch_error}`, `muted` = dimmed), title, mono unread count, hover actions (mute/unmute toggle, delete with `confirm()`), footer "+ Add feed" button opening `AddFeedDialog`, plus a "Discover →" link to `/feeds/discover`.
 
-`EntryList` — header with subscription name + unread-only toggle + "mark all read" (when a sub is selected); rows: title, `t-data` meta line (subscription_title · published date via `lib/time` helpers if present, else `toLocaleDateString`), unread dot, "gulped" check when `promoted_source_id`.
+`EntryList` — header with subscription name + unread-only toggle + "mark all read" (when a sub is selected); rows: title, `t-data` meta line (subscription_title · published date via `lib/time` helpers if present, else `toLocaleDateString`), unread dot, "forwarded" check when `promoted_source_id`.
 
-`EntryReader` — empty state ("Select an entry"); else header (title as link to `url`, author/date), actions row (Gulp button — disabled when `!entry.url`, shows "In library →" link when promoted; mark read/unread), body `dangerouslySetInnerHTML={{ __html: entry.content_html ?? "" }}` inside a scrollable prose container. (Feed HTML is third-party: strip `<script>` tags with a small `sanitize(html)` — `html.replace(/<script[\s\S]*?<\/script>/gi, "")` — before rendering; a full sanitizer is a fast-follow.)
+`EntryReader` — empty state ("Select an entry"); else header (title as link to `url`, author/date), actions row (Forward button — disabled when `!entry.url`, shows "Forwarded ✓ →" link when forwarded → the snapshot, which lands in the Inbox and reaches the Library only at `status=ready`; mark read/unread), body `dangerouslySetInnerHTML={{ __html: entry.content_html ?? "" }}` inside a scrollable prose container. (Feed HTML is third-party: strip `<script>` tags with a small `sanitize(html)` — `html.replace(/<script[\s\S]*?<\/script>/gi, "")` — before rendering; a full sanitizer is a fast-follow.)
 
 `AddFeedDialog` — input (placeholder `rsshub://ns/path, /ns/path, or https://…`) + optional title; submit → `createSubscription`; on 422 show the error inline; on success close + refresh.
 

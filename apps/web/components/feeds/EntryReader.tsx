@@ -7,8 +7,9 @@ import { sanitizeFeedHtml } from "@/lib/feeds";
 import { timeAgo } from "@/lib/time";
 import styles from "./EntryReader.module.css";
 
-// Right pane: feed-provided content + the one decisive action, Gulp —
-// promote this entry into the snapshot pipeline (spec 2026-07-09 §5).
+// Right pane: feed-provided content + the one decisive action — Forward (the
+// internal "gulp"): send this entry into the capture pipeline. It lands in the
+// Inbox and reaches the Library only once processing completes (spec 2026-07-09 §5).
 export function EntryReader({
   entry,
   onGulp,
@@ -44,18 +45,18 @@ export function EntryReader({
         </p>
         <div className={styles.actions}>
           {entry.promoted_source_id ? (
-            <Link href={`/snapshots/${entry.promoted_source_id}`} className={styles.inLibrary}>
-              In library →
+            <Link href={`/snapshots/${entry.promoted_source_id}`} className={styles.forwarded}>
+              Forwarded ✓ →
             </Link>
           ) : (
             <button
               type="button"
-              className={styles.gulp}
+              className={styles.forward}
               disabled={!entry.url}
-              title={entry.url ? "Create a snapshot and digest it" : "Entry has no URL"}
+              title={entry.url ? "Forward into your Inbox and digest it" : "Entry has no URL"}
               onClick={() => onGulp(entry)}
             >
-              Gulp
+              Forward
             </button>
           )}
           <button type="button" className={styles.secondary} onClick={() => onToggleRead(entry)}>
