@@ -1,0 +1,66 @@
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.source {
+  font: inherit;
+  font-size: 0.78em;
+  padding: 2px 8px;
+  border: 1px solid var(--border-strong, #d8cca8);
+  border-radius: 999px;
+  background: var(--blue-50, #fff4c2);
+  color: var(--blue-700, #16130b);
+  cursor: pointer;
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.78em;
+  padding: 2px 4px 2px 8px;
+  border: 1px solid var(--border, #e7dfc8);
+  border-radius: 999px;
+  color: var(--text-muted, #777);
+}
+
+.remove {
+  font: inherit;
+  line-height: 1;
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: var(--text-muted, #777);
+  padding: 0 2px;
+}
+
+.remove:hover {
+  color: var(--blue-700, #16130b);
+}
+
+.add {
+  font: inherit;
+  font-size: 0.9em;
+  line-height: 1;
+  width: 20px;
+  height: 20px;
+  border: 1px dashed var(--border-strong, #d8cca8);
+  border-radius: 999px;
+  background: none;
+  cursor: pointer;
+  color: var(--text-muted, #777);
+}
+
+.input {
+  font: inherit;
+  font-size: 0.78em;
+  width: 90px;
+  padding: 2px 8px;
+  border: 1px solid var(--border-strong, #d8cca8);
+  border-radius: 999px;
+  background: var(--surface, #fffdf6);
+}
