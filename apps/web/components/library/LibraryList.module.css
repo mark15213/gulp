@@ -1,24 +1,20 @@
-.chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  padding: 12px 0;
-  border-bottom: 1px solid var(--border);
+.layout {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 24px;
+  align-items: start;
+  padding-top: 12px;
 }
 
-.chip {
-  font: inherit;
-  font-size: 0.85em;
-  padding: 4px 12px;
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  background: none;
-  cursor: pointer;
+.listCol {
+  min-width: 0;
+  max-width: var(--measure, 720px);
 }
 
-.chipActive {
-  border-color: var(--blue-600, #2563eb);
-  color: var(--blue-600, #2563eb);
+@media (max-width: 720px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
 }
 
 .list {
