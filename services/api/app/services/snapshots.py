@@ -35,6 +35,36 @@ def _tags_for(db: Session, source_id: uuid.UUID) -> list[str]:
     )
 
 
+def add_tag(db: Session, source: Source, tag: str) -> Source:
+    """Idempotent: no-op if a live row already exists for (source, tag)."""
+    live = db.scalar(
+        select(SourceTag.id).where(
+            SourceTag.source_id == source.id,
+            SourceTag.tag == tag,
+            SourceTag.deleted_at.is_(None),
+        )
+    )
+    if live is None:
+        db.add(SourceTag(source_id=source.id, tag=tag))
+        db.commit()
+    return source
+
+
+def remove_tag(db: Session, source: Source, tag: str) -> Source:
+    """Soft-delete every live row for (source, tag). No-op if none match."""
+    db.execute(
+        update(SourceTag)
+        .where(
+            SourceTag.source_id == source.id,
+            SourceTag.tag == tag,
+            SourceTag.deleted_at.is_(None),
+        )
+        .values(deleted_at=datetime.now(UTC))
+    )
+    db.commit()
+    return source
+
+
 def delete_snapshot(db: Session, source: Source) -> None:
     """Cascade soft-delete: the snapshot + every derivative, in one transaction."""
     now = datetime.now(UTC)

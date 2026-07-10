@@ -2,6 +2,7 @@
 
 import uuid
 from datetime import datetime
+from typing import Annotated
 
 from gulp_shared.domain.urls import is_http_url
 from gulp_shared.models.source import (
@@ -12,7 +13,7 @@ from gulp_shared.models.source import (
     SourceGenre,
     SourceKind,
 )
-from pydantic import BaseModel, ConfigDict, model_validator
+from pydantic import BaseModel, ConfigDict, StringConstraints, model_validator
 
 
 class CaptureRequest(BaseModel):
@@ -67,6 +68,10 @@ class SnapshotPatch(BaseModel):
     the next re-run."""
 
     genre: SourceGenre
+
+
+class TagCreate(BaseModel):
+    tag: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
 
 
 class CaptureResponse(BaseModel):
