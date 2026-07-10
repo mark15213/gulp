@@ -1,5 +1,10 @@
+/* The shell's capture row above this page is 44px tall: 12px top padding
+   (Shell.module.css .captureRow) + the 32px md Button (docs/03 §7.4).
+   Subtract it so the workspace ends exactly at the viewport bottom — the
+   subscription-pane footer (Add feed / Discover) must stay visible. */
 .page {
-  height: calc(100vh - 0px);
+  height: calc(100vh - 44px);
+  height: calc(100dvh - 44px);
   min-height: 0;
   display: flex;
   flex-direction: column;
