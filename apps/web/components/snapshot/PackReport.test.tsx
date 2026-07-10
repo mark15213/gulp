@@ -6,6 +6,7 @@ import userEvent from "@testing-library/user-event";
 import * as api from "@gulp/api-client";
 import type { PackOut } from "@gulp/api-client";
 import { PackReport } from "./PackReport";
+import { ReaderChatCtx } from "./ReaderChatContext";
 
 vi.mock("@gulp/api-client", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@gulp/api-client")>();
@@ -14,8 +15,6 @@ vi.mock("@gulp/api-client", async (importOriginal) => {
     updateBlock: vi.fn(),
     createBlock: vi.fn(),
     deleteBlock: vi.fn(),
-    getBlockMessages: vi.fn(),
-    postBlockMessage: vi.fn(),
     getFigures: vi.fn(async () => []),
   };
 });
@@ -220,16 +219,17 @@ describe("PackReport editing", () => {
 });
 
 describe("PackReport chat", () => {
-  it("opens the ChatPanel for a block when its Discuss button is clicked", async () => {
-    (api.getBlockMessages as ReturnType<typeof vi.fn>).mockResolvedValue([]);
-    render(<PackReport pack={pack} />);
+  it("adds a block to the article chat via context when Add-to-chat is clicked", async () => {
+    const addToChat = vi.fn();
+    render(
+      <ReaderChatCtx.Provider value={{ addToChat }}>
+        <PackReport pack={pack} />
+      </ReaderChatCtx.Provider>,
+    );
     const cell = document.querySelector('[data-block-id="00000000-0000-0000-0000-0000000000b1"]')!;
-    await userEvent.click(cell.querySelector('[aria-label="Discuss block"]') as HTMLElement);
-    // the panel mounts and loads this block's messages
-    expect(await screen.findByLabelText("Ask about this block")).toBeTruthy();
-    expect(api.getBlockMessages).toHaveBeenCalledWith(
-      pack.snapshot_id,
-      "00000000-0000-0000-0000-0000000000b1",
+    await userEvent.click(cell.querySelector('[aria-label="Add to chat"]') as HTMLElement);
+    expect(addToChat).toHaveBeenCalledWith(
+      expect.objectContaining({ id: "00000000-0000-0000-0000-0000000000b1" }),
     );
   });
 });

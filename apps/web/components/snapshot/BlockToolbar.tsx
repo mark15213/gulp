@@ -6,7 +6,7 @@ export function BlockToolbar({
   onDelete,
   onMoveUp,
   onMoveDown,
-  onDiscuss,
+  onAddToChat,
   canMoveUp,
   canMoveDown,
 }: {
@@ -14,7 +14,7 @@ export function BlockToolbar({
   onDelete: () => void;
   onMoveUp: () => void;
   onMoveDown: () => void;
-  onDiscuss: () => void;
+  onAddToChat: () => void;
   canMoveUp: boolean;
   canMoveDown: boolean;
 }) {
@@ -41,7 +41,7 @@ export function BlockToolbar({
       >
         ↓
       </button>
-      <button type="button" className={styles.iconBtn} aria-label="Discuss block" onClick={onDiscuss}>
+      <button type="button" className={styles.iconBtn} aria-label="Add to chat" onClick={onAddToChat}>
         💬
       </button>
       <button type="button" className={styles.iconBtn} aria-label="Delete block" onClick={onDelete}>

@@ -14,17 +14,34 @@ import {
 } from "@/lib/packEdit";
 import { BlockCell } from "./BlockCell";
 import { AddBlockMenu } from "./AddBlockMenu";
-import { ChatPanel } from "./ChatPanel";
+import { useReaderChat } from "./ReaderChatContext";
 import { Md } from "./Md";
 import styles from "./PackReport.module.css";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+const preview = (s: string) => {
+  const t = s.replace(/\s+/g, " ").trim();
+  return t.length > 32 ? `${t.slice(0, 32)}…` : t || "Block";
+};
+
+function attachmentLabel(block: PackBlockOut): string {
+  switch (block.type) {
+    case "prose": return preview(block.content);
+    case "formula": return preview(block.explanation || block.latex);
+    case "list": return preview(block.items[0] ?? "List");
+    case "figure": return block.label || "Figure";
+    case "table": return block.caption || "Table";
+    case "code": return "Code";
+    default: return "Block";
+  }
+}
+
 export function PackReport({ pack: initialPack }: { pack: PackOut }) {
   const [pack, setPack] = useState(initialPack);
   const [error, setError] = useState<string | null>(null);
-  const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
   const [figures, setFigures] = useState<FigureAssetOut[]>([]);
+  const chat = useReaderChat();
   const sid = pack.snapshot_id;
 
   useEffect(() => {
@@ -149,7 +166,7 @@ export function PackReport({ pack: initialPack }: { pack: PackOut }) {
                   onDelete={() => del(section.id, block.id)}
                   onMoveUp={() => move(section.id, block.id, -1)}
                   onMoveDown={() => move(section.id, block.id, 1)}
-                  onDiscuss={() => setSelectedBlockId(block.id)}
+                  onAddToChat={() => chat?.addToChat({ id: block.id, label: attachmentLabel(block) })}
                 />
                 <AddBlockMenu onInsert={(t) => insert(section.id, i + 1, t)} />
               </Fragment>
@@ -171,14 +188,6 @@ export function PackReport({ pack: initialPack }: { pack: PackOut }) {
           </section>
         )}
       </article>
-      {selectedBlockId && (
-        <ChatPanel
-          key={selectedBlockId}
-          snapshotId={sid}
-          blockId={selectedBlockId}
-          onClose={() => setSelectedBlockId(null)}
-        />
-      )}
     </>
   );
 }

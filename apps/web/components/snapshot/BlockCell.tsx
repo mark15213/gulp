@@ -20,7 +20,7 @@ export function BlockCell({
   onDelete,
   onMoveUp,
   onMoveDown,
-  onDiscuss,
+  onAddToChat,
 }: {
   snapshotId: string;
   block: PackBlockOut;
@@ -32,7 +32,7 @@ export function BlockCell({
   onDelete: () => void;
   onMoveUp: () => void;
   onMoveDown: () => void;
-  onDiscuss: () => void;
+  onAddToChat: () => void;
 }) {
   const [editing, setEditing] = useState(false);
   return (
@@ -55,7 +55,7 @@ export function BlockCell({
               onDelete={onDelete}
               onMoveUp={onMoveUp}
               onMoveDown={onMoveDown}
-              onDiscuss={onDiscuss}
+              onAddToChat={onAddToChat}
               canMoveUp={canMoveUp}
               canMoveDown={canMoveDown}
             />
