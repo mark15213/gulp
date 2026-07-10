@@ -19,6 +19,7 @@ class Settings(BaseSettings):
     rsshub_routes_url: str = "https://docs.rsshub.app/routes.json"
     feed_poll_interval_minutes: int = 30
     feed_entry_retention_days: int = 90
+    log_level: str = "INFO"
 
     @property
     def cors_origins(self) -> list[str]:

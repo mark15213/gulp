@@ -53,7 +53,10 @@ format:
     uv run ruff format .
 test:
     pnpm turbo run test
-    uv run pytest
+    # api and worker both expose a top-level `app` package, so run pytest per
+    # Python package just like mypy.
+    uv run pytest services/shared services/api
+    cd services/worker && uv run --package gulp-worker pytest
 
 # Regenerate the TS api-client from the API's OpenAPI schema
 gen-client:

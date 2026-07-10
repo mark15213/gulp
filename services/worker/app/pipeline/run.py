@@ -57,6 +57,7 @@ async def process_source(
     provider: LLMProvider | None = None,
     config: ModelConfig | None = None,
 ) -> None:
+    logger.info("process_snapshot started source_id=%s", source.id)
     source.status = SnapshotStatus.processing
     db.commit()
     try:
@@ -78,6 +79,7 @@ async def process_source(
         persist_pack(db, source, draft)
         source.status = SnapshotStatus.ready
         db.commit()
+        logger.info("process_snapshot completed source_id=%s", source.id)
         await _maybe_extract_figures(db, source, fetch)
     except Exception:
         db.rollback()

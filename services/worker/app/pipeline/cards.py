@@ -175,6 +175,7 @@ async def generate_cards_for_source(
     provider: LLMProvider | None = None,
     config: ModelConfig | None = None,
 ) -> None:
+    logger.info("generate_cards started source_id=%s", source.id)
     source.cards_status = CardsStatus.generating
     db.commit()
     try:
@@ -192,6 +193,7 @@ async def generate_cards_for_source(
         persist_cards(db, source, CardsPayload(cards=generation.cards))
         source.cards_status = CardsStatus.ready
         db.commit()
+        logger.info("generate_cards completed source_id=%s", source.id)
     except Exception:
         db.rollback()
         source.cards_status = CardsStatus.failed

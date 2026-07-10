@@ -2,6 +2,7 @@
 // flushes on reconnect. Real reconciliation (dedupe-on-flush, cross-device
 // merge) is S8 — not here.
 import { capture as apiCapture, type CaptureBody } from "@gulp/api-client";
+import { logError } from "./logger";
 
 export type PendingCapture = {
   localId: string;
@@ -18,7 +19,8 @@ const KEY = "gulp.captureQueue";
 export function readQueue(): PendingCapture[] {
   try {
     return JSON.parse(localStorage.getItem(KEY) ?? "[]") as PendingCapture[];
-  } catch {
+  } catch (err) {
+    logError("capture queue read failed", err);
     return [];
   }
 }
@@ -48,7 +50,8 @@ export async function flushQueue(send: Sender = apiCapture): Promise<number> {
         captured_via: item.captured_via,
       });
       flushed += 1;
-    } catch {
+    } catch (err) {
+      logError("capture queue flush failed", err, { localId: item.localId });
       remaining.push(item);
     }
   }

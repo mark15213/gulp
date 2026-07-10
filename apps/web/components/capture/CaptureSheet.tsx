@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { capture } from "@gulp/api-client";
 import { enqueuePending } from "@/lib/captureQueue";
+import { logError } from "@/lib/logger";
 import { Button } from "@/components/ui/Button";
 import styles from "./CaptureSheet.module.css";
 
@@ -28,7 +29,7 @@ export function CaptureSheet({ onClose }: { onClose: () => void }) {
     setError(null);
     try {
       await capture(body);
-    } catch {
+    } catch (err) {
       // Only a genuinely-offline browser is safe to buffer optimistically. Any
       // other failure (server down, CORS, 4xx) must be surfaced — swallowing it
       // into the local queue is how captures silently vanished.
@@ -41,6 +42,7 @@ export function CaptureSheet({ onClose }: { onClose: () => void }) {
           captured_via: mode === "link" ? "paste" : "manual",
         });
       } else {
+        logError("capture save failed", err, { mode });
         setError("Couldn't save — the server didn't respond. Nothing was saved; try again.");
         return;
       }
