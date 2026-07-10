@@ -1,5 +1,6 @@
 .page {
-  height: calc(100vh - 0px);
+  /* Fill the rest of the shell's viewport column (see Shell.module.css .main). */
+  flex: 1;
   min-height: 0;
   display: flex;
   flex-direction: column;

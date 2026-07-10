@@ -6,6 +6,11 @@
 
 .main {
   min-width: 0;
+  /* Column flex so a full-height workspace page (e.g. /feeds) can `flex: 1`
+     to exactly fill the viewport below the capture row — no hardcoded
+     offsets. Normal pages keep their natural height (flex-basis auto). */
+  display: flex;
+  flex-direction: column;
 }
 
 .captureRow {
