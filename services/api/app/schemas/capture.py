@@ -34,6 +34,14 @@ class CaptureRequest(BaseModel):
         return self
 
 
+class SourceFeedOut(BaseModel):
+    """The subscription feed that produced a snapshot (derived from
+    Source.emitted_by); null for ad-hoc captures."""
+
+    id: uuid.UUID
+    title: str
+
+
 class SnapshotOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -49,6 +57,7 @@ class SnapshotOut(BaseModel):
     captured_via: CapturedVia | None
     cards_status: CardsStatus | None
     tags: list[str]
+    source_feed: SourceFeedOut | None = None
     created_at: datetime
     updated_at: datetime
 

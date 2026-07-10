@@ -14,7 +14,7 @@ from gulp_shared.models.source_tag import SourceTag
 from sqlalchemy import ColumnElement, select, update
 from sqlalchemy.orm import Session
 
-from app.schemas.capture import SnapshotOut, SnapshotPatch
+from app.schemas.capture import SnapshotOut, SnapshotPatch, SourceFeedOut
 
 
 def update_snapshot(db: Session, source: Source, patch: SnapshotPatch) -> Source:
@@ -76,7 +76,28 @@ def delete_snapshot(db: Session, source: Source) -> None:
     db.commit()
 
 
-def to_out(db: Session, source: Source) -> SnapshotOut:
+def _source_feed(
+    db: Session,
+    source: Source,
+    feed_titles: dict[uuid.UUID, str] | None = None,
+) -> SourceFeedOut | None:
+    """The subscription that emitted this snapshot. Batch callers pass
+    `feed_titles` (id -> title) to avoid an N+1; single-item callers fall back
+    to a PK lookup."""
+    if source.emitted_by is None:
+        return None
+    if feed_titles is not None:
+        title = feed_titles.get(source.emitted_by)
+        return SourceFeedOut(id=source.emitted_by, title=title) if title is not None else None
+    sub = db.get(Source, source.emitted_by)
+    return SourceFeedOut(id=sub.id, title=sub.title) if sub is not None else None
+
+
+def to_out(
+    db: Session,
+    source: Source,
+    feed_titles: dict[uuid.UUID, str] | None = None,
+) -> SnapshotOut:
     return SnapshotOut(
         id=source.id,
         kind=source.kind,
@@ -90,6 +111,7 @@ def to_out(db: Session, source: Source) -> SnapshotOut:
         captured_via=source.captured_via,
         cards_status=source.cards_status,
         tags=_tags_for(db, source.id),
+        source_feed=_source_feed(db, source, feed_titles),
         created_at=source.created_at,
         updated_at=source.updated_at,
     )

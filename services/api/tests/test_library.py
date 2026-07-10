@@ -38,6 +38,33 @@ def test_library_lists_only_ready_newest_first(client: TestClient, db) -> None: 
     assert body["count"] == 2
 
 
+def _subscription(db, title: str):  # type: ignore[no-untyped-def]
+    sub = Source(
+        owner_id=DEV_USER_ID,
+        kind=SourceKind.subscription,
+        title=title,
+        status=SnapshotStatus.ready,  # constant for subscriptions; health is derived
+    )
+    db.add(sub)
+    db.flush()
+    return sub
+
+
+def test_library_item_carries_source_feed(client: TestClient, db) -> None:  # type: ignore[no-untyped-def]
+    sub = _subscription(db, "HuggingFace Paper Daily")
+    from_feed = _ready(db, "https://hf.co/papers/1")
+    from_feed.emitted_by = sub.id
+    db.commit()
+    plain = _ready(db, "https://blog.example/1")
+
+    items = {i["id"]: i for i in client.get("/library").json()["items"]}
+    assert items[str(from_feed.id)]["source_feed"] == {
+        "id": str(sub.id),
+        "title": "HuggingFace Paper Daily",
+    }
+    assert items[str(plain.id)]["source_feed"] is None
+
+
 def test_library_excludes_foreign_and_deleted(client: TestClient, db) -> None:  # type: ignore[no-untyped-def]
     mine = _ready(db, "https://a.com/mine")
     gone = _ready(db, "https://a.com/gone")

@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from app.core.auth import get_current_user
 from app.deps import get_db
 from app.schemas.capture import LibraryOut
-from app.services.library import list_library
+from app.services.library import feed_titles_for, list_library
 from app.services.snapshots import to_out
 
 router = APIRouter()
@@ -18,5 +18,7 @@ def get_library(
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> LibraryOut:
-    items = [to_out(db, s) for s in list_library(db, user.id)]
+    sources = list_library(db, user.id)
+    feed_titles = feed_titles_for(db, sources)
+    items = [to_out(db, s, feed_titles) for s in sources]
     return LibraryOut(items=items, count=len(items))
