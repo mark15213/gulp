@@ -13,6 +13,13 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn() }),
 }));
 
+vi.mock("@/lib/auth", () => ({
+  useAuth: () => ({
+    user: { email: "dev@gulp.local", display_name: "Dev" },
+    signOut: vi.fn(),
+  }),
+}));
+
 afterEach(() => {
   cleanup();
   vi.clearAllMocks();

@@ -4,6 +4,7 @@ import { IconSettings } from "@/components/ui/icons";
 import { getInbox } from "@gulp/api-client";
 import { SidebarNav } from "./SidebarNav";
 import { SearchCommand } from "./SearchCommand";
+import { AccountMenu } from "./AccountMenu";
 import styles from "./Sidebar.module.css";
 
 export async function Sidebar() {
@@ -35,15 +36,7 @@ export async function Sidebar() {
           <IconSettings className={styles.itemIcon} />
           <span className={styles.itemLabel}>Settings</span>
         </span>
-        <div className={styles.account}>
-          <span className={styles.avatar} aria-hidden="true">
-            M
-          </span>
-          <div className={styles.accountText}>
-            <span className={styles.accountName}>Mark</span>
-            <span className={styles.accountMeta}>Free plan</span>
-          </div>
-        </div>
+        <AccountMenu />
       </div>
     </aside>
   );
