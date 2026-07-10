@@ -4,14 +4,14 @@ export type StarterSource = { feedUrl: string; title: string; note: string };
 
 export const STARTER_SOURCES: StarterSource[] = [
   {
-    feedUrl: "rsshub://anthropic/research",
-    title: "Anthropic Research",
-    note: "English AI research articles",
+    feedUrl: "rsshub://openai/news",
+    title: "OpenAI News",
+    note: "English AI news",
   },
   { feedUrl: "rsshub://sspai/index", title: "少数派", note: "Chinese long-form, high volume" },
   { feedUrl: "rsshub://qbitai/category/资讯", title: "量子位", note: "Chinese AI news" },
   { feedUrl: "rsshub://solidot/www", title: "Solidot", note: "Short tech news items" },
-  { feedUrl: "rsshub://36kr/hot-list", title: "36氪热榜", note: "Ranked tech list" },
+  { feedUrl: "rsshub://36kr/newsflashes", title: "36氪快讯", note: "Short tech newsflashes" },
   {
     feedUrl: "rsshub://hellogithub/volume",
     title: "HelloGitHub 月刊",

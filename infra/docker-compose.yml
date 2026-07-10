@@ -28,6 +28,10 @@ services:
       NODE_ENV: production
       CACHE_TYPE: redis
       REDIS_URL: redis://redis:6379/1
+      # Route upstream fetches through the host's local proxy so routes for
+      # sites unreachable from a bare domestic connection (anthropic, openai,
+      # bsky, …) work; the proxy's own rules keep domestic sites direct.
+      PROXY_URI: http://host.docker.internal:7993
     depends_on:
       - redis
 

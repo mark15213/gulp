@@ -11,9 +11,9 @@ import styles from "./Sidebar.module.css";
 // spec 2026-07-09). Knowledge bases are parked (tags cover grouping).
 const NAV = [
   { label: "Today", href: "/", icon: IconToday },
+  { label: "Feeds", href: "/feeds", icon: IconFeeds },
   { label: "Inbox", href: "/inbox", icon: IconInbox },
   { label: "Library", href: "/library", icon: IconLibrary },
-  { label: "Feeds", href: "/feeds", icon: IconFeeds },
 ] as const;
 
 // Today only on the exact root; sections match themselves and their subtree.
