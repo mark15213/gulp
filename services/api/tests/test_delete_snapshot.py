@@ -59,7 +59,14 @@ def _library_snapshot_with_derivatives(db) -> Source:  # type: ignore[no-untyped
     block = PackBlock(section_id=section.id, block_type=PackBlockType.prose, data={}, position=0)
     db.add(block)
     db.flush()
-    db.add(PackMessage(snapshot_id=src.id, role=ChatRole.user, content="hi", block_refs=[str(block.id)]))
+    db.add(
+        PackMessage(
+            snapshot_id=src.id,
+            role=ChatRole.user,
+            content="hi",
+            block_refs=[str(block.id)],
+        )
+    )
 
     db.add(
         Card(

@@ -33,18 +33,36 @@ class FakeProvider:
 
 
 def _pack(db) -> dict:  # type: ignore[no-untyped-def]
-    snap = Source(owner_id=DEV_USER_ID, kind=SourceKind.snapshot, title="T",
-                  status=SnapshotStatus.ready, content_body="The source body text.")
-    db.add(snap); db.flush()
-    pack = KnowledgePack(snapshot_id=snap.id, title="BERT", summary="A summary.",
-                         pack_type=PackType.paper, extras={"key_insight": "Change the objective."},
-                         status=PackStatus.ready)
-    db.add(pack); db.flush()
+    snap = Source(
+        owner_id=DEV_USER_ID,
+        kind=SourceKind.snapshot,
+        title="T",
+        status=SnapshotStatus.ready,
+        content_body="The source body text.",
+    )
+    db.add(snap)
+    db.flush()
+    pack = KnowledgePack(
+        snapshot_id=snap.id,
+        title="BERT",
+        summary="A summary.",
+        pack_type=PackType.paper,
+        extras={"key_insight": "Change the objective."},
+        status=PackStatus.ready,
+    )
+    db.add(pack)
+    db.flush()
     sec = PackSection(pack_id=pack.id, heading="Method", position=0)
-    db.add(sec); db.flush()
-    block = PackBlock(section_id=sec.id, block_type=PackBlockType.prose,
-                      data={"content": "Masked language modeling."}, position=0)
-    db.add(block); db.commit()
+    db.add(sec)
+    db.flush()
+    block = PackBlock(
+        section_id=sec.id,
+        block_type=PackBlockType.prose,
+        data={"content": "Masked language modeling."},
+        position=0,
+    )
+    db.add(block)
+    db.commit()
     return {"snap": snap.id, "block": block.id}
 
 
@@ -85,8 +103,10 @@ def client(db):  # type: ignore[no-untyped-def]
 
 def test_post_then_get_messages(client, db) -> None:  # type: ignore[no-untyped-def]
     ids = _pack(db)
-    r = client.post(f"/snapshots/{ids['snap']}/messages",
-                    json={"content": "Why masking?", "block_refs": [str(ids["block"])]})
+    r = client.post(
+        f"/snapshots/{ids['snap']}/messages",
+        json={"content": "Why masking?", "block_refs": [str(ids["block"])]},
+    )
     assert r.status_code == 201
     assert r.json()["role"] == "assistant"
     g = client.get(f"/snapshots/{ids['snap']}/messages")
@@ -95,8 +115,13 @@ def test_post_then_get_messages(client, db) -> None:  # type: ignore[no-untyped-
 
 
 def test_messages_404_for_foreign_snapshot(client, db) -> None:  # type: ignore[no-untyped-def]
-    foreign = Source(owner_id=uuid.uuid4(), kind=SourceKind.snapshot, title="F",
-                     status=SnapshotStatus.ready)
-    db.add(foreign); db.commit()
+    foreign = Source(
+        owner_id=uuid.uuid4(),
+        kind=SourceKind.snapshot,
+        title="F",
+        status=SnapshotStatus.ready,
+    )
+    db.add(foreign)
+    db.commit()
     r = client.get(f"/snapshots/{foreign.id}/messages")
     assert r.status_code == 404
