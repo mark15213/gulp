@@ -346,6 +346,7 @@ The product's most-repeated component (interaction spec §2.3).
 
 - Horizontally scrolling, toggleable chips: by form (Snapshots · Conversations), by derived type (Cards · Concepts), by Knowledge base, by mastery / `Due` (interaction spec §4.3).
 - Selected = `--blue-50` fill + `--blue-700` text + 1px blue border; idle = `--fill` + `--text-2`.
+- *(amended 2026-07-10)* The web Library realizes these facets as a **left tag sidebar** (grouped Sources / Mine / Topics with per-entry counts), not a single chip row. Each object card's metadata row carries a read-only **source chip** (the feed it came from) plus its editable user tags. Selected entry style follows the chip rule above. The **Topics** group is rendered disabled ("coming soon") until AI topic tagging exists.
 
 ### 7.4 Buttons & primary actions
 

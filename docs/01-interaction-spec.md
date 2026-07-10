@@ -164,6 +164,8 @@ Each flow: **trigger → steps → key screens → states → edge cases**, with
 
 **Steps / entries** *(amended 2026-07-02 — v1 scope, see [`superpowers/specs/2026-07-02-single-gate-lifecycle-design.md`](superpowers/specs/2026-07-02-single-gate-lifecycle-design.md))*: the Library lists **`ready` snapshots** (everything digested — arrival is automatic, §F2), filtered by **tag** and type; grouping is by tags (`SourceTag`) — the Knowledge-base entity is parked, Concept browsing is frozen until concept supply exists. Open any object → read / discuss / manage its cards.
 
+*(amended 2026-07-10 — see [`superpowers/specs/2026-07-10-library-redesign-source-tags-design.md`](superpowers/specs/2026-07-10-library-redesign-source-tags-design.md))* Browsing is via a left **tag sidebar** grouped by **Sources** (the feed each item was forwarded from, derived from `Source.emitted_by`), **Mine** (user `SourceTag`s, editable inline), and a reserved **Topics** group (AI topic tags — a disabled "coming soon" placeholder until AI tagging ships). Filtering is single-select; the Knowledge-base entity stays parked.
+
 **Key screens:** Library list (v1 filters: tag · type; mastery/due chips arrive with S5) · Concept page *(frozen)* · Knowledge-base home *(parked — tags cover grouping)*.
 
 **States shown per item:** mastery state (§7), `due` indicator, last-reviewed, source freshness.

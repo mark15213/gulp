@@ -152,7 +152,7 @@ The frozen, point-in-time item — "the everyday thing you gulped" (`01 §4.2`).
 | `content_body` | `text?` | **stored extracted content** — the link-rot-proof copy (§8 decision) |
 | `content_ref` | `string?` | pointer to the stored original/blob (media, raw file) |
 | `captured_via` | `enum{share_sheet·wechat·email·in_app·paste·manual·screenshot·audio_memo·feed}` | provenance (`01 §F1`; `feed` = promoted from a subscription, spec 2026-07-09) |
-| `emitted_by` | `→Source?` | the `Subscription` that produced it; null for ad-hoc captures (`01 §F6`) — **live** as of spec 2026-07-09 (was deferred with S7) |
+| `emitted_by` | `→Source?` | the `Subscription` that produced it; null for ad-hoc captures (`01 §F6`) — **live** as of spec 2026-07-09 (was deferred with S7). The Library's **Sources** facet is *derived* from this (join to the subscription's `title`) and surfaced on the contract as `SnapshotOut.source_feed` — no materialized source tag and no tag-`origin` column yet; that column arrives with AI topic tagging (spec 2026-07-10). |
 | `pack` | `→KnowledgePack?` | 1–1; null until generated, and null forever for unsupported content (`01 §10.3`) |
 
 **`status` domain (the capture lifecycle, `01 §F1`/`§F2` — amended 2026-07-02, single gate; see [`superpowers/specs/2026-07-02-single-gate-lifecycle-design.md`](superpowers/specs/2026-07-02-single-gate-lifecycle-design.md)):**
