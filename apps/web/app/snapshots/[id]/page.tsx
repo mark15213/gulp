@@ -1,13 +1,12 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getPack, getSnapshot } from "@gulp/api-client";
-import { GenreSelect } from "@/components/snapshot/GenreSelect";
+import { Sidebar } from "@/components/shell/Sidebar";
+import { ReaderLayout } from "@/components/snapshot/ReaderLayout";
 import { ReaderToggle } from "@/components/snapshot/ReaderToggle";
 import { StartButton } from "@/components/snapshot/StartButton";
 import { ExportActions } from "@/components/snapshot/ExportActions";
 import { ProcessingPoller } from "@/components/snapshot/ProcessingPoller";
 import styles from "@/components/snapshot/SnapshotStatusView.module.css";
-import { safeHost } from "@/lib/pack";
 
 export const dynamic = "force-dynamic";
 
@@ -20,23 +19,12 @@ export default async function SnapshotPage({ params }: { params: Promise<{ id: s
     notFound();
   }
 
-  const source = safeHost(snap.origin_url);
-
-  return (
-    <div className={styles.page}>
-      <Link href="/inbox" className={styles.back}>← Inbox</Link>
-      <h1 className={`t-title-l ${styles.title}`}>{snap.title}</h1>
-      <p className={`t-data ${styles.source}`}>
-        {source} <GenreSelect snapshotId={id} genre={snap.genre ?? null} />
-      </p>
-
+  const body = (
+    <>
       {snap.status === "unprocessed" && (
         <div className={styles.actions}>
           <StartButton id={id} />
           <ExportActions id={id} status={snap.status} />
-          {snap.origin_url && (
-            <a className={styles.open} href={snap.origin_url} target="_blank" rel="noreferrer">Open original</a>
-          )}
         </div>
       )}
 
@@ -56,9 +44,6 @@ export default async function SnapshotPage({ params }: { params: Promise<{ id: s
           <div className={styles.actions}>
             <StartButton id={id} label="Retry" />
             <ExportActions id={id} status={snap.status} />
-            {snap.origin_url && (
-              <a className={styles.open} href={snap.origin_url} target="_blank" rel="noreferrer">Open original</a>
-            )}
           </div>
         </>
       )}
@@ -72,20 +57,31 @@ export default async function SnapshotPage({ params }: { params: Promise<{ id: s
         </div>
       )}
 
-      {snap.status === "ready" &&
-        (await renderPack(id, snap.content_body, snap.cards_status ?? null))}
-    </div>
+      {snap.status === "ready" && (await renderPack(id, snap.cards_status ?? null))}
+    </>
+  );
+
+  return (
+    <ReaderLayout
+      sidebar={<Sidebar />}
+      snapshotId={id}
+      title={snap.title}
+      genre={snap.genre ?? null}
+      originUrl={snap.origin_url}
+      packReady={snap.status === "ready"}
+    >
+      {body}
+    </ReaderLayout>
   );
 }
 
 async function renderPack(
   id: string,
-  original: string | null,
   cardsStatus: "generating" | "ready" | "failed" | null,
 ) {
   const pack = await getPack(id);
   if (!pack) {
     return <p className="t-data" style={{ color: "var(--text-muted, #777)" }}>Pack not available.</p>;
   }
-  return <ReaderToggle pack={pack} original={original} snapshotId={id} cardsStatus={cardsStatus} />;
+  return <ReaderToggle pack={pack} snapshotId={id} cardsStatus={cardsStatus} />;
 }

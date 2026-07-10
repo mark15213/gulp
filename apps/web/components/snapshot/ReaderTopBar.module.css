@@ -1,0 +1,52 @@
+.bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 20px;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  background: var(--bg, #fbf7ea);
+  z-index: 5;
+}
+
+.back {
+  color: var(--text-muted, #777);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.spacer {
+  flex: 1;
+}
+
+.icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: none;
+  cursor: pointer;
+  text-decoration: none;
+  color: inherit;
+  font-size: 1rem;
+}
+
+.icon:hover {
+  background: var(--surface, #fffdf6);
+  border-color: var(--border);
+}
+
+.icon[aria-pressed="true"] {
+  background: var(--blue-50, #fff4c2);
+  border-color: var(--border-strong, #d8cca8);
+}

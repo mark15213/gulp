@@ -8,7 +8,7 @@ import styles from "./Shell.module.css";
 // Routes that render without the app chrome (sidebar + capture affordance) —
 // currently just the Gulp session, which needs the full viewport for its
 // own full-bleed focus layout (Task 15, S4 §7).
-const FULL_BLEED_PREFIXES = ["/gulp"];
+const FULL_BLEED_PREFIXES = ["/gulp", "/snapshots"];
 
 function isFullBleed(pathname: string): boolean {
   return FULL_BLEED_PREFIXES.some(
