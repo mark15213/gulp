@@ -45,7 +45,8 @@ export function SessionRunner({ initial }: { initial: GulpSession }) {
 
   const current = queue[0] ?? null;
   const total = index + queue.length;
-  const progressPct = total > 0 ? Math.round((index / total) * 100) : 0;
+  const position = total > 0 ? Math.min(index + 1, total) : 0;
+  const progressPct = total > 0 ? Math.round((position / total) * 100) : 0;
 
   // The queue drains either because the initial deck was already empty
   // (nothing due) or because the last grade() below emptied it. Either way,
@@ -145,20 +146,29 @@ export function SessionRunner({ initial }: { initial: GulpSession }) {
 
   return (
     <div className={styles.page}>
-      <div className={styles.topbar}>
-        <Link href="/" className={styles.iconBtn} aria-label="Exit session">
-          ←
-        </Link>
-        <div className={styles.track}>
-          <i style={{ width: `${progressPct}%` }} />
+      <header className={styles.topbar}>
+        <div className={styles.topbarInner}>
+          <Link href="/" className={styles.iconBtn} aria-label="Exit session">
+            ←
+          </Link>
+          <div
+            className={styles.track}
+            role="progressbar"
+            aria-label="Session progress"
+            aria-valuemin={0}
+            aria-valuemax={total}
+            aria-valuenow={position}
+          >
+            <i style={{ width: `${progressPct}%` }} />
+          </div>
+          <span className={styles.counter}>
+            {position} / {total}
+          </span>
         </div>
-        <span className={styles.counter}>
-          {index} / {total}
-        </span>
-      </div>
+      </header>
 
-      <div className={styles.stage}>
-        <div className={styles.cardwrap}>
+      <main className={styles.stage}>
+        <article className={styles.cardwrap} aria-labelledby="gulp-card-prompt">
           <div className={styles.srcline}>
             <StateChip state={current.daily} />
             <span className={styles.srcName}>
@@ -171,15 +181,17 @@ export function SessionRunner({ initial }: { initial: GulpSession }) {
             {current.card_type}
             {current.reason === "retest" ? " · retest" : ""}
           </p>
-          <p className={styles.prompt}>{current.prompt}</p>
+          <p id="gulp-card-prompt" className={styles.prompt}>
+            {current.prompt}
+          </p>
 
           {phase === "prompt" && (
             <CardPrompt key={current.id} card={current} onReveal={reveal} />
           )}
 
           {phase === "revealed" && <Reveal card={current} />}
-        </div>
-      </div>
+        </article>
+      </main>
 
       {error && (
         <p role="alert" className={styles.explain}>
@@ -187,21 +199,23 @@ export function SessionRunner({ initial }: { initial: GulpSession }) {
         </p>
       )}
 
-      {phase === "revealed" && (
-        <>
-          <div className={styles.snoozeRow}>
-            <button
-              type="button"
-              className={styles.snoozeBtn}
-              disabled={busy}
-              onClick={() => void snooze()}
-            >
-              Snooze — bring it back tomorrow
-            </button>
-          </div>
-          <GradeBar suggested={suggested} onGrade={(g) => void grade(g)} />
-        </>
-      )}
+      <div className={styles.actionDock}>
+        {phase === "revealed" && (
+          <>
+            <div className={styles.snoozeRow}>
+              <button
+                type="button"
+                className={styles.snoozeBtn}
+                disabled={busy}
+                onClick={() => void snooze()}
+              >
+                Snooze — bring it back tomorrow
+              </button>
+            </div>
+            <GradeBar suggested={suggested} onGrade={(g) => void grade(g)} />
+          </>
+        )}
+      </div>
     </div>
   );
 }

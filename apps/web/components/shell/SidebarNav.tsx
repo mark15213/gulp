@@ -1,9 +1,15 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { IconToday, IconInbox, IconLibrary, IconFeeds } from "@/components/ui/icons";
+import { getInbox } from "@gulp/api-client";
+import {
+  IconToday,
+  IconInbox,
+  IconLibrary,
+  IconFeeds,
+} from "@/components/ui/icons";
 import styles from "./Sidebar.module.css";
 
 // Single-gate nav (spec 2026-07-02): Today first, then the conveyor belt
@@ -25,6 +31,35 @@ export function isActive(pathname: string, href: string): boolean {
 
 export function SidebarNav({ inboxCount }: { inboxCount: number }) {
   const pathname = usePathname();
+  const [latest, setLatest] = useState<{
+    pathname: string;
+    seed: number;
+    count: number;
+  } | null>(null);
+
+  // Root layouts persist across App Router navigations, so Sidebar's server
+  // count can outlive the Inbox page that produced it. Keep that SSR value for
+  // the first paint, then reconcile whenever this nav mounts, the route
+  // changes, or router.refresh() supplies a new server count.
+  useEffect(() => {
+    let active = true;
+    getInbox()
+      .then(({ count }) => {
+        if (active) setLatest({ pathname, seed: inboxCount, count });
+      })
+      .catch(() => {
+        // A failed background refresh should not hide a valid server count.
+      });
+    return () => {
+      active = false;
+    };
+  }, [pathname, inboxCount]);
+
+  const displayedInboxCount =
+    latest?.pathname === pathname && latest.seed === inboxCount
+      ? latest.count
+      : inboxCount;
+
   return (
     <nav className={styles.nav} aria-label="Primary">
       {NAV.map(({ label, href, icon: Glyph }) => {
@@ -38,8 +73,8 @@ export function SidebarNav({ inboxCount }: { inboxCount: number }) {
           >
             <Glyph className={styles.itemIcon} />
             <span className={styles.itemLabel}>{label}</span>
-            {label === "Inbox" && inboxCount > 0 && (
-              <span className={styles.itemCount}>{inboxCount}</span>
+            {label === "Inbox" && displayedInboxCount > 0 && (
+              <span className={styles.itemCount}>{displayedInboxCount}</span>
             )}
           </Link>
         );

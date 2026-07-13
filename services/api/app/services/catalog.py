@@ -71,8 +71,11 @@ def _param_docs(parameters: dict[str, Any] | None) -> dict[str, str] | None:
 
 
 def search_catalog(
-    q: str, limit: int = 30, catalog: dict[str, Any] | None = None
-) -> list[CatalogRouteOut]:
+    q: str,
+    limit: int = 30,
+    offset: int = 0,
+    catalog: dict[str, Any] | None = None,
+) -> tuple[list[CatalogRouteOut], int]:
     data = catalog if catalog is not None else get_catalog()
     ql = q.strip().lower()
     hits: list[CatalogRouteOut] = []
@@ -101,4 +104,4 @@ def search_catalog(
                 )
             )
     hits.sort(key=lambda h: h.heat, reverse=True)
-    return hits[:limit]
+    return hits[offset : offset + limit], len(hits)

@@ -171,7 +171,8 @@ def gulp_entry(
 def catalog_search(
     q: str = "",
     limit: int = 30,
+    offset: int = 0,
     user: User = Depends(get_current_user),
 ) -> CatalogSearchOut:
-    items = search_catalog(q, limit=limit)
-    return CatalogSearchOut(items=items, count=len(items))
+    items, count = search_catalog(q, limit=limit, offset=offset)
+    return CatalogSearchOut(items=items, count=count)

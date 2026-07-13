@@ -497,9 +497,13 @@ export async function gulpEntry(
   return data;
 }
 
-export async function searchCatalog(q: string, limit = 30): Promise<CatalogSearchOut> {
+export async function searchCatalog(
+  q: string,
+  limit = 30,
+  offset = 0,
+): Promise<CatalogSearchOut> {
   const { data, error } = await client.GET("/feeds/catalog/search", {
-    params: { query: { q, limit } },
+    params: { query: { q, limit, offset } },
   });
   if (error || !data) throw new Error("catalog search failed");
   return data;

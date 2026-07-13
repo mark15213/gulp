@@ -2772,6 +2772,7 @@ export interface operations {
             query?: {
                 q?: string;
                 limit?: number;
+                offset?: number;
             };
             header?: never;
             path?: never;
