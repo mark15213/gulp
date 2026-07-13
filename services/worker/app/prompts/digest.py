@@ -1,7 +1,7 @@
 """The digest prompt — turn a NormDoc into a deep, structured paper report."""
 
 from app.pipeline.normdoc import NormDoc
-from gulp_shared.llm.base import Message
+from gulp_shared.llm.base import ChatMessage
 
 _SYSTEM = """You are an expert researcher and paper reviewer. Read the paper \
 carefully and produce a comprehensive, technically deep research report as \
@@ -62,6 +62,6 @@ References section into the body, but you may mine it for follow-up references.
 broken tables, and inline page headers / arXiv banners."""
 
 
-def build_digest_messages(normdoc: NormDoc, body: str) -> tuple[str, list[Message]]:
+def build_digest_messages(normdoc: NormDoc, body: str) -> tuple[str, list[ChatMessage]]:
     user = f"Source type: {normdoc.media_type}\nTitle: {normdoc.title}\n\n---\n{body}"
-    return _SYSTEM, [{"role": "user", "content": user}]
+    return _SYSTEM, [ChatMessage(role="user", content=user)]

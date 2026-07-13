@@ -5,7 +5,7 @@ import gulp_shared.models  # noqa: F401
 from app.pipeline.adapters.fetch import FetchedDoc
 from app.pipeline.run import process_source
 from gulp_shared.db import Base
-from gulp_shared.llm.base import Message, ModelConfig
+from gulp_shared.llm.base import ChatMessage, ModelConfig
 from gulp_shared.models.knowledge_pack import KnowledgePack, PackType
 from gulp_shared.models.source import (
     MediaType,
@@ -23,7 +23,7 @@ class FakeProvider:
     def __init__(self, payload: dict[str, Any]) -> None:
         self.payload = payload
 
-    async def complete_json(self, *, system: str | None, messages: list[Message],
+    async def complete_json(self, *, system: str | None, messages: list[ChatMessage],
                             json_schema: dict[str, Any], config: ModelConfig) -> dict[str, Any]:
         return self.payload
 

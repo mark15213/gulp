@@ -5,7 +5,7 @@ The model reasons a short per-source *curriculum* as a chain-of-thought (the
 content plus the learner's per-block conversation, then emits the cards.
 """
 
-from gulp_shared.llm.base import Message
+from gulp_shared.llm.base import ChatMessage
 
 _SYSTEM = """You are a learning-science expert. A learner has read the knowledge \
 pack below. Your job: design the cards that will best help THIS learner master it.
@@ -51,7 +51,7 @@ are reviewed weeks later without the pack at hand."""
 
 def build_cards_messages(
     pack_text: str, conversation_text: str = ""
-) -> tuple[str, list[Message]]:
+) -> tuple[str, list[ChatMessage]]:
     user = f"The knowledge pack:\n\n---\n{pack_text}"
     if conversation_text.strip():
         user += (
@@ -59,4 +59,4 @@ def build_cards_messages(
             "(their questions reveal what to weight):\n\n"
             f"{conversation_text}"
         )
-    return _SYSTEM, [{"role": "user", "content": user}]
+    return _SYSTEM, [ChatMessage(role="user", content=user)]

@@ -4,11 +4,12 @@ The client is injectable so tests pass a fake; in production it is built lazily
 from settings so importing/registering this module needs no API key.
 """
 
+from collections.abc import AsyncIterator
 from typing import Any, cast
 
 from anthropic import AsyncAnthropic
 
-from gulp_shared.llm.base import LLMError, Message, ModelConfig
+from gulp_shared.llm.base import ChatMessage, LLMError, ModelConfig, StreamEvent, ToolSpec
 from gulp_shared.settings import settings
 
 _TOOL_NAME = "emit"
@@ -27,7 +28,7 @@ class AnthropicProvider:
         self,
         *,
         system: str | None,
-        messages: list[Message],
+        messages: list[ChatMessage],
         json_schema: dict[str, Any],
         config: ModelConfig,
     ) -> dict[str, Any]:
@@ -40,7 +41,7 @@ class AnthropicProvider:
             "model": config.model,
             "max_tokens": config.max_tokens,
             "temperature": config.temperature,
-            "messages": messages,
+            "messages": [{"role": m.role, "content": m.content} for m in messages],
             "tools": [tool],
             "tool_choice": {"type": "tool", "name": _TOOL_NAME},
         }
@@ -51,3 +52,14 @@ class AnthropicProvider:
             if getattr(block, "type", None) == "tool_use":
                 return cast(dict[str, Any], block.input)
         raise LLMError("Anthropic response contained no tool_use block")
+
+    async def stream_chat(
+        self,
+        *,
+        system: str | None,
+        messages: list[ChatMessage],
+        tools: list[ToolSpec] | None,
+        config: ModelConfig,
+    ) -> AsyncIterator[StreamEvent]:
+        raise NotImplementedError("streaming lands with the adapter rework")
+        yield  # pragma: no cover — makes this an async generator

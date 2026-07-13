@@ -3,7 +3,7 @@ LLM, persist the thread (spec 2026-07-10 reader redesign)."""
 
 import uuid
 
-from gulp_shared.llm import LLMProvider, ModelConfig, complete_structured
+from gulp_shared.llm import ChatMessage, LLMProvider, ModelConfig, complete_structured
 from gulp_shared.models.knowledge_pack import KnowledgePack, PackBlock, PackSection
 from gulp_shared.models.pack_message import ChatRole, PackMessage
 from gulp_shared.models.source import Source
@@ -108,7 +108,10 @@ async def answer_question(
     db.flush()
 
     history = list_messages(db, snapshot_id)
-    messages = [{"role": m.role.value, "content": m.content} for m in history]
+    messages = [
+        ChatMessage(role="user" if m.role is ChatRole.user else "assistant", content=m.content)
+        for m in history
+    ]
     system = _grounding_system(db, snapshot_id, attached)
 
     result = await complete_structured(

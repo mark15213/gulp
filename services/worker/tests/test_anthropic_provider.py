@@ -2,7 +2,7 @@ from typing import Any
 
 import pytest
 from gulp_shared.llm.anthropic_provider import AnthropicProvider
-from gulp_shared.llm.base import LLMError, ModelConfig
+from gulp_shared.llm.base import ChatMessage, LLMError, ModelConfig
 
 
 class _ToolUseBlock:
@@ -44,7 +44,7 @@ async def test_returns_tool_use_input_and_forces_the_tool() -> None:
 
     out = await prov.complete_json(
         system="be precise",
-        messages=[{"role": "user", "content": "who?"}],
+        messages=[ChatMessage(role="user", content="who?")],
         json_schema={"type": "object", "properties": {"name": {"type": "string"}}},
         config=ModelConfig(model="claude-sonnet-4-6"),
     )
@@ -63,7 +63,7 @@ async def test_raises_when_no_tool_use_block() -> None:
     with pytest.raises(LLMError):
         await prov.complete_json(
             system=None,
-            messages=[{"role": "user", "content": "hi"}],
+            messages=[ChatMessage(role="user", content="hi")],
             json_schema={"type": "object"},
             config=ModelConfig(),
         )

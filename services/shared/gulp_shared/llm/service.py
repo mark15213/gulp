@@ -3,7 +3,7 @@
 
 from pydantic import BaseModel, ValidationError
 
-from gulp_shared.llm.base import LLMError, LLMProvider, Message, ModelConfig
+from gulp_shared.llm.base import ChatMessage, LLMError, LLMProvider, ModelConfig
 
 _PROVIDERS: dict[str, LLMProvider] = {}
 
@@ -22,7 +22,7 @@ def get_provider(name: str) -> LLMProvider:
 async def complete_structured[T: BaseModel](
     *,
     response_model: type[T],
-    messages: list[Message],
+    messages: list[ChatMessage],
     system: str | None = None,
     config: ModelConfig | None = None,
     provider: LLMProvider | None = None,

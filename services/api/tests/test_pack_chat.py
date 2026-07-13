@@ -7,7 +7,7 @@ from app.deps import get_db
 from app.main import app
 from app.services.chat import answer_question, list_messages
 from fastapi.testclient import TestClient
-from gulp_shared.llm import AnthropicProvider, register_provider
+from gulp_shared.llm import AnthropicProvider, ChatMessage, register_provider
 from gulp_shared.models.knowledge_pack import (
     KnowledgePack,
     PackBlock,
@@ -24,7 +24,7 @@ from gulp_shared.models.user import DEV_USER_ID
 class FakeProvider:
     def __init__(self) -> None:
         self.last_system: str | None = None
-        self.last_messages: list[dict[str, str]] = []
+        self.last_messages: list[ChatMessage] = []
 
     async def complete_json(self, *, system, messages, json_schema, config) -> dict[str, Any]:
         self.last_system = system

@@ -1,7 +1,7 @@
 from typing import Any
 
 import pytest
-from gulp_shared.llm.base import LLMError, Message, ModelConfig
+from gulp_shared.llm.base import ChatMessage, LLMError, ModelConfig
 from gulp_shared.llm.service import complete_structured, get_provider, register_provider
 from pydantic import BaseModel
 
@@ -22,7 +22,7 @@ class FakeProvider:
         self,
         *,
         system: str | None,
-        messages: list[Message],
+        messages: list[ChatMessage],
         json_schema: dict[str, Any],
         config: ModelConfig,
     ) -> dict[str, Any]:
@@ -34,7 +34,7 @@ async def test_complete_structured_validates_into_model() -> None:
     fake = FakeProvider({"name": "Ada", "age": 36})
     out = await complete_structured(
         response_model=Person,
-        messages=[{"role": "user", "content": "who?"}],
+        messages=[ChatMessage(role="user", content="who?")],
         config=ModelConfig(),
         provider=fake,
     )
@@ -46,7 +46,7 @@ async def test_complete_structured_retries_then_succeeds() -> None:
     fake = FakeProvider({"name": "Ada"}, {"name": "Ada", "age": 36})  # 1st missing age
     out = await complete_structured(
         response_model=Person,
-        messages=[{"role": "user", "content": "who?"}],
+        messages=[ChatMessage(role="user", content="who?")],
         config=ModelConfig(),
         provider=fake,
         max_attempts=2,
@@ -60,7 +60,7 @@ async def test_complete_structured_raises_after_max_attempts() -> None:
     with pytest.raises(LLMError):
         await complete_structured(
             response_model=Person,
-            messages=[{"role": "user", "content": "who?"}],
+            messages=[ChatMessage(role="user", content="who?")],
             config=ModelConfig(),
             provider=fake,
             max_attempts=2,

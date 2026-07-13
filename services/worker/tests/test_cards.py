@@ -13,7 +13,7 @@ from app.pipeline.cards import (
 )
 from gulp_shared.contracts.cards import CardsPayload
 from gulp_shared.db import Base
-from gulp_shared.llm.base import Message, ModelConfig
+from gulp_shared.llm.base import ChatMessage, ModelConfig
 from gulp_shared.models.card import (
     Card,
     CardOrigin,
@@ -50,11 +50,11 @@ class FakeProvider:
         self,
         *,
         system: str | None,
-        messages: list[Message],
+        messages: list[ChatMessage],
         json_schema: dict[str, Any],
         config: ModelConfig,
     ) -> dict[str, Any]:
-        self.last_body = messages[0]["content"]
+        self.last_body = messages[0].content
         if self.error is not None:
             raise self.error
         assert self.payload is not None

@@ -30,8 +30,8 @@ def test_system_prompt_states_the_rules() -> None:
 
 def test_user_message_carries_title_media_type_and_body() -> None:
     _, messages = build_digest_messages(_doc(), "BODY-CONTENT-HERE")
-    assert len(messages) == 1 and messages[0]["role"] == "user"
-    content = messages[0]["content"]
+    assert len(messages) == 1 and messages[0].role == "user"
+    content = messages[0].content
     assert "Attention" in content        # title
     assert "article" in content          # media_type hint
     assert "BODY-CONTENT-HERE" in content  # the body we passed (not normdoc.content_body)

@@ -3,7 +3,7 @@ from typing import Any
 from app.pipeline.digest import MAX_DIGEST_CHARS, run_digest
 from app.pipeline.normdoc import Anchor, NormBlock, NormDoc
 from app.pipeline.schemas import PaperReport
-from gulp_shared.llm.base import Message, ModelConfig
+from gulp_shared.llm.base import ChatMessage, ModelConfig
 
 
 class FakeProvider:
@@ -15,11 +15,11 @@ class FakeProvider:
         self,
         *,
         system: str | None,
-        messages: list[Message],
+        messages: list[ChatMessage],
         json_schema: dict[str, Any],
         config: ModelConfig,
     ) -> dict[str, Any]:
-        self.last_body = messages[0]["content"]
+        self.last_body = messages[0].content
         return self.payload
 
 
