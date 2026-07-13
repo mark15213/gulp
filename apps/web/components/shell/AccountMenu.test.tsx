@@ -24,4 +24,10 @@ describe("AccountMenu", () => {
     await userEvent.click(screen.getByRole("button", { name: "Log out" }));
     expect(signOut).toHaveBeenCalled();
   });
+
+  it("links to the AI models settings page", () => {
+    render(<AccountMenu />);
+    const link = screen.getByRole("link", { name: "AI" });
+    expect(link.getAttribute("href")).toBe("/settings/ai");
+  });
 });

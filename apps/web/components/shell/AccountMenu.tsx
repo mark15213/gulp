@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Link from "next/link";
 import { useAuth } from "@/lib/auth";
 import styles from "./AccountMenu.module.css";
 
@@ -18,6 +19,9 @@ export function AccountMenu() {
         <span className={styles.accountName}>{name}</span>
         <span className={styles.accountMeta}>{user?.email}</span>
       </div>
+      <Link className={styles.settingsLink} href="/settings/ai" title="AI models">
+        AI
+      </Link>
       <button className={styles.logout} onClick={() => void signOut()}>
         Log out
       </button>
