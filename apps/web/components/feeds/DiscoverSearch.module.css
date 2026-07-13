@@ -155,3 +155,39 @@
   color: var(--emerald-600, #059669);
   cursor: default;
 }
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.pageButton {
+  min-width: 92px;
+  padding: 7px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.pageButton:hover:not(:disabled) {
+  border-color: var(--blue-600, #2563eb);
+  color: var(--blue-600, #2563eb);
+}
+
+.pageButton:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.pageStatus {
+  min-width: 88px;
+  color: var(--text-muted, #777);
+  font-size: 0.85em;
+  text-align: center;
+}

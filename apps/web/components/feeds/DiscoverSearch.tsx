@@ -1,19 +1,23 @@
 "use client";
 
 import React, { useState } from "react";
-import type { CatalogRoute } from "@gulp/api-client";
+import type { CatalogSearchOut } from "@gulp/api-client";
 import { createSubscription, searchCatalog } from "@gulp/api-client";
 import { STARTER_SOURCES } from "./starters";
 import styles from "./DiscoverSearch.module.css";
 
 // Paste box + catalog search + starter grid. Subscribing goes through the
 // same normalizing endpoint regardless of which surface the address came from.
+const PAGE_SIZE = 24;
+
 export function DiscoverSearch() {
   const [paste, setPaste] = useState("");
   const [pasteState, setPasteState] = useState<"idle" | "busy" | "added" | "error">("idle");
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<CatalogRoute[] | null>(null);
+  const [results, setResults] = useState<CatalogSearchOut | null>(null);
   const [searching, setSearching] = useState(false);
+  const [activeQuery, setActiveQuery] = useState("");
+  const [page, setPage] = useState(1);
   const [added, setAdded] = useState<Set<string>>(new Set());
 
   const subscribe = async (feedUrl: string, title?: string | null) => {
@@ -33,15 +37,31 @@ export function DiscoverSearch() {
     }
   };
 
-  const submitSearch = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const loadPage = async (searchQuery: string, nextPage: number) => {
     setSearching(true);
     try {
-      setResults((await searchCatalog(query)).items);
+      const response = await searchCatalog(
+        searchQuery,
+        PAGE_SIZE,
+        (nextPage - 1) * PAGE_SIZE,
+      );
+      setResults(response);
+      setActiveQuery(searchQuery);
+      setPage(nextPage);
     } finally {
       setSearching(false);
     }
   };
+
+  const submitSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    void loadPage(query, 1);
+  };
+
+  const totalPages = Math.max(
+    1,
+    Math.ceil((results?.count ?? 0) / PAGE_SIZE),
+  );
 
   return (
     <div className={styles.discover}>
@@ -79,10 +99,10 @@ export function DiscoverSearch() {
       {results !== null && (
         <section className={styles.section} aria-label="Catalog results">
           <h2 className={styles.sectionTitle}>
-            Catalog {results.length > 0 ? `· ${results.length} routes` : "· no matches"}
+            Catalog {results.count > 0 ? `· ${results.count} routes` : "· no matches"}
           </h2>
           <ul className={styles.grid}>
-            {results.map((r) => (
+            {results.items.map((r) => (
               <li key={`${r.namespace}${r.route_path}`} className={styles.card}>
                 <div className={styles.cardHead}>
                   <span className={styles.ns}>{r.namespace_name}</span>
@@ -111,6 +131,27 @@ export function DiscoverSearch() {
               </li>
             ))}
           </ul>
+          <nav className={styles.pagination} aria-label="Catalog pagination">
+            <button
+              type="button"
+              className={styles.pageButton}
+              disabled={searching || page === 1}
+              onClick={() => void loadPage(activeQuery, page - 1)}
+            >
+              Previous
+            </button>
+            <span className={styles.pageStatus} aria-live="polite">
+              Page {page} of {totalPages}
+            </span>
+            <button
+              type="button"
+              className={styles.pageButton}
+              disabled={searching || page === totalPages}
+              onClick={() => void loadPage(activeQuery, page + 1)}
+            >
+              Next
+            </button>
+          </nav>
         </section>
       )}
 

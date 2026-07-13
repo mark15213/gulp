@@ -14,6 +14,12 @@ export function EntryList({
   unreadOnly,
   onToggleUnreadOnly,
   onMarkAllRead,
+  page,
+  pageSize,
+  totalCount,
+  loading,
+  onPreviousPage,
+  onNextPage,
 }: {
   entries: FeedEntry[];
   title?: string;
@@ -22,7 +28,15 @@ export function EntryList({
   unreadOnly: boolean;
   onToggleUnreadOnly: () => void;
   onMarkAllRead?: () => void;
+  page: number;
+  pageSize: number;
+  totalCount: number;
+  loading: boolean;
+  onPreviousPage: () => void;
+  onNextPage: () => void;
 }) {
+  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
+
   return (
     <section className={styles.pane} aria-label="Entries">
       <header className={styles.header}>
@@ -84,6 +98,28 @@ export function EntryList({
             : "No entries yet — feeds fill in after a fetch."}
         </p>
       )}
+      <footer className={styles.pagination} aria-label="Entry pagination">
+        <button
+          type="button"
+          className={styles.pageButton}
+          disabled={page === 0 || loading}
+          onClick={onPreviousPage}
+        >
+          ← Previous
+        </button>
+        <span className={`t-data ${styles.pageStatus}`} aria-live="polite">
+          Page {page + 1} of {totalPages} · {totalCount}{" "}
+          {totalCount === 1 ? "entry" : "entries"}
+        </span>
+        <button
+          type="button"
+          className={styles.pageButton}
+          disabled={page + 1 >= totalPages || loading}
+          onClick={onNextPage}
+        >
+          Next →
+        </button>
+      </footer>
     </section>
   );
 }

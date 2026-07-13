@@ -21,6 +21,7 @@ export default async function FeedsPage() {
       <FeedsWorkspace
         initialSubscriptions={subs.items}
         initialEntries={entries.items}
+        initialEntryCount={entries.count}
       />
     </PageFrame>
   );

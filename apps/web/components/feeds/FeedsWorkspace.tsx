@@ -22,18 +22,24 @@ import styles from "./FeedsWorkspace.module.css";
 
 // Snapshot statuses that no longer change on their own — stop polling once reached.
 const TERMINAL_STATUS = new Set(["ready", "exported", "needs_attention"]);
+const ENTRY_PAGE_SIZE = 50;
 
 // Three panes: subscriptions | entries | reader. Selection is client state;
 // mutations call the api-client then refetch the affected list.
 export function FeedsWorkspace({
   initialSubscriptions,
   initialEntries,
+  initialEntryCount,
 }: {
   initialSubscriptions: Subscription[];
   initialEntries: FeedEntry[];
+  initialEntryCount: number;
 }) {
   const [subs, setSubs] = useState(initialSubscriptions);
   const [entries, setEntries] = useState(initialEntries);
+  const [entryCount, setEntryCount] = useState(initialEntryCount);
+  const [entryPage, setEntryPage] = useState(0);
+  const [entriesLoading, setEntriesLoading] = useState(false);
   const [selectedSubId, setSelectedSubId] = useState<string | null>(null);
   const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null);
   const [unreadOnly, setUnreadOnly] = useState(false);
@@ -44,23 +50,36 @@ export function FeedsWorkspace({
   }, []);
 
   const refreshEntries = useCallback(
-    async (subId: string | null = selectedSubId, unread: boolean = unreadOnly) => {
-      const out = await getFeedEntries({
-        subscriptionId: subId ?? undefined,
-        unreadOnly: unread,
-      });
-      setEntries(out.items);
+    async (
+      subId: string | null = selectedSubId,
+      unread: boolean = unreadOnly,
+      page: number = entryPage,
+    ) => {
+      setEntriesLoading(true);
+      try {
+        const out = await getFeedEntries({
+          subscriptionId: subId ?? undefined,
+          unreadOnly: unread,
+          limit: ENTRY_PAGE_SIZE,
+          offset: page * ENTRY_PAGE_SIZE,
+        });
+        setEntries(out.items);
+        setEntryCount(out.count);
+        setEntryPage(page);
+      } finally {
+        setEntriesLoading(false);
+      }
     },
-    [selectedSubId, unreadOnly],
+    [entryPage, selectedSubId, unreadOnly],
   );
 
   const selectSub = useCallback(
     async (subId: string | null) => {
       setSelectedSubId(subId);
       setSelectedEntryId(null);
-      await refreshEntries(subId);
+      await refreshEntries(subId, unreadOnly, 0);
     },
-    [refreshEntries],
+    [refreshEntries, unreadOnly],
   );
 
   const selectEntry = useCallback(
@@ -69,7 +88,9 @@ export function FeedsWorkspace({
       const entry = entries.find((e) => e.id === entryId);
       if (entry && !entry.read) {
         // reader convention: opening marks read (unread toggle undoes it)
-        setEntries((es) => es.map((e) => (e.id === entryId ? { ...e, read: true } : e)));
+        setEntries((es) =>
+          es.map((e) => (e.id === entryId ? { ...e, read: true } : e)),
+        );
         setSubs((ss) =>
           ss.map((s) =>
             s.id === entry.subscription_id
@@ -93,15 +114,20 @@ export function FeedsWorkspace({
 
   const removeSub = useCallback(
     async (sub: Subscription) => {
-      if (!window.confirm(`Unsubscribe from "${sub.title}"? Its entries are removed.`)) return;
+      if (
+        !window.confirm(
+          `Unsubscribe from "${sub.title}"? Its entries are removed.`,
+        )
+      )
+        return;
       await deleteSubscription(sub.id);
       if (selectedSubId === sub.id) {
         setSelectedSubId(null);
         setSelectedEntryId(null);
       }
-      await Promise.all([refreshSubs(), refreshEntries(null)]);
+      await Promise.all([refreshSubs(), refreshEntries(null, unreadOnly, 0)]);
     },
-    [refreshEntries, refreshSubs, selectedSubId],
+    [refreshEntries, refreshSubs, selectedSubId, unreadOnly],
   );
 
   const refreshOne = useCallback(
@@ -119,21 +145,40 @@ export function FeedsWorkspace({
   const markAllRead = useCallback(async () => {
     if (!selectedSubId) return;
     await readAllSubscription(selectedSubId);
-    await Promise.all([refreshSubs(), refreshEntries()]);
-  }, [refreshEntries, refreshSubs, selectedSubId]);
+    setSelectedEntryId(null);
+    await Promise.all([
+      refreshSubs(),
+      refreshEntries(selectedSubId, unreadOnly, 0),
+    ]);
+  }, [refreshEntries, refreshSubs, selectedSubId, unreadOnly]);
 
   const toggleUnreadOnly = useCallback(async () => {
     const next = !unreadOnly;
     setUnreadOnly(next);
-    await refreshEntries(selectedSubId, next);
+    setSelectedEntryId(null);
+    await refreshEntries(selectedSubId, next, 0);
   }, [refreshEntries, selectedSubId, unreadOnly]);
+
+  const changeEntryPage = useCallback(
+    async (nextPage: number) => {
+      if (nextPage < 0 || entriesLoading) return;
+      setSelectedEntryId(null);
+      await refreshEntries(selectedSubId, unreadOnly, nextPage);
+    },
+    [entriesLoading, refreshEntries, selectedSubId, unreadOnly],
+  );
 
   const onGulp = useCallback(async (entry: FeedEntry) => {
     const { snapshot_id, status } = await gulpEntry(entry.id);
     setEntries((es) =>
       es.map((e) =>
         e.id === entry.id
-          ? { ...e, promoted_source_id: snapshot_id, promoted_status: status, read: true }
+          ? {
+              ...e,
+              promoted_source_id: snapshot_id,
+              promoted_status: status,
+              read: true,
+            }
           : e,
       ),
     );
@@ -141,11 +186,16 @@ export function FeedsWorkspace({
 
   const onToggleRead = useCallback(async (entry: FeedEntry) => {
     const next = !entry.read;
-    setEntries((es) => es.map((e) => (e.id === entry.id ? { ...e, read: next } : e)));
+    setEntries((es) =>
+      es.map((e) => (e.id === entry.id ? { ...e, read: next } : e)),
+    );
     setSubs((ss) =>
       ss.map((s) =>
         s.id === entry.subscription_id
-          ? { ...s, unread_count: Math.max(0, s.unread_count + (next ? -1 : 1)) }
+          ? {
+              ...s,
+              unread_count: Math.max(0, s.unread_count + (next ? -1 : 1)),
+            }
           : s,
       ),
     );
@@ -167,7 +217,10 @@ export function FeedsWorkspace({
   const entriesRef = useRef(entries);
   entriesRef.current = entries;
   const inflightKey = entries
-    .filter((e) => e.promoted_source_id && !TERMINAL_STATUS.has(e.promoted_status ?? ""))
+    .filter(
+      (e) =>
+        e.promoted_source_id && !TERMINAL_STATUS.has(e.promoted_status ?? ""),
+    )
     .map((e) => e.promoted_source_id)
     .sort()
     .join(",");
@@ -176,7 +229,8 @@ export function FeedsWorkspace({
     let cancelled = false;
     const tick = async () => {
       const targets = entriesRef.current.filter(
-        (e) => e.promoted_source_id && !TERMINAL_STATUS.has(e.promoted_status ?? ""),
+        (e) =>
+          e.promoted_source_id && !TERMINAL_STATUS.has(e.promoted_status ?? ""),
       );
       const results = await Promise.all(
         targets.map(async (e) => {
@@ -231,9 +285,23 @@ export function FeedsWorkspace({
         unreadOnly={unreadOnly}
         onToggleUnreadOnly={toggleUnreadOnly}
         onMarkAllRead={selectedSubId ? markAllRead : undefined}
+        page={entryPage}
+        pageSize={ENTRY_PAGE_SIZE}
+        totalCount={entryCount}
+        loading={entriesLoading}
+        onPreviousPage={() => void changeEntryPage(entryPage - 1)}
+        onNextPage={() => void changeEntryPage(entryPage + 1)}
       />
-      <EntryReader entry={selectedEntry} onGulp={onGulp} onToggleRead={onToggleRead} />
-      <AddFeedDialog open={addOpen} onClose={() => setAddOpen(false)} onSubmit={onAdd} />
+      <EntryReader
+        entry={selectedEntry}
+        onGulp={onGulp}
+        onToggleRead={onToggleRead}
+      />
+      <AddFeedDialog
+        open={addOpen}
+        onClose={() => setAddOpen(false)}
+        onSubmit={onAdd}
+      />
     </div>
   );
 }

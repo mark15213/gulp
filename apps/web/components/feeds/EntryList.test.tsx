@@ -24,6 +24,15 @@ const entry = (over: Partial<FeedEntry>): FeedEntry =>
 
 const noop = () => {};
 
+const pagination = {
+  page: 0,
+  pageSize: 50,
+  totalCount: 1,
+  loading: false,
+  onPreviousPage: noop,
+  onNextPage: noop,
+};
+
 describe("EntryList", () => {
   it("shows unread state and selects", () => {
     const onSelect = vi.fn();
@@ -34,6 +43,7 @@ describe("EntryList", () => {
         onSelect={onSelect}
         unreadOnly={false}
         onToggleUnreadOnly={noop}
+        {...pagination}
       />,
     );
     expect(screen.getByLabelText("unread")).toBeDefined();
@@ -49,6 +59,7 @@ describe("EntryList", () => {
         onSelect={noop}
         unreadOnly={false}
         onToggleUnreadOnly={noop}
+        {...pagination}
       />,
     );
     expect(screen.getByLabelText("forwarded")).toBeDefined();
@@ -65,6 +76,7 @@ describe("EntryList", () => {
         unreadOnly={false}
         onToggleUnreadOnly={noop}
         onMarkAllRead={onMarkAllRead}
+        {...pagination}
       />,
     );
     fireEvent.click(screen.getByText("Mark all read"));
@@ -79,6 +91,7 @@ describe("EntryList", () => {
         onSelect={noop}
         unreadOnly
         onToggleUnreadOnly={noop}
+        {...pagination}
       />,
     );
     expect(
@@ -91,5 +104,31 @@ describe("EntryList", () => {
         .getByRole("button", { name: "Unread" })
         .getAttribute("aria-pressed"),
     ).toBe("true");
+  });
+
+  it("shows page status and enables the available direction", () => {
+    const onPreviousPage = vi.fn();
+    const onNextPage = vi.fn();
+    render(
+      <EntryList
+        entries={[entry({})]}
+        selectedId={null}
+        onSelect={noop}
+        unreadOnly={false}
+        onToggleUnreadOnly={noop}
+        page={1}
+        pageSize={50}
+        totalCount={120}
+        loading={false}
+        onPreviousPage={onPreviousPage}
+        onNextPage={onNextPage}
+      />,
+    );
+
+    expect(screen.getByText("Page 2 of 3 · 120 entries")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "← Previous" }));
+    fireEvent.click(screen.getByRole("button", { name: "Next →" }));
+    expect(onPreviousPage).toHaveBeenCalledOnce();
+    expect(onNextPage).toHaveBeenCalledOnce();
   });
 });
