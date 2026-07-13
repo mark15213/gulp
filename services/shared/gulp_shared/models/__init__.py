@@ -28,9 +28,11 @@ from gulp_shared.models.source import (
 from gulp_shared.models.source_figure import SourceFigure
 from gulp_shared.models.source_tag import SourceTag
 from gulp_shared.models.user import DEV_USER_ID, Locale, User
+from gulp_shared.models.user_llm_credential import UserLLMCredential
 
 __all__ = [
     "User",
+    "UserLLMCredential",
     "Locale",
     "DEV_USER_ID",
     "Source",

@@ -28,3 +28,6 @@ class User(TimestampedBase, Base):
     display_name: Mapped[str | None] = mapped_column(String, default=None)
     locale: Mapped[Locale] = mapped_column(Enum(Locale, name="locale"), default=Locale.en)
     gulp_session_minutes: Mapped[int] = mapped_column(default=5)
+    # BYOK default model selection (spec 2026-07-13 §4.1); NULL = not configured.
+    llm_provider: Mapped[str | None] = mapped_column(String, default=None)
+    llm_model: Mapped[str | None] = mapped_column(String, default=None)
