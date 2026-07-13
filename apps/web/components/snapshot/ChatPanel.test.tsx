@@ -12,17 +12,28 @@ const ANSWER = {
   created_at: "",
 };
 const getPackMessages = vi.fn();
-const postPackMessage = vi.fn();
+const streamPackMessage = vi.fn();
 vi.mock("@gulp/api-client", () => ({
   getPackMessages: (...a: unknown[]) => getPackMessages(...a),
-  postPackMessage: (...a: unknown[]) => postPackMessage(...a),
+  streamPackMessage: (...a: unknown[]) => streamPackMessage(...a),
 }));
+
+function stream(events: unknown[]) {
+  return (async function* () {
+    for (const e of events) yield e;
+  })();
+}
 
 beforeEach(() => {
   getPackMessages.mockReset();
   getPackMessages.mockResolvedValue([]);
-  postPackMessage.mockReset();
-  postPackMessage.mockResolvedValue(ANSWER);
+  streamPackMessage.mockReset();
+  streamPackMessage.mockImplementation(() =>
+    stream([
+      { type: "delta", text: "Answer." },
+      { type: "done", message: ANSWER },
+    ]),
+  );
 });
 
 afterEach(cleanup);
@@ -100,6 +111,51 @@ describe("ChatPanel", () => {
     expect(onRemove).toHaveBeenCalledWith("b1");
   });
 
+  it("renders deltas incrementally then the final message", async () => {
+    streamPackMessage.mockImplementation(() =>
+      stream([
+        { type: "delta", text: "Hel" },
+        { type: "delta", text: "lo" },
+        { type: "done", message: { ...ANSWER, content: "Hello" } },
+      ]),
+    );
+    render(
+      <ChatPanel
+        snapshotId="s1"
+        attachments={[]}
+        onRemoveAttachment={() => {}}
+        onClose={() => {}}
+      />,
+    );
+    await screen.findByText("Start a conversation");
+    await userEvent.type(screen.getByRole("textbox"), "hi");
+    await userEvent.click(screen.getByRole("button", { name: "Send" }));
+    expect(await screen.findByText("Hello")).toBeTruthy();
+    expect(streamPackMessage).toHaveBeenCalledWith("s1", {
+      content: "hi",
+      block_refs: [],
+    });
+  });
+
+  it("surfaces llm_not_configured with a settings pointer", async () => {
+    streamPackMessage.mockImplementation(() =>
+      stream([{ type: "error", code: "llm_not_configured" }]),
+    );
+    render(
+      <ChatPanel
+        snapshotId="s1"
+        attachments={[]}
+        onRemoveAttachment={() => {}}
+        onClose={() => {}}
+      />,
+    );
+    await screen.findByText("Start a conversation");
+    await userEvent.type(screen.getByRole("textbox"), "hi");
+    await userEvent.click(screen.getByRole("button", { name: "Send" }));
+    const alert = await screen.findByRole("alert");
+    expect(alert.textContent).toContain("Settings → AI models");
+  });
+
   it("sends with the attached block_refs", async () => {
     render(
       <ChatPanel
@@ -113,7 +169,7 @@ describe("ChatPanel", () => {
     await userEvent.type(screen.getByRole("textbox"), "hello");
     await userEvent.click(screen.getByRole("button", { name: "Send" }));
     await waitFor(() =>
-      expect(postPackMessage).toHaveBeenCalledWith("s1", {
+      expect(streamPackMessage).toHaveBeenCalledWith("s1", {
         content: "hello",
         block_refs: ["b1"],
       }),
@@ -135,7 +191,7 @@ describe("ChatPanel", () => {
       "hello{Control>}{Enter}{/Control}",
     );
     await waitFor(() =>
-      expect(postPackMessage).toHaveBeenCalledWith("s1", {
+      expect(streamPackMessage).toHaveBeenCalledWith("s1", {
         content: "hello",
         block_refs: [],
       }),
@@ -143,7 +199,9 @@ describe("ChatPanel", () => {
   });
 
   it("rolls back an optimistic message and restores the draft after a send error", async () => {
-    postPackMessage.mockRejectedValueOnce(new Error("nope"));
+    streamPackMessage.mockImplementationOnce(() => {
+      throw new Error("nope");
+    });
     render(
       <ChatPanel
         snapshotId="s1"

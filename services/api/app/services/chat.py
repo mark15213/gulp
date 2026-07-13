@@ -11,7 +11,6 @@ from gulp_shared.llm import (
     ChatMessage,
     LLMProvider,
     ModelConfig,
-    complete_structured,
     get_spec,
     resolve_model_config,
 )
@@ -25,15 +24,10 @@ from gulp_shared.llm.base import (
 from gulp_shared.models.knowledge_pack import KnowledgePack, PackBlock, PackSection
 from gulp_shared.models.pack_message import ChatRole, PackMessage
 from gulp_shared.models.source import Source
-from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 _MAX_SOURCE_CHARS = 6000
-
-
-class ChatAnswer(BaseModel):
-    answer: str
 
 
 def _block_text(block: PackBlock) -> str:
@@ -173,57 +167,6 @@ def _grounding_system(
         )
     parts.append(f"Source excerpt:\n{body[:_MAX_SOURCE_CHARS]}")
     return "\n".join(parts)
-
-
-async def answer_question(
-    db: Session,
-    snapshot_id: uuid.UUID,
-    question: str,
-    block_refs: list[uuid.UUID] | None = None,
-    *,
-    provider: LLMProvider | None = None,
-) -> PackMessage:
-    refs = [uuid.UUID(str(r)) for r in (block_refs or [])]
-    attached = _attached_blocks(db, snapshot_id, refs)
-
-    user_msg = PackMessage(
-        snapshot_id=snapshot_id,
-        role=ChatRole.user,
-        content=question,
-        block_refs=[str(r) for r in refs],
-    )
-    db.add(user_msg)
-    db.flush()
-
-    history = list_messages(db, snapshot_id)
-    messages = [
-        ChatMessage(role="user" if m.role is ChatRole.user else "assistant", content=m.content)
-        for m in history
-    ]
-    system = _grounding_system(db, snapshot_id, attached)
-
-    source = db.get(Source, snapshot_id)
-    if provider is not None:
-        cfg = ModelConfig()  # injected fakes ignore the config
-    elif source is None:
-        raise LookupError("snapshot not found")  # routes 404 before this
-    else:
-        cfg = resolve_model_config(db, source.owner_id)
-    result = await complete_structured(
-        response_model=ChatAnswer,
-        messages=messages,
-        system=system,
-        config=cfg,
-        provider=provider,
-    )
-
-    assistant_msg = PackMessage(
-        snapshot_id=snapshot_id, role=ChatRole.assistant, content=result.answer, block_refs=[]
-    )
-    db.add(assistant_msg)
-    db.commit()
-    db.refresh(assistant_msg)
-    return assistant_msg
 
 
 async def answer_stream(

@@ -3,7 +3,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import {
   getPackMessages,
-  postPackMessage,
+  streamPackMessage,
   type MessageOut,
 } from "@gulp/api-client";
 import { Button } from "@/components/ui/Button";
@@ -27,6 +27,7 @@ export function ChatPanel({
   const [draft, setDraft] = useState("");
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const [streamText, setStreamText] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const tmpIdRef = useRef(0);
 
@@ -50,6 +51,12 @@ export function ChatPanel({
     };
   }, [snapshotId]);
 
+  const ERROR_COPY: Record<string, string> = {
+    llm_not_configured: "Add an AI provider key in Settings → AI models first.",
+    llm_key_invalid: "Your AI key was rejected — check Settings → AI models.",
+    llm_rate_limited: "The provider rate-limited this key — try again shortly.",
+  };
+
   async function send() {
     const q = draft.trim();
     if (!q || sending) return;
@@ -65,18 +72,32 @@ export function ChatPanel({
       created_at: "",
     };
     setMessages((m) => [...m, optimistic]);
+    let failed: string | null = null;
     try {
-      const answer = await postPackMessage(snapshotId, {
+      let acc = "";
+      for await (const ev of streamPackMessage(snapshotId, {
         content: q,
         block_refs: refs,
-      });
-      setMessages((m) => [...m, answer]);
+      })) {
+        if (ev.type === "delta") {
+          acc += ev.text;
+          setStreamText(acc);
+        } else if (ev.type === "done") {
+          setMessages((m) => [...m, ev.message]);
+        } else {
+          failed = ERROR_COPY[ev.code] ?? "Couldn't send — try again.";
+        }
+      }
     } catch {
+      failed = "Couldn't send — try again.";
+    } finally {
+      setStreamText(null);
+      setSending(false);
+    }
+    if (failed) {
       setMessages((m) => m.filter((x) => x.id !== optimistic.id));
       setDraft(q);
-      setError("Couldn't send — try again.");
-    } finally {
-      setSending(false);
+      setError(failed);
     }
   }
 
@@ -119,7 +140,14 @@ export function ChatPanel({
             {m.content}
           </div>
         ))}
-        {sending && <div className={styles.thinking}>Thinking…</div>}
+        {streamText !== null && streamText !== "" && (
+          <div className={`${styles.message} ${styles.assistant}`}>
+            {streamText}
+          </div>
+        )}
+        {sending && !streamText && (
+          <div className={styles.thinking}>Thinking…</div>
+        )}
         {error && (
           <div className={styles.err} role="alert">
             {error}

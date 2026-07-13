@@ -1,9 +1,12 @@
 """Pack read endpoint — thin (docs/05 D4)."""
 
+import json
 import uuid
+from collections.abc import AsyncIterator
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Response
+from fastapi.responses import StreamingResponse
 from gulp_shared.models.source import Source
 from gulp_shared.models.user import User
 from sqlalchemy.orm import Session
@@ -12,7 +15,7 @@ from app.core.auth import get_current_user
 from app.deps import get_db
 from app.schemas.chat import MessageCreate, MessageOut
 from app.schemas.pack import BlockCreate, BlockOut, BlockUpdate, PackOut
-from app.services.chat import answer_question, list_messages
+from app.services.chat import answer_stream, list_messages
 from app.services.pack import create_block, delete_block, pack_out, update_block
 
 router = APIRouter()
@@ -97,12 +100,21 @@ def list_messages_route(
     return list_messages(db, snapshot_id)
 
 
-@router.post("/snapshots/{snapshot_id}/messages", response_model=MessageOut, status_code=201)
-async def post_message_route(
+@router.post("/snapshots/{snapshot_id}/messages/stream")
+async def stream_message_route(
     snapshot_id: uuid.UUID,
     body: MessageCreate,
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
-) -> Any:
+) -> StreamingResponse:
     _owned_snapshot(db, snapshot_id, user)
-    return await answer_question(db, snapshot_id, body.content, body.block_refs)
+
+    async def gen() -> AsyncIterator[str]:
+        async for ev in answer_stream(db, snapshot_id, body.content, body.block_refs):
+            yield f"data: {json.dumps(ev)}\n\n"
+
+    return StreamingResponse(
+        gen(),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )

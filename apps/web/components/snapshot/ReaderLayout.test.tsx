@@ -6,7 +6,11 @@ import { ReaderLayout } from "./ReaderLayout";
 
 vi.mock("@gulp/api-client", () => ({
   getPackMessages: vi.fn().mockResolvedValue([]),
-  postPackMessage: vi.fn().mockResolvedValue({}),
+  streamPackMessage: vi.fn(() =>
+    (async function* () {
+      yield { type: "done", message: {} };
+    })(),
+  ),
 }));
 vi.mock("./GenreSelect", () => ({ GenreSelect: () => <div>genre</div> }));
 

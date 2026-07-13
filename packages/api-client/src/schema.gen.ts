@@ -754,8 +754,24 @@ export interface paths {
         /** List Messages Route */
         get: operations["list_messages_route_snapshots__snapshot_id__messages_get"];
         put?: never;
-        /** Post Message Route */
-        post: operations["post_message_route_snapshots__snapshot_id__messages_post"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/snapshots/{snapshot_id}/messages/stream": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Stream Message Route */
+        post: operations["stream_message_route_snapshots__snapshot_id__messages_stream_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3381,7 +3397,7 @@ export interface operations {
             };
         };
     };
-    post_message_route_snapshots__snapshot_id__messages_post: {
+    stream_message_route_snapshots__snapshot_id__messages_stream_post: {
         parameters: {
             query?: never;
             header?: never;
@@ -3397,12 +3413,12 @@ export interface operations {
         };
         responses: {
             /** @description Successful Response */
-            201: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["MessageOut"];
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */

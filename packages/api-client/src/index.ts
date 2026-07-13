@@ -293,8 +293,6 @@ export async function deleteCard(snapshotId: string, cardId: string): Promise<vo
 
 export type MessageOut =
   paths["/snapshots/{snapshot_id}/messages"]["get"]["responses"]["200"]["content"]["application/json"][number];
-export type MessageCreateBody =
-  paths["/snapshots/{snapshot_id}/messages"]["post"]["requestBody"]["content"]["application/json"];
 
 export async function getPackMessages(snapshotId: string): Promise<MessageOut[]> {
   const { data, error } = await client.GET("/snapshots/{snapshot_id}/messages", {
@@ -302,18 +300,6 @@ export async function getPackMessages(snapshotId: string): Promise<MessageOut[]>
     cache: "no-store",
   });
   if (error || !data) throw new Error("fetch messages failed");
-  return data;
-}
-
-export async function postPackMessage(
-  snapshotId: string,
-  body: MessageCreateBody,
-): Promise<MessageOut> {
-  const { data, error } = await client.POST("/snapshots/{snapshot_id}/messages", {
-    params: { path: { snapshot_id: snapshotId } },
-    body,
-  });
-  if (error || !data) throw new Error("post message failed");
   return data;
 }
 
@@ -552,3 +538,4 @@ export async function getMe(): Promise<UserPublic | null> {
 }
 
 export * from "./llm";
+export * from "./chat";
