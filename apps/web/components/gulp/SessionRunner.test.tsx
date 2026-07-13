@@ -20,7 +20,11 @@ const reviewCardMock = () => api.reviewCard as ReturnType<typeof vi.fn>;
 const snoozeCardMock = () => api.snoozeCard as ReturnType<typeof vi.fn>;
 const completeMock = () => api.completeGulpSession as ReturnType<typeof vi.fn>;
 
-function card(id: string, prompt: string, reason: SessionCard["reason"] = "due"): SessionCard {
+function card(
+  id: string,
+  prompt: string,
+  reason: SessionCard["reason"] = "due",
+): SessionCard {
   return {
     id,
     card_type: "flashcard",
@@ -63,6 +67,19 @@ afterEach(() => {
 });
 
 describe("SessionRunner — retest queue (Task 17 fix)", () => {
+  it("shows the current card position in the progress header", () => {
+    render(
+      <SessionRunner
+        initial={session([card("c1", "Prompt one"), card("c2", "Prompt two")])}
+      />,
+    );
+
+    expect(screen.getByText("1 / 2")).toBeTruthy();
+    expect(screen.getByRole("progressbar").getAttribute("aria-valuenow")).toBe(
+      "1",
+    );
+  });
+
   it("does not duplicate cards when the server's next_card echoes what's already queued", async () => {
     // This is exactly the bug: the server hands back the next PLANNED card
     // (already sitting in our own queue) on every review — the old code
@@ -70,10 +87,13 @@ describe("SessionRunner — retest queue (Task 17 fix)", () => {
     const c1 = card("c1", "Prompt one");
     const c2 = card("c2", "Prompt two");
     const c3 = card("c3", "Prompt three");
-    reviewCardMock().mockImplementation((_sessionId: string, body: { card_id: string }) => {
-      const echoed = body.card_id === "c1" ? c2 : body.card_id === "c2" ? c3 : null;
-      return Promise.resolve({ mastery: {}, next_card: echoed, done: false });
-    });
+    reviewCardMock().mockImplementation(
+      (_sessionId: string, body: { card_id: string }) => {
+        const echoed =
+          body.card_id === "c1" ? c2 : body.card_id === "c2" ? c3 : null;
+        return Promise.resolve({ mastery: {}, next_card: echoed, done: false });
+      },
+    );
     completeMock().mockResolvedValue(SUMMARY);
 
     render(<SessionRunner initial={session([c1, c2, c3])} />);
@@ -97,7 +117,11 @@ describe("SessionRunner — retest queue (Task 17 fix)", () => {
   it("requeues a missed card for exactly one retest, never twice (no infinite loop)", async () => {
     const c1 = card("c1", "Prompt one");
     const c2 = card("c2", "Prompt two");
-    reviewCardMock().mockResolvedValue({ mastery: {}, next_card: null, done: false });
+    reviewCardMock().mockResolvedValue({
+      mastery: {},
+      next_card: null,
+      done: false,
+    });
     completeMock().mockResolvedValue(SUMMARY);
 
     render(<SessionRunner initial={session([c1, c2])} />);
@@ -128,7 +152,11 @@ describe("SessionRunner — snooze", () => {
   it("drops the card via snoozeCard, without grading or retesting it", async () => {
     const c1 = card("c1", "Prompt one");
     const c2 = card("c2", "Prompt two");
-    snoozeCardMock().mockResolvedValue({ mastery: {}, next_card: null, done: false });
+    snoozeCardMock().mockResolvedValue({
+      mastery: {},
+      next_card: null,
+      done: false,
+    });
     completeMock().mockResolvedValue(SUMMARY);
 
     render(<SessionRunner initial={session([c1, c2])} />);

@@ -45,7 +45,7 @@ function FlashcardPrompt({ onReveal }: { onReveal: () => void }) {
 
   return (
     <div className={styles.flip}>
-      <Button variant="secondary" onClick={() => onReveal()}>
+      <Button variant="primary" size="lg" onClick={() => onReveal()}>
         Show answer <kbd className={styles.kbd}>space</kbd>
       </Button>
     </div>
@@ -88,7 +88,9 @@ function McqPrompt({
             disabled={picked !== null}
             onClick={() => pick(index, option)}
           >
-            <span className={styles.optKey}>{String.fromCharCode(65 + index)}</span>
+            <span className={styles.optKey}>
+              {String.fromCharCode(65 + index)}
+            </span>
             <span>{option}</span>
             {isAnswer && <span className={styles.optMark}>✓ answer</span>}
             {isWrongPick && <span className={styles.optMark}>your pick</span>}

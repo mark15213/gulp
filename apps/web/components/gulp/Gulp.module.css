@@ -6,22 +6,32 @@
 
 .page {
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
   background:
-    radial-gradient(rgba(217, 168, 0, 0.13) 1.2px, transparent 1.5px) 0 0 /
-      16px 16px,
+    radial-gradient(rgba(217, 168, 0, 0.13) 1.2px, transparent 1.5px) 0 0 / 16px
+      16px,
     var(--surface);
   color: var(--text-1);
 }
 
 /* ── topbar: exit · progress track · counter ─────────────────── */
 .topbar {
+  flex: none;
+  border-bottom: 1px solid var(--border);
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
+  backdrop-filter: blur(10px);
+}
+
+.topbarInner {
+  width: 100%;
+  max-width: var(--dashboard-max);
+  margin: 0 auto;
   display: flex;
   align-items: center;
   gap: var(--space-4);
   padding: var(--space-4) var(--space-5);
-  border-bottom: 1px solid var(--border);
 }
 
 .iconBtn {
@@ -77,23 +87,50 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: var(--space-6) var(--space-5) var(--space-5);
+  padding: var(--space-8) var(--space-5);
 }
 
 .cardwrap {
   width: 100%;
-  max-width: var(--measure);
+  max-width: calc(var(--measure) + var(--space-12));
+  min-height: 360px;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-8);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-xl);
+  background: var(--surface);
+  box-shadow:
+    0 18px 52px rgba(22, 19, 11, 0.1),
+    0 3px 10px rgba(22, 19, 11, 0.06);
+}
+
+.cardwrap::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 5px;
+  background: linear-gradient(90deg, var(--banana), var(--banana-deep));
 }
 
 .srcline {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
-  flex-wrap: wrap;
-  gap: var(--space-3);
-  margin-bottom: var(--space-4);
+  gap: var(--space-2) var(--space-3);
+  margin-bottom: var(--space-6);
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--border);
 }
 
 .srcName {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   color: var(--text-2);
   font-size: 12.5px;
 }
@@ -116,9 +153,7 @@
 }
 
 .whyPop {
-  /* forces the explanation onto its own full-width row within the
-   * flex-wrap srcline, right under the chip that opened it. */
-  flex-basis: 100%;
+  grid-column: 1 / -1;
   margin: 0;
   font-size: 12.5px;
   line-height: 20px;
@@ -135,20 +170,22 @@
   text-transform: uppercase;
   letter-spacing: 0.1em;
   color: var(--muted);
-  margin-bottom: var(--space-2);
+  margin-bottom: var(--space-3);
 }
 
 .prompt {
   font-family: var(--font-reading);
-  font-size: 27px;
-  line-height: 34px;
+  font-size: clamp(25px, 2.1vw, 30px);
+  line-height: 1.24;
   letter-spacing: -0.01em;
-  text-wrap: balance;
+  overflow-wrap: anywhere;
+  text-wrap: pretty;
 }
 
 /* ── CardPrompt: the per-card-type interaction (S4 §7, Task 16) ──────── */
 .flip {
-  margin-top: var(--space-6);
+  margin-top: auto;
+  padding-top: var(--space-8);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -158,14 +195,14 @@
 .kbd {
   font-family: var(--font-mono);
   font-size: 10px;
-  background: var(--ink);
-  color: var(--surface);
+  background: var(--surface);
+  color: var(--ink);
   padding: 2px 6px;
   border-radius: 4px;
 }
 
 .opts {
-  margin-top: var(--space-6);
+  margin-top: var(--space-8);
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
@@ -234,7 +271,8 @@
 }
 
 .clozebox {
-  margin-top: var(--space-6);
+  margin-top: auto;
+  padding-top: var(--space-8);
   display: flex;
   gap: var(--space-3);
 }
@@ -255,7 +293,7 @@
 }
 
 .reveal {
-  margin-top: var(--space-6);
+  margin-top: var(--space-8);
   border-top: 1px dashed var(--border-strong);
   padding-top: var(--space-4);
   animation: rise 0.28s ease both;
@@ -285,8 +323,14 @@
 }
 
 /* ── snooze: opt out of grading this card, back tomorrow (Task 17) ──── */
+.actionDock {
+  min-height: 104px;
+  flex: none;
+}
+
 .snoozeRow {
-  max-width: var(--measure);
+  width: 100%;
+  max-width: calc(var(--measure) + var(--space-12));
   margin: var(--space-3) auto 0;
   display: flex;
   justify-content: center;
@@ -314,13 +358,14 @@
 /* ── placeholder grade area — Task 16 replaces with <GradeBar> ──── */
 .gradebar {
   border-top: 1px solid var(--border);
+  background: color-mix(in srgb, var(--surface) 90%, transparent);
   padding: var(--space-4) var(--space-5);
 }
 
 .grades {
   display: flex;
   gap: var(--space-3);
-  max-width: var(--measure);
+  max-width: calc(var(--measure) + var(--space-12));
   margin: 0 auto;
 }
 
@@ -497,10 +542,40 @@
 }
 
 @media (max-width: 620px) {
+  .topbarInner {
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+  }
+
+  .stage {
+    justify-content: flex-start;
+    padding: var(--space-5) var(--space-4);
+  }
+
+  .cardwrap {
+    min-height: min(420px, calc(100dvh - 152px));
+    padding: var(--space-6);
+  }
+
+  .srcline {
+    grid-template-columns: auto minmax(0, 1fr);
+    margin-bottom: var(--space-5);
+  }
+
+  .whyBtn {
+    grid-column: 1 / -1;
+    justify-self: end;
+  }
+
   .prompt {
     font-size: 23px;
     line-height: 30px;
   }
+
+  .gradebar {
+    padding: var(--space-3) var(--space-4) var(--space-4);
+  }
+
   .grades {
     flex-direction: row;
   }
