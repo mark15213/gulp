@@ -23,6 +23,7 @@ from app.routers import (
     gulp,
     inbox,
     library,
+    llm,
     pack,
     processing,
     today,
@@ -64,6 +65,7 @@ app.include_router(figures.router, tags=["figures"])
 app.include_router(gulp.router, tags=["gulp"])
 app.include_router(inbox.router, tags=["inbox"])
 app.include_router(library.router, tags=["library"])
+app.include_router(llm.router, tags=["llm"])
 app.include_router(pack.router, tags=["pack"])
 app.include_router(processing.router, tags=["processing"])
 app.include_router(today.router, tags=["today"])
