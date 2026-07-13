@@ -25,7 +25,6 @@ from gulp_shared.models.knowledge_pack import (
 )
 from gulp_shared.models.pack_message import PackMessage
 from gulp_shared.models.source import CardsStatus, Source
-from gulp_shared.settings import settings
 from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -130,7 +129,7 @@ async def run_cards(
     provider: LLMProvider | None = None,
     config: ModelConfig | None = None,
 ) -> CardGeneration:
-    cfg = config or ModelConfig(provider=settings.llm_provider, model=settings.llm_model)
+    cfg = config or ModelConfig()
     system, messages = build_cards_messages(pack_text, conversation_text)
     return await complete_structured(
         response_model=CardGeneration,

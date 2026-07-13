@@ -6,7 +6,6 @@ before sending. Per-section map-reduce for long content is a later enhancement.
 
 from gulp_shared.llm import ModelConfig, complete_structured
 from gulp_shared.llm.base import LLMProvider
-from gulp_shared.settings import settings
 
 from app.pipeline.normdoc import NormDoc
 from app.pipeline.schemas import PaperReport
@@ -22,7 +21,7 @@ async def run_digest(
     provider: LLMProvider | None = None,
     config: ModelConfig | None = None,
 ) -> PaperReport:
-    cfg = config or ModelConfig(provider=settings.llm_provider, model=settings.llm_model)
+    cfg = config or ModelConfig()
     body = normdoc.content_body
     if len(body) > MAX_DIGEST_CHARS:
         body = body[:MAX_DIGEST_CHARS]

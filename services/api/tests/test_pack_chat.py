@@ -20,6 +20,7 @@ from gulp_shared.models.knowledge_pack import (
 from gulp_shared.models.pack_message import ChatRole
 from gulp_shared.models.source import SnapshotStatus, Source, SourceKind
 from gulp_shared.models.user import DEV_USER_ID
+from gulp_shared.settings import settings
 
 
 class FakeProvider:
@@ -104,9 +105,23 @@ def client(db, monkeypatch):  # type: ignore[no-untyped-def]
         models=spec.models,
     )
     monkeypatch.setitem(llm_catalog.PROVIDERS, "anthropic", fake_spec)
+    monkeypatch.setattr(settings, "anthropic_api_key", "sk-test")  # dev fallback path
     c = TestClient(app)
     yield c
     app.dependency_overrides.clear()
+
+
+def test_post_without_credentials_maps_to_409(db, monkeypatch) -> None:  # type: ignore[no-untyped-def]
+    monkeypatch.setattr(settings, "anthropic_api_key", "")
+    app.dependency_overrides[get_db] = lambda: db
+    ids = _pack(db)
+    try:
+        c = TestClient(app)
+        r = c.post(f"/snapshots/{ids['snap']}/messages", json={"content": "Q"})
+    finally:
+        app.dependency_overrides.clear()
+    assert r.status_code == 409
+    assert r.json()["detail"] == "llm_not_configured"
 
 
 def test_post_then_get_messages(client, db) -> None:  # type: ignore[no-untyped-def]

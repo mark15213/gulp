@@ -8,10 +8,12 @@ import logging
 from collections.abc import Awaitable, Callable
 
 from gulp_shared.llm.base import LLMProvider, ModelConfig
+from gulp_shared.llm.resolve import resolve_model_config
 from gulp_shared.models.source import (
     MediaType,
     SnapshotStatus,
     Source,
+    SourceGenre,
 )
 from gulp_shared.urls import host_of
 from sqlalchemy.orm import Session
@@ -75,6 +77,8 @@ async def process_source(
             and normdoc.title != source.title
         ):
             source.title = normdoc.title
+        if provider is None and config is None and source.genre is SourceGenre.paper:
+            config = resolve_model_config(db, source.owner_id)
         draft = await build_pack_draft(source.genre, normdoc, provider=provider, config=config)
         persist_pack(db, source, draft)
         source.status = SnapshotStatus.ready

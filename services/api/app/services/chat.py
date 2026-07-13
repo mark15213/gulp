@@ -3,11 +3,16 @@ LLM, persist the thread (spec 2026-07-10 reader redesign)."""
 
 import uuid
 
-from gulp_shared.llm import ChatMessage, LLMProvider, ModelConfig, complete_structured
+from gulp_shared.llm import (
+    ChatMessage,
+    LLMProvider,
+    ModelConfig,
+    complete_structured,
+    resolve_model_config,
+)
 from gulp_shared.models.knowledge_pack import KnowledgePack, PackBlock, PackSection
 from gulp_shared.models.pack_message import ChatRole, PackMessage
 from gulp_shared.models.source import Source
-from gulp_shared.settings import settings
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -114,11 +119,18 @@ async def answer_question(
     ]
     system = _grounding_system(db, snapshot_id, attached)
 
+    source = db.get(Source, snapshot_id)
+    if provider is not None:
+        cfg = ModelConfig()  # injected fakes ignore the config
+    elif source is None:
+        raise LookupError("snapshot not found")  # routes 404 before this
+    else:
+        cfg = resolve_model_config(db, source.owner_id)
     result = await complete_structured(
         response_model=ChatAnswer,
         messages=messages,
         system=system,
-        config=ModelConfig(provider=settings.llm_provider, model=settings.llm_model),
+        config=cfg,
         provider=provider,
     )
 

@@ -29,6 +29,7 @@ from gulp_shared.llm.catalog import (
     get_spec,
 )
 from gulp_shared.llm.openai_compat import OpenAICompatProvider
+from gulp_shared.llm.resolve import resolve_model_config
 from gulp_shared.llm.service import complete_structured, get_provider
 
 __all__ = [
@@ -59,4 +60,5 @@ __all__ = [
     "complete_structured",
     "get_provider",
     "get_spec",
+    "resolve_model_config",
 ]

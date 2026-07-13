@@ -7,10 +7,11 @@ from collections.abc import Awaitable, Callable
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from gulp_shared.llm.base import LLMAuthError, LLMNotConfiguredError, LLMRateLimitError
 from gulp_shared.logging import configure_logging, reset_request_id, set_request_id
 from gulp_shared.settings import settings
 from starlette.requests import Request
-from starlette.responses import Response
+from starlette.responses import JSONResponse, Response
 
 from app.routers import (
     auth,
@@ -38,6 +39,22 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.exception_handler(LLMNotConfiguredError)
+async def _llm_not_configured(request: Request, exc: LLMNotConfiguredError) -> JSONResponse:
+    return JSONResponse(status_code=409, content={"detail": "llm_not_configured"})
+
+
+@app.exception_handler(LLMAuthError)
+async def _llm_auth(request: Request, exc: LLMAuthError) -> JSONResponse:
+    return JSONResponse(status_code=409, content={"detail": "llm_key_invalid"})
+
+
+@app.exception_handler(LLMRateLimitError)
+async def _llm_rate_limited(request: Request, exc: LLMRateLimitError) -> JSONResponse:
+    return JSONResponse(status_code=429, content={"detail": "llm_rate_limited"})
+
 app.include_router(auth.router, tags=["auth"])
 app.include_router(capture.router, tags=["capture"])
 app.include_router(cards.router, tags=["cards"])
