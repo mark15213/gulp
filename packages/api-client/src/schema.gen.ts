@@ -640,6 +640,58 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/me/llm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Settings Route */
+        get: operations["get_settings_route_me_llm_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/llm/credentials/{provider}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Put Credential Route */
+        put: operations["put_credential_route_me_llm_credentials__provider__put"];
+        post?: never;
+        /** Delete Credential Route */
+        delete: operations["delete_credential_route_me_llm_credentials__provider__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/llm/default": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Put Default Route */
+        put: operations["put_default_route_me_llm_default_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/snapshots/{snapshot_id}/pack": {
         parameters: {
             query?: never;
@@ -965,6 +1017,25 @@ export interface components {
             /** Content */
             content: string;
         };
+        /** CredentialIn */
+        CredentialIn: {
+            /** Api Key */
+            api_key: string;
+        };
+        /** CredentialOut */
+        CredentialOut: {
+            /** Provider */
+            provider: string;
+            /** Masked Key */
+            masked_key: string;
+        };
+        /** DefaultIn */
+        DefaultIn: {
+            /** Provider */
+            provider: string;
+            /** Model */
+            model: string;
+        };
         /** FeedEntriesOut */
         FeedEntriesOut: {
             /** Items */
@@ -1114,6 +1185,17 @@ export interface components {
             /** Count */
             count: number;
         };
+        /** LLMSettingsOut */
+        LLMSettingsOut: {
+            /** Default Provider */
+            default_provider: string | null;
+            /** Default Model */
+            default_model: string | null;
+            /** Credentials */
+            credentials: components["schemas"]["CredentialOut"][];
+            /** Catalog */
+            catalog: components["schemas"]["ProviderCatalogOut"][];
+        };
         /** LibraryOut */
         LibraryOut: {
             /** Items */
@@ -1216,6 +1298,13 @@ export interface components {
              */
             created_at: string;
         };
+        /** ModelInfoOut */
+        ModelInfoOut: {
+            /** Id */
+            id: string;
+            /** Label */
+            label: string;
+        };
         /** NextUp */
         NextUp: {
             /** Due Count */
@@ -1307,6 +1396,15 @@ export interface components {
             type: "prose";
             /** Content */
             content: string;
+        };
+        /** ProviderCatalogOut */
+        ProviderCatalogOut: {
+            /** Provider */
+            provider: string;
+            /** Capabilities */
+            capabilities: string[];
+            /** Models */
+            models: components["schemas"]["ModelInfoOut"][];
         };
         /** RegisterRequest */
         RegisterRequest: {
@@ -3000,6 +3098,121 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["LibraryOut"];
+                };
+            };
+        };
+    };
+    get_settings_route_me_llm_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LLMSettingsOut"];
+                };
+            };
+        };
+    };
+    put_credential_route_me_llm_credentials__provider__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                provider: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CredentialIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CredentialOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_credential_route_me_llm_credentials__provider__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                provider: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    put_default_route_me_llm_default_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DefaultIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
