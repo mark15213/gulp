@@ -28,6 +28,7 @@ from gulp_shared.llm.catalog import (
     check_capabilities,
     get_spec,
 )
+from gulp_shared.llm.loop import ToolExecutor, run_tool_loop
 from gulp_shared.llm.openai_compat import OpenAICompatProvider
 from gulp_shared.llm.resolve import ping_credential, resolve_model_config
 from gulp_shared.llm.service import complete_structured, get_provider
@@ -56,10 +57,12 @@ __all__ = [
     "ToolCallEvent",
     "ToolSpec",
     "UsageEvent",
+    "ToolExecutor",
     "check_capabilities",
     "complete_structured",
     "get_provider",
     "get_spec",
     "ping_credential",
     "resolve_model_config",
+    "run_tool_loop",
 ]
