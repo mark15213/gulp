@@ -1,14 +1,26 @@
-"""Snapshot-scoped article chat: assemble context (+ attached blocks), call the
-LLM, persist the thread (spec 2026-07-10 reader redesign)."""
+"""Snapshot-scoped article chat: assemble context (+ attached blocks), stream
+the LLM answer with inline [[block:ID]] citations, persist the thread
+(spec 2026-07-13 MaaS layer §5.2)."""
 
+import re
 import uuid
+from collections.abc import AsyncIterator
+from typing import Any
 
 from gulp_shared.llm import (
     ChatMessage,
     LLMProvider,
     ModelConfig,
     complete_structured,
+    get_spec,
     resolve_model_config,
+)
+from gulp_shared.llm.base import (
+    LLMAuthError,
+    LLMError,
+    LLMNotConfiguredError,
+    LLMRateLimitError,
+    TextDelta,
 )
 from gulp_shared.models.knowledge_pack import KnowledgePack, PackBlock, PackSection
 from gulp_shared.models.pack_message import ChatRole, PackMessage
@@ -70,6 +82,66 @@ def _attached_blocks(
     )
 
 
+def _pack_blocks(db: Session, snapshot_id: uuid.UUID) -> list[PackBlock]:
+    return list(
+        db.scalars(
+            select(PackBlock)
+            .join(PackSection, PackBlock.section_id == PackSection.id)
+            .join(KnowledgePack, PackSection.pack_id == KnowledgePack.id)
+            .where(
+                PackBlock.deleted_at.is_(None),
+                KnowledgePack.snapshot_id == snapshot_id,
+                KnowledgePack.deleted_at.is_(None),
+            )
+            .order_by(PackBlock.position)
+        )
+    )
+
+
+_MARKER_RE = re.compile(r"\[\[block:([0-9a-fA-F-]{36})\]\]")
+_MAX_HOLDBACK = 48  # longest possible partial marker
+
+
+class MarkerFilter:
+    """Incrementally strip [[block:<uuid>]] citation markers from a token
+    stream, collecting the cited ids. Text that merely looks like the start of
+    a marker is held back until it resolves."""
+
+    def __init__(self) -> None:
+        self.refs: list[uuid.UUID] = []
+        self.text = ""
+        self._buf = ""
+
+    def feed(self, chunk: str) -> str:
+        self._buf += chunk
+        out: list[str] = []
+        while True:
+            m = _MARKER_RE.search(self._buf)
+            if m:
+                out.append(self._buf[: m.start()])
+                ref = uuid.UUID(m.group(1))
+                if ref not in self.refs:
+                    self.refs.append(ref)
+                self._buf = self._buf[m.end() :]
+                continue
+            idx = self._buf.rfind("[[")
+            if idx != -1 and len(self._buf) - idx < _MAX_HOLDBACK:
+                out.append(self._buf[:idx])
+                self._buf = self._buf[idx:]
+            else:
+                out.append(self._buf)
+                self._buf = ""
+            break
+        clean = "".join(out)
+        self.text += clean
+        return clean
+
+    def flush(self) -> str:
+        tail, self._buf = self._buf, ""
+        self.text += tail
+        return tail
+
+
 def _grounding_system(
     db: Session, snapshot_id: uuid.UUID, attached: list[PackBlock]
 ) -> str:
@@ -88,6 +160,17 @@ def _grounding_system(
     if attached:
         blocks_txt = "\n".join(f"- ({b.block_type.value}) {_block_text(b)}" for b in attached)
         parts.append("The reader is asking specifically about these blocks:\n" + blocks_txt)
+    citable = _pack_blocks(db, snapshot_id)
+    if citable:
+        listing = "\n".join(
+            f"- {b.id} ({b.block_type.value}) {_block_text(b)[:80]}" for b in citable[:60]
+        )
+        parts.append("Blocks you may cite:\n" + listing)
+        parts.append(
+            "When a sentence draws on a specific block, cite it inline as "
+            "[[block:<id>]] immediately after that sentence, using only ids "
+            "from the list above."
+        )
     parts.append(f"Source excerpt:\n{body[:_MAX_SOURCE_CHARS]}")
     return "\n".join(parts)
 
@@ -141,3 +224,87 @@ async def answer_question(
     db.commit()
     db.refresh(assistant_msg)
     return assistant_msg
+
+
+async def answer_stream(
+    db: Session,
+    snapshot_id: uuid.UUID,
+    question: str,
+    block_refs: list[uuid.UUID] | None = None,
+    *,
+    provider: LLMProvider | None = None,
+) -> AsyncIterator[dict[str, Any]]:
+    refs = [uuid.UUID(str(r)) for r in (block_refs or [])]
+    attached = _attached_blocks(db, snapshot_id, refs)
+    source = db.get(Source, snapshot_id)
+
+    user_msg = PackMessage(
+        snapshot_id=snapshot_id,
+        role=ChatRole.user,
+        content=question,
+        block_refs=[str(r) for r in refs],
+    )
+    db.add(user_msg)
+    db.flush()
+
+    history = list_messages(db, snapshot_id)
+    messages = [
+        ChatMessage(role="user" if m.role is ChatRole.user else "assistant", content=m.content)
+        for m in history
+    ]
+    system = _grounding_system(db, snapshot_id, attached)
+    mf = MarkerFilter()
+    try:
+        if provider is not None:
+            cfg = ModelConfig()  # injected fakes ignore the config
+            prov = provider
+        elif source is None:
+            raise LookupError("snapshot not found")  # routes 404 before this
+        else:
+            cfg = resolve_model_config(db, source.owner_id)
+            prov = get_spec(cfg.provider).adapter
+        async for ev in prov.stream_chat(system=system, messages=messages, tools=None, config=cfg):
+            if isinstance(ev, TextDelta):
+                clean = mf.feed(ev.text)
+                if clean:
+                    yield {"type": "delta", "text": clean}
+        tail = mf.flush()
+        if tail:
+            yield {"type": "delta", "text": tail}
+    except LLMNotConfiguredError:
+        db.rollback()
+        yield {"type": "error", "code": "llm_not_configured"}
+        return
+    except LLMAuthError:
+        db.rollback()
+        yield {"type": "error", "code": "llm_key_invalid"}
+        return
+    except LLMRateLimitError:
+        db.rollback()
+        yield {"type": "error", "code": "llm_rate_limited"}
+        return
+    except LLMError:
+        db.rollback()
+        yield {"type": "error", "code": "llm_error"}
+        return
+
+    valid = {b.id for b in _pack_blocks(db, snapshot_id)}
+    assistant_msg = PackMessage(
+        snapshot_id=snapshot_id,
+        role=ChatRole.assistant,
+        content=mf.text,
+        block_refs=[str(r) for r in mf.refs if r in valid],
+    )
+    db.add(assistant_msg)
+    db.commit()
+    db.refresh(assistant_msg)
+    yield {
+        "type": "done",
+        "message": {
+            "id": str(assistant_msg.id),
+            "role": "assistant",
+            "content": assistant_msg.content,
+            "block_refs": assistant_msg.block_refs,
+            "created_at": assistant_msg.created_at.isoformat(),
+        },
+    }

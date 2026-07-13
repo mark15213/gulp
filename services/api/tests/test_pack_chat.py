@@ -5,10 +5,11 @@ from typing import Any
 import pytest
 from app.deps import get_db
 from app.main import app
-from app.services.chat import answer_question, list_messages
+from app.services.chat import MarkerFilter, answer_question, answer_stream, list_messages
 from fastapi.testclient import TestClient
 from gulp_shared.llm import ChatMessage
 from gulp_shared.llm import catalog as llm_catalog
+from gulp_shared.llm.base import DoneEvent, TextDelta
 from gulp_shared.models.knowledge_pack import (
     KnowledgePack,
     PackBlock,
@@ -148,3 +149,67 @@ def test_messages_404_for_foreign_snapshot(client, db) -> None:  # type: ignore[
     db.commit()
     r = client.get(f"/snapshots/{foreign.id}/messages")
     assert r.status_code == 404
+
+
+class FakeStreamProvider:
+    def __init__(self, *chunks: str) -> None:
+        self.chunks = chunks
+        self.last_system: str | None = None
+
+    async def complete_json(self, **kw: Any) -> dict[str, Any]:
+        raise AssertionError("streaming path must not call complete_json")
+
+    async def stream_chat(self, *, system, messages, tools, config):  # type: ignore[no-untyped-def]
+        self.last_system = system
+        for c in self.chunks:
+            yield TextDelta(text=c)
+        yield DoneEvent(stop_reason="stop")
+
+
+async def _collect(agen) -> list[dict[str, Any]]:  # type: ignore[no-untyped-def]
+    return [e async for e in agen]
+
+
+def test_marker_filter_strips_split_markers() -> None:
+    bid = "11111111-1111-1111-1111-111111111111"
+    mf = MarkerFilter()
+    out = mf.feed("Attention is [[bl") + mf.feed(f"ock:{bid}]] key.") + mf.flush()
+    assert out == "Attention is  key."
+    assert mf.text == "Attention is  key."
+    assert [str(r) for r in mf.refs] == [bid]
+
+
+def test_marker_filter_passes_plain_double_brackets() -> None:
+    mf = MarkerFilter()
+    out = mf.feed("a [[note]] b") + mf.flush()
+    assert out == "a [[note]] b" and mf.refs == []
+
+
+def test_answer_stream_persists_thread_with_refs(db) -> None:  # type: ignore[no-untyped-def]
+    ids = _pack(db)
+    fake = FakeStreamProvider("The answer ", f"[[block:{ids['block']}]]", "is 42.")
+    events = asyncio.run(_collect(answer_stream(db, ids["snap"], "Why?", provider=fake)))
+    assert events[-1]["type"] == "done"
+    deltas = "".join(e["text"] for e in events if e["type"] == "delta")
+    assert deltas == "The answer is 42."
+    msgs = list_messages(db, ids["snap"])
+    assert [m.role.value for m in msgs] == ["user", "assistant"]
+    assert msgs[1].content == "The answer is 42."
+    assert msgs[1].block_refs == [str(ids["block"])]
+    assert events[-1]["message"]["content"] == "The answer is 42."
+
+
+def test_answer_stream_drops_unknown_block_refs(db) -> None:  # type: ignore[no-untyped-def]
+    ids = _pack(db)
+    fake = FakeStreamProvider("Hi [[block:99999999-9999-9999-9999-999999999999]] there.")
+    asyncio.run(_collect(answer_stream(db, ids["snap"], "Q", provider=fake)))
+    msgs = list_messages(db, ids["snap"])
+    assert msgs[1].block_refs == []
+
+
+def test_answer_stream_system_lists_citable_blocks(db) -> None:  # type: ignore[no-untyped-def]
+    ids = _pack(db)
+    fake = FakeStreamProvider("ok")
+    asyncio.run(_collect(answer_stream(db, ids["snap"], "Q", provider=fake)))
+    assert str(ids["block"]) in (fake.last_system or "")
+    assert "[[block:" in (fake.last_system or "")  # citation instruction present
