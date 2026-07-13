@@ -6,6 +6,15 @@
   gap: var(--space-4);
   padding: var(--space-6) var(--space-4);
 }
+.backLink {
+  font-size: 13px;
+  color: var(--text-2);
+  text-decoration: none;
+  width: fit-content;
+}
+.backLink:hover {
+  color: var(--ink);
+}
 .title {
   font-size: 20px;
   font-weight: 650;

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
 import {
   deleteLLMCredential,
   getLLMSettings,
@@ -68,6 +69,9 @@ export function AISettings() {
 
   return (
     <div className={styles.root}>
+      <Link href="/settings" className={styles.backLink}>
+        ← Settings
+      </Link>
       <h1 className={styles.title}>AI models</h1>
       <p className={styles.muted}>
         Bring your own API keys. Gulp calls providers with your key and never

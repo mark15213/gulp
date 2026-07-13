@@ -1,10 +1,10 @@
 import React from "react";
 import Image from "next/image";
-import { IconSettings } from "@/components/ui/icons";
 import { getInbox } from "@gulp/api-client";
 import { SidebarNav } from "./SidebarNav";
 import { SearchCommand } from "./SearchCommand";
 import { AccountMenu } from "./AccountMenu";
+import { SettingsLink } from "./SettingsLink";
 import styles from "./Sidebar.module.css";
 
 export async function Sidebar() {
@@ -28,14 +28,7 @@ export async function Sidebar() {
       <SidebarNav inboxCount={count} />
 
       <div className={styles.foot}>
-        <span
-          className={`${styles.item} ${styles.itemDisabled}`}
-          aria-disabled="true"
-          title="Coming soon"
-        >
-          <IconSettings className={styles.itemIcon} />
-          <span className={styles.itemLabel}>Settings</span>
-        </span>
+        <SettingsLink />
         <AccountMenu />
       </div>
     </aside>

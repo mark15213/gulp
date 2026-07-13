@@ -36,16 +36,6 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.settingsLink {
-  font-size: 12px;
-  color: var(--text-2);
-  padding: var(--space-1);
-  flex-shrink: 0;
-  text-decoration: none;
-}
-.settingsLink:hover {
-  color: var(--ink);
-}
 .logout {
   border: none;
   background: none;
