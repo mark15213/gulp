@@ -5,6 +5,7 @@ description = "Shared server-side layer: ORM models, db, settings, domain."
 requires-python = ">=3.13"
 dependencies = [
     "anthropic>=0.40",
+    "cryptography>=43",
     "openai>=1.50",
     "pydantic-settings>=2.6",
     "sqlalchemy>=2.0",

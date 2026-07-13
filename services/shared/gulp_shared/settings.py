@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     database_url: str = "postgresql+psycopg://gulp:gulp@localhost:5432/gulp"
     redis_url: str = "redis://localhost:6379/0"
     auth_secret: str = "change-me"
+    credential_secret: str = "change-me-too"  # encrypts stored BYOK provider keys
     session_ttl_days: int = 30
     session_cookie_name: str = "gulp_session"
     session_cookie_secure: bool = False  # True in production (HTTPS)
