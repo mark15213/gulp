@@ -7,7 +7,8 @@ from app.deps import get_db
 from app.main import app
 from app.services.chat import answer_question, list_messages
 from fastapi.testclient import TestClient
-from gulp_shared.llm import AnthropicProvider, ChatMessage, register_provider
+from gulp_shared.llm import ChatMessage
+from gulp_shared.llm import catalog as llm_catalog
 from gulp_shared.models.knowledge_pack import (
     KnowledgePack,
     PackBlock,
@@ -92,13 +93,20 @@ def test_answer_without_attachments_is_general(db) -> None:  # type: ignore[no-u
 
 
 @pytest.fixture
-def client(db):  # type: ignore[no-untyped-def]
+def client(db, monkeypatch):  # type: ignore[no-untyped-def]
     app.dependency_overrides[get_db] = lambda: db
-    register_provider("anthropic", FakeProvider())
+    spec = llm_catalog.PROVIDERS["anthropic"]
+    fake_spec = llm_catalog.ProviderSpec(
+        name=spec.name,
+        adapter=FakeProvider(),
+        base_url=spec.base_url,
+        capabilities=spec.capabilities,
+        models=spec.models,
+    )
+    monkeypatch.setitem(llm_catalog.PROVIDERS, "anthropic", fake_spec)
     c = TestClient(app)
     yield c
     app.dependency_overrides.clear()
-    register_provider("anthropic", AnthropicProvider())
 
 
 def test_post_then_get_messages(client, db) -> None:  # type: ignore[no-untyped-def]

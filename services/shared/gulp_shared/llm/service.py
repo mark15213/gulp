@@ -1,22 +1,13 @@
-"""Provider registry + the validated `complete_structured` entry point."""
-
+"""Validated `complete_structured` entry point over the provider catalog."""
 
 from pydantic import BaseModel, ValidationError
 
 from gulp_shared.llm.base import ChatMessage, LLMError, LLMProvider, ModelConfig
-
-_PROVIDERS: dict[str, LLMProvider] = {}
-
-
-def register_provider(name: str, provider: LLMProvider) -> None:
-    _PROVIDERS[name] = provider
+from gulp_shared.llm.catalog import check_capabilities, get_spec
 
 
 def get_provider(name: str) -> LLMProvider:
-    try:
-        return _PROVIDERS[name]
-    except KeyError as exc:
-        raise LLMError(f"no LLM provider registered as {name!r}") from exc
+    return get_spec(name).adapter
 
 
 async def complete_structured[T: BaseModel](
@@ -29,7 +20,12 @@ async def complete_structured[T: BaseModel](
     max_attempts: int = 2,
 ) -> T:
     cfg = config or ModelConfig()
-    prov = provider or get_provider(cfg.provider)
+    if provider is None:
+        spec = get_spec(cfg.provider)
+        check_capabilities(spec, messages, None)
+        prov: LLMProvider = spec.adapter
+    else:
+        prov = provider
     schema = response_model.model_json_schema()
     last: Exception | None = None
     for _ in range(max_attempts):

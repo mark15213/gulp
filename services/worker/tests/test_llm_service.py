@@ -2,7 +2,7 @@ from typing import Any
 
 import pytest
 from gulp_shared.llm.base import ChatMessage, LLMError, ModelConfig
-from gulp_shared.llm.service import complete_structured, get_provider, register_provider
+from gulp_shared.llm.service import complete_structured
 from pydantic import BaseModel
 
 
@@ -66,13 +66,3 @@ async def test_complete_structured_raises_after_max_attempts() -> None:
             max_attempts=2,
         )
 
-
-def test_registry_round_trips() -> None:
-    fake = FakeProvider({"name": "z", "age": 1})
-    register_provider("fake", fake)
-    assert get_provider("fake") is fake
-
-
-def test_get_provider_unknown_raises() -> None:
-    with pytest.raises(LLMError):
-        get_provider("nope-not-registered")

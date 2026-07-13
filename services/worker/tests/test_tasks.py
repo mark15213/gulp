@@ -47,8 +47,16 @@ async def test_process_snapshot_loads_and_processes(monkeypatch: Any) -> None:
     # process_snapshot opens its own session via SessionLocal, and uses the
     # registered provider — point both at our test doubles.
     monkeypatch.setattr(tasks, "SessionLocal", Local)
-    from gulp_shared.llm import register_provider
-    register_provider("anthropic", FakeProvider())
+    from gulp_shared.llm import catalog as llm_catalog
+    spec = llm_catalog.PROVIDERS["anthropic"]
+    monkeypatch.setitem(
+        llm_catalog.PROVIDERS,
+        "anthropic",
+        llm_catalog.ProviderSpec(
+            name=spec.name, adapter=FakeProvider(), base_url=spec.base_url,
+            capabilities=spec.capabilities, models=spec.models,
+        ),
+    )
 
     await process_snapshot({}, sid)
 

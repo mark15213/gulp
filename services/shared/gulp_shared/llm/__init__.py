@@ -1,4 +1,4 @@
-"""Model/provider clients for the pipeline. Registers the default provider."""
+"""Model/provider clients for the pipeline, resolved via the static catalog."""
 
 from gulp_shared.llm.anthropic_provider import AnthropicProvider
 from gulp_shared.llm.base import (
@@ -21,15 +21,18 @@ from gulp_shared.llm.base import (
     ToolSpec,
     UsageEvent,
 )
-from gulp_shared.llm.service import (
-    complete_structured,
-    get_provider,
-    register_provider,
+from gulp_shared.llm.catalog import (
+    PROVIDERS,
+    ModelInfo,
+    ProviderSpec,
+    check_capabilities,
+    get_spec,
 )
-
-register_provider("anthropic", AnthropicProvider())
+from gulp_shared.llm.openai_compat import OpenAICompatProvider
+from gulp_shared.llm.service import complete_structured, get_provider
 
 __all__ = [
+    "PROVIDERS",
     "AnthropicProvider",
     "ChatMessage",
     "ContentPart",
@@ -42,6 +45,9 @@ __all__ = [
     "LLMProvider",
     "LLMRateLimitError",
     "ModelConfig",
+    "ModelInfo",
+    "OpenAICompatProvider",
+    "ProviderSpec",
     "StreamEvent",
     "TextDelta",
     "TextPart",
@@ -49,7 +55,8 @@ __all__ = [
     "ToolCallEvent",
     "ToolSpec",
     "UsageEvent",
+    "check_capabilities",
     "complete_structured",
     "get_provider",
-    "register_provider",
+    "get_spec",
 ]
