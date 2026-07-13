@@ -1,6 +1,6 @@
 import React from "react";
 import Image from "next/image";
-import { getInbox } from "@gulp/api-client";
+import { getInbox } from "@/lib/serverApi";
 import { SidebarNav } from "./SidebarNav";
 import { SearchCommand } from "./SearchCommand";
 import { AccountMenu } from "./AccountMenu";

@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { getPack, getSnapshot } from "@gulp/api-client";
+import { getPack, getSnapshot } from "@/lib/serverApi";
 import { Sidebar } from "@/components/shell/Sidebar";
 import { ReaderLayout } from "@/components/snapshot/ReaderLayout";
 import { ReaderToggle } from "@/components/snapshot/ReaderToggle";

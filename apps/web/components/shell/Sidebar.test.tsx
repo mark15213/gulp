@@ -1,12 +1,9 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { cleanup, render, screen } from "@testing-library/react";
-import * as api from "@gulp/api-client";
+import * as api from "@/lib/serverApi";
 import { Sidebar } from "./Sidebar";
 
-vi.mock("@gulp/api-client", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@gulp/api-client")>();
-  return { ...actual, getInbox: vi.fn() };
-});
+vi.mock("@/lib/serverApi", () => ({ getInbox: vi.fn() }));
 
 vi.mock("next/navigation", () => ({
   usePathname: () => "/",
@@ -27,7 +24,10 @@ afterEach(() => {
 
 describe("Sidebar", () => {
   it("nav is Today · Feeds · Inbox · Library, Today first, wired hrefs", async () => {
-    (api.getInbox as ReturnType<typeof vi.fn>).mockResolvedValue({ items: [], count: 2 });
+    (api.getInbox as ReturnType<typeof vi.fn>).mockResolvedValue({
+      items: [],
+      count: 2,
+    });
     render(await Sidebar());
     const nav = screen.getByRole("navigation", { name: "Primary" });
     const links = Array.from(nav.querySelectorAll("a"));

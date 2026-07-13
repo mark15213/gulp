@@ -1,4 +1,4 @@
-import { getInbox } from "@gulp/api-client";
+import { getInbox } from "@/lib/serverApi";
 import { InboxList } from "@/components/inbox/InboxList";
 import { PageFrame, PageHeader } from "@/components/shell/PageFrame";
 import styles from "./page.module.css";

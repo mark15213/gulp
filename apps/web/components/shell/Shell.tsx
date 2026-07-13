@@ -1,6 +1,6 @@
 import React from "react";
 import type { ReactNode } from "react";
-import { getMe } from "@gulp/api-client";
+import { getMe } from "@/lib/serverApi";
 import { Sidebar } from "./Sidebar";
 import { FullBleedGate } from "./FullBleedGate";
 import { AuthProvider } from "@/lib/auth";

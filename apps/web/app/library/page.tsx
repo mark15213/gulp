@@ -1,4 +1,4 @@
-import { getLibrary } from "@gulp/api-client";
+import { getLibrary } from "@/lib/serverApi";
 import { LibraryList } from "@/components/library/LibraryList";
 import { PageFrame, PageHeader } from "@/components/shell/PageFrame";
 import styles from "./page.module.css";

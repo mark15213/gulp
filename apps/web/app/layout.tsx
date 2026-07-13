@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { geistMono, instrumentSerif } from "./fonts";
 import { Shell } from "@/components/shell/Shell";
-import { ensureServerApiAuth } from "@/lib/serverApiAuth";
 import "@gulp/ui/tokens.css";
 import "./globals.css";
 
@@ -13,7 +12,6 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
-  ensureServerApiAuth();
   return (
     <html
       lang="en"

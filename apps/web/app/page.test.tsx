@@ -1,12 +1,12 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { cleanup, render, screen } from "@testing-library/react";
-import * as api from "@gulp/api-client";
+import * as api from "@/lib/serverApi";
 import TodayPage from "./page";
 
-vi.mock("@gulp/api-client", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@gulp/api-client")>();
-  return { ...actual, getToday: vi.fn(), getCurrentGulpSession: vi.fn() };
-});
+vi.mock("@/lib/serverApi", () => ({
+  getToday: vi.fn(),
+  getCurrentGulpSession: vi.fn(),
+}));
 
 const snap = (over: Record<string, unknown>) => ({
   id: "s1",

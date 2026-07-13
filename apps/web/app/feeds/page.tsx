@@ -1,4 +1,4 @@
-import { getFeedEntries, getSubscriptions } from "@gulp/api-client";
+import { getFeedEntries, getSubscriptions } from "@/lib/serverApi";
 import { FeedsWorkspace } from "@/components/feeds/FeedsWorkspace";
 import { PageFrame, PageHeader } from "@/components/shell/PageFrame";
 import styles from "./page.module.css";

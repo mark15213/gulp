@@ -6,7 +6,7 @@ import { StartGulpCard } from "@/components/today/StartGulpCard";
 import { MasteryTally } from "@/components/today/MasteryTally";
 import { DigestCard } from "@/components/today/DigestCard";
 import { CapturePeek, type RecentItem } from "@/components/today/CapturePeek";
-import { getCurrentGulpSession, getToday } from "@gulp/api-client";
+import { getCurrentGulpSession, getToday } from "@/lib/serverApi";
 import { safeHost } from "@/lib/pack";
 import { timeAgo } from "@/lib/time";
 import { PageFrame, PageHeader } from "@/components/shell/PageFrame";

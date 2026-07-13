@@ -5,8 +5,8 @@ import createClient from "openapi-fetch";
 import type { paths } from "./schema.gen";
 
 // Browser: same-origin "/api" (proxied by the Next rewrite) so the httpOnly
-// session cookie is first-party. Server (SSR): absolute API URL — apps/web
-// forwards the incoming cookie via openapi-fetch middleware (see web layout).
+// session cookie is first-party. Server (SSR): absolute API URL — apps/web's
+// serverApi wrapper passes the incoming request cookie explicitly.
 export const baseUrl =
   typeof window === "undefined"
     ? process.env.API_INTERNAL_URL ??
@@ -15,6 +15,8 @@ export const baseUrl =
     : "/api";
 
 export const client = createClient<paths>({ baseUrl, credentials: "include" });
+
+export type ApiRequestOptions = { headers?: HeadersInit };
 
 export type CaptureBody =
   paths["/capture"]["post"]["requestBody"]["content"]["application/json"];
@@ -34,8 +36,11 @@ export async function capture(body: CaptureBody): Promise<CaptureResponse> {
   return data;
 }
 
-export async function getInbox(): Promise<InboxOut> {
-  const { data, error } = await client.GET("/inbox", { cache: "no-store" });
+export async function getInbox(options?: ApiRequestOptions): Promise<InboxOut> {
+  const { data, error } = await client.GET("/inbox", {
+    cache: "no-store",
+    headers: options?.headers,
+  });
   if (error || !data) throw new Error("inbox fetch failed");
   return data;
 }
@@ -43,8 +48,13 @@ export async function getInbox(): Promise<InboxOut> {
 export type LibraryOut =
   paths["/library"]["get"]["responses"]["200"]["content"]["application/json"];
 
-export async function getLibrary(): Promise<LibraryOut> {
-  const { data, error } = await client.GET("/library", { cache: "no-store" });
+export async function getLibrary(
+  options?: ApiRequestOptions,
+): Promise<LibraryOut> {
+  const { data, error } = await client.GET("/library", {
+    cache: "no-store",
+    headers: options?.headers,
+  });
   if (error || !data) throw new Error("library fetch failed");
   return data;
 }
@@ -52,16 +62,23 @@ export async function getLibrary(): Promise<LibraryOut> {
 export type TodayOut =
   paths["/today"]["get"]["responses"]["200"]["content"]["application/json"];
 
-export async function getToday(): Promise<TodayOut> {
-  const { data, error } = await client.GET("/today", { cache: "no-store" });
+export async function getToday(options?: ApiRequestOptions): Promise<TodayOut> {
+  const { data, error } = await client.GET("/today", {
+    cache: "no-store",
+    headers: options?.headers,
+  });
   if (error || !data) throw new Error("today fetch failed");
   return data;
 }
 
-export async function getSnapshot(id: string): Promise<Snapshot> {
+export async function getSnapshot(
+  id: string,
+  options?: ApiRequestOptions,
+): Promise<Snapshot> {
   const { data, error } = await client.GET("/snapshots/{snapshot_id}", {
     params: { path: { snapshot_id: id } },
     cache: "no-store",
+    headers: options?.headers,
   });
   if (error || !data) throw new Error("snapshot fetch failed");
   return data;
@@ -116,10 +133,14 @@ export async function removeSnapshotTag(id: string, tag: string): Promise<Snapsh
 // This is fine while "no pack yet" is the only expected error state.
 // Plan B must distinguish a real 404 from a 5xx/4xx before shipping production
 // error handling (e.g. surface retries on 5xx, show a permanent error on 4xx).
-export async function getPack(id: string): Promise<PackOut | null> {
+export async function getPack(
+  id: string,
+  options?: ApiRequestOptions,
+): Promise<PackOut | null> {
   const { data, error } = await client.GET("/snapshots/{snapshot_id}/pack", {
     params: { path: { snapshot_id: id } },
     cache: "no-store",
+    headers: options?.headers,
   });
   if (error) return null; // 404 = no pack yet (still processing / needs attention)
   return data ?? null;
@@ -341,8 +362,13 @@ export async function startGulpSession(
   return data;
 }
 
-export async function getCurrentGulpSession(): Promise<GulpSession | null> {
-  const { data, error } = await client.GET("/gulp/sessions/current", { cache: "no-store" });
+export async function getCurrentGulpSession(
+  options?: ApiRequestOptions,
+): Promise<GulpSession | null> {
+  const { data, error } = await client.GET("/gulp/sessions/current", {
+    cache: "no-store",
+    headers: options?.headers,
+  });
   if (error) throw new Error("current session fetch failed");
   return data ?? null;
 }
@@ -396,8 +422,13 @@ export type CatalogSearchOut =
   paths["/feeds/catalog/search"]["get"]["responses"]["200"]["content"]["application/json"];
 export type CatalogRoute = CatalogSearchOut["items"][number];
 
-export async function getSubscriptions(): Promise<SubscriptionsOut> {
-  const { data, error } = await client.GET("/subscriptions", { cache: "no-store" });
+export async function getSubscriptions(
+  options?: ApiRequestOptions,
+): Promise<SubscriptionsOut> {
+  const { data, error } = await client.GET("/subscriptions", {
+    cache: "no-store",
+    headers: options?.headers,
+  });
   if (error || !data) throw new Error("subscriptions fetch failed");
   return data;
 }
@@ -444,12 +475,15 @@ export async function readAllSubscription(id: string): Promise<void> {
   if (error) throw new Error("read-all failed");
 }
 
-export async function getFeedEntries(params?: {
-  subscriptionId?: string;
-  unreadOnly?: boolean;
-  limit?: number;
-  offset?: number;
-}): Promise<FeedEntriesOut> {
+export async function getFeedEntries(
+  params?: {
+    subscriptionId?: string;
+    unreadOnly?: boolean;
+    limit?: number;
+    offset?: number;
+  },
+  options?: ApiRequestOptions,
+): Promise<FeedEntriesOut> {
   const query = {
     unread_only: params?.unreadOnly,
     limit: params?.limit,
@@ -459,6 +493,7 @@ export async function getFeedEntries(params?: {
     const { data, error } = await client.GET("/subscriptions/{sub_id}/entries", {
       params: { path: { sub_id: params.subscriptionId }, query },
       cache: "no-store",
+      headers: options?.headers,
     });
     if (error || !data) throw new Error("entries fetch failed");
     return data;
@@ -466,6 +501,7 @@ export async function getFeedEntries(params?: {
   const { data, error } = await client.GET("/feed-entries", {
     params: { query },
     cache: "no-store",
+    headers: options?.headers,
   });
   if (error || !data) throw new Error("entries fetch failed");
   return data;
@@ -535,8 +571,13 @@ export async function logout(): Promise<void> {
 }
 
 /** Current user, or null if unauthenticated (401). */
-export async function getMe(): Promise<UserPublic | null> {
-  const { data, error } = await client.GET("/auth/me", { cache: "no-store" });
+export async function getMe(
+  options?: ApiRequestOptions,
+): Promise<UserPublic | null> {
+  const { data, error } = await client.GET("/auth/me", {
+    cache: "no-store",
+    headers: options?.headers,
+  });
   if (error || !data) return null;
   return data;
 }
