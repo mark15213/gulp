@@ -25,9 +25,11 @@ from gulp_shared.models.knowledge_pack import KnowledgePack, PackBlock, PackSect
 from gulp_shared.models.pack_message import ChatRole, PackMessage
 from gulp_shared.models.source import Source
 from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
-_MAX_SOURCE_CHARS = 6000
+_MAX_PACK_CONTEXT_CHARS = 24_000
+_MAX_SOURCE_CHARS = 12_000
+_MAX_HISTORY_MESSAGES = 24
 
 
 def _block_text(block: PackBlock) -> str:
@@ -43,6 +45,9 @@ def _block_text(block: PackBlock) -> str:
         return f"{d.get('label', '')}: {d.get('explanation', '')}"
     if t == "list":
         return "; ".join(str(x) for x in d.get("items", []))
+    if t == "code":
+        language = str(d.get("language") or "code")
+        return f"```{language}\n{d.get('content', '')}\n```"
     return ""
 
 
@@ -56,9 +61,7 @@ def list_messages(db: Session, snapshot_id: uuid.UUID) -> list[PackMessage]:
     )
 
 
-def _attached_blocks(
-    db: Session, snapshot_id: uuid.UUID, refs: list[uuid.UUID]
-) -> list[PackBlock]:
+def _attached_blocks(db: Session, snapshot_id: uuid.UUID, refs: list[uuid.UUID]) -> list[PackBlock]:
     if not refs:
         return []
     return list(
@@ -87,9 +90,37 @@ def _pack_blocks(db: Session, snapshot_id: uuid.UUID) -> list[PackBlock]:
                 KnowledgePack.snapshot_id == snapshot_id,
                 KnowledgePack.deleted_at.is_(None),
             )
-            .order_by(PackBlock.position)
+            .options(joinedload(PackBlock.section))
+            .order_by(PackSection.position, PackBlock.position)
         )
     )
+
+
+def _pack_context(blocks: list[PackBlock]) -> str:
+    """Render the authored pack in reading order within a predictable prompt budget.
+
+    The previous chat prompt exposed only the first 80 characters of each block,
+    which made questions about later details impossible even though the answer
+    could cite those blocks. The pack is already the article's compact reading
+    representation, so it is the best primary context for deep follow-ups.
+    """
+
+    parts: list[str] = []
+    used = 0
+    for block in blocks:
+        text = _block_text(block).strip()
+        if not text:
+            continue
+        heading = block.section.heading or "Untitled section"
+        entry = f"[block id={block.id}; section={heading}; type={block.block_type.value}]\n{text}"
+        remaining = _MAX_PACK_CONTEXT_CHARS - used
+        if remaining <= 0:
+            break
+        if len(entry) > remaining:
+            entry = entry[:remaining]
+        parts.append(entry)
+        used += len(entry) + 2
+    return "\n\n".join(parts)
 
 
 _MARKER_RE = re.compile(r"\[\[block:([0-9a-fA-F-]{36})\]\]")
@@ -136,9 +167,7 @@ class MarkerFilter:
         return tail
 
 
-def _grounding_system(
-    db: Session, snapshot_id: uuid.UUID, attached: list[PackBlock]
-) -> str:
+def _grounding_system(db: Session, snapshot_id: uuid.UUID, attached: list[PackBlock]) -> str:
     pack = db.scalar(select(KnowledgePack).where(KnowledgePack.snapshot_id == snapshot_id))
     source = db.get(Source, snapshot_id)
     body = (source.content_body or "") if source else ""
@@ -152,18 +181,17 @@ def _grounding_system(
         f"Key insight: {key_insight}",
     ]
     if attached:
-        blocks_txt = "\n".join(f"- ({b.block_type.value}) {_block_text(b)}" for b in attached)
+        blocks_txt = "\n".join(
+            f"- [block id={b.id}; type={b.block_type.value}] {_block_text(b)}" for b in attached
+        )
         parts.append("The reader is asking specifically about these blocks:\n" + blocks_txt)
     citable = _pack_blocks(db, snapshot_id)
     if citable:
-        listing = "\n".join(
-            f"- {b.id} ({b.block_type.value}) {_block_text(b)[:80]}" for b in citable[:60]
-        )
-        parts.append("Blocks you may cite:\n" + listing)
+        parts.append("Knowledge pack content:\n" + _pack_context(citable))
         parts.append(
             "When a sentence draws on a specific block, cite it inline as "
             "[[block:<id>]] immediately after that sentence, using only ids "
-            "from the list above."
+            "from the knowledge pack content above."
         )
     parts.append(f"Source excerpt:\n{body[:_MAX_SOURCE_CHARS]}")
     return "\n".join(parts)
@@ -179,13 +207,14 @@ async def answer_stream(
 ) -> AsyncIterator[dict[str, Any]]:
     refs = [uuid.UUID(str(r)) for r in (block_refs or [])]
     attached = _attached_blocks(db, snapshot_id, refs)
+    attached_ids = [b.id for b in attached]
     source = db.get(Source, snapshot_id)
 
     user_msg = PackMessage(
         snapshot_id=snapshot_id,
         role=ChatRole.user,
         content=question,
-        block_refs=[str(r) for r in refs],
+        block_refs=[str(r) for r in attached_ids],
     )
     db.add(user_msg)
     db.flush()
@@ -193,7 +222,7 @@ async def answer_stream(
     history = list_messages(db, snapshot_id)
     messages = [
         ChatMessage(role="user" if m.role is ChatRole.user else "assistant", content=m.content)
-        for m in history
+        for m in history[-_MAX_HISTORY_MESSAGES:]
     ]
     system = _grounding_system(db, snapshot_id, attached)
     mf = MarkerFilter()

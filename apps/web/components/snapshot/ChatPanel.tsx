@@ -10,17 +10,22 @@ import { Button } from "@/components/ui/Button";
 import { IconButton } from "@/components/ui/IconButton";
 import { IconClose } from "@/components/ui/icons";
 import type { ChatAttachment } from "./ReaderChatContext";
+import { Md } from "./Md";
 import styles from "./ChatPanel.module.css";
 
 export function ChatPanel({
   snapshotId,
   attachments,
   onRemoveAttachment,
+  onClearAttachments,
+  onOpenReference,
   onClose,
 }: {
   snapshotId: string;
   attachments: ChatAttachment[];
   onRemoveAttachment: (id: string) => void;
+  onClearAttachments?: () => void;
+  onOpenReference?: (id: string) => void;
   onClose: () => void;
 }) {
   const [messages, setMessages] = useState<MessageOut[]>([]);
@@ -30,6 +35,8 @@ export function ChatPanel({
   const [streamText, setStreamText] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const tmpIdRef = useRef(0);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     let active = true;
@@ -50,6 +57,22 @@ export function ChatPanel({
       active = false;
     };
   }, [snapshotId]);
+
+  useEffect(() => {
+    if (!loading) inputRef.current?.focus();
+  }, [loading]);
+
+  useEffect(() => {
+    if (!loading) bottomRef.current?.scrollIntoView?.({ block: "end" });
+  }, [error, loading, messages, sending, streamText]);
+
+  useEffect(() => {
+    function closeOnEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") onClose();
+    }
+    document.addEventListener("keydown", closeOnEscape);
+    return () => document.removeEventListener("keydown", closeOnEscape);
+  }, [onClose]);
 
   const ERROR_COPY: Record<string, string> = {
     llm_not_configured: "Add an AI provider key in Settings → AI models first.",
@@ -73,6 +96,7 @@ export function ChatPanel({
     };
     setMessages((m) => [...m, optimistic]);
     let failed: string | null = null;
+    let completed = false;
     try {
       let acc = "";
       for await (const ev of streamPackMessage(snapshotId, {
@@ -84,6 +108,7 @@ export function ChatPanel({
           setStreamText(acc);
         } else if (ev.type === "done") {
           setMessages((m) => [...m, ev.message]);
+          completed = true;
         } else {
           failed = ERROR_COPY[ev.code] ?? "Couldn't send — try again.";
         }
@@ -98,13 +123,18 @@ export function ChatPanel({
       setMessages((m) => m.filter((x) => x.id !== optimistic.id));
       setDraft(q);
       setError(failed);
+    } else if (completed) {
+      onClearAttachments?.();
     }
   }
 
   return (
     <aside className={styles.panel} aria-label="Article chat">
       <div className={styles.header}>
-        <span className="t-label">Chat</span>
+        <div className={styles.headerCopy}>
+          <span className={styles.headerTitle}>Discuss this article</span>
+          <span className={styles.saved}>Saved automatically</span>
+        </div>
         <IconButton
           label="Close chat"
           className={styles.close}
@@ -137,12 +167,36 @@ export function ChatPanel({
             key={m.id}
             className={`${styles.message} ${m.role === "user" ? styles.user : styles.assistant}`}
           >
-            {m.content}
+            <div className={styles.messageBody}>
+              {m.role === "assistant" ? <Md>{m.content}</Md> : m.content}
+            </div>
+            {m.block_refs.length > 0 && (
+              <div
+                className={styles.messageRefs}
+                aria-label={
+                  m.role === "user" ? "Attached context" : "Answer sources"
+                }
+              >
+                {m.block_refs.map((ref, index) => (
+                  <button
+                    key={ref}
+                    type="button"
+                    className={styles.messageRef}
+                    onClick={() => onOpenReference?.(ref)}
+                    disabled={!onOpenReference}
+                  >
+                    {m.role === "user" ? "Context" : "Passage"} {index + 1}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         ))}
         {streamText !== null && streamText !== "" && (
           <div className={`${styles.message} ${styles.assistant}`}>
-            {streamText}
+            <div className={styles.messageBody}>
+              <Md>{streamText}</Md>
+            </div>
           </div>
         )}
         {sending && !streamText && (
@@ -153,6 +207,7 @@ export function ChatPanel({
             {error}
           </div>
         )}
+        <div ref={bottomRef} aria-hidden="true" />
       </div>
       <div className={styles.composer}>
         {attachments.length > 0 && (
@@ -181,12 +236,17 @@ export function ChatPanel({
           </div>
         )}
         <textarea
+          ref={inputRef}
           aria-label="Ask about this article"
           className={styles.input}
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           onKeyDown={(e) => {
-            if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+            if (
+              e.key === "Enter" &&
+              !e.shiftKey &&
+              !e.nativeEvent.isComposing
+            ) {
               e.preventDefault();
               void send();
             }
@@ -196,7 +256,9 @@ export function ChatPanel({
           disabled={loading || sending}
         />
         <div className={styles.composerFooter}>
-          <span className={styles.shortcut}>Ctrl / ⌘ + Enter to send</span>
+          <span className={styles.shortcut}>
+            Enter to send · Shift + Enter for a new line
+          </span>
           <Button
             variant="primary"
             className={styles.send}

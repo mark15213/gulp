@@ -12,6 +12,11 @@
   background: var(--fill);
 }
 
+.cell[data-chat-target="true"] {
+  background: var(--blue-50);
+  box-shadow: inset 3px 0 var(--banana);
+}
+
 /* Block-internal typography (moved here from the old PackReport styles). */
 .cell :global(figure) {
   margin: var(--space-3) 0;

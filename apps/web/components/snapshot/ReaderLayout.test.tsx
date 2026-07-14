@@ -58,6 +58,10 @@ describe("ReaderLayout", () => {
     expect(
       screen.getByRole("complementary", { name: "Article chat" }),
     ).toBeTruthy();
+    await userEvent.click(screen.getByRole("button", { name: "Dismiss chat" }));
+    expect(
+      screen.queryByRole("complementary", { name: "Article chat" }),
+    ).toBeNull();
   });
 
   it("shows the origin link and hides the chat toggle when not ready", () => {

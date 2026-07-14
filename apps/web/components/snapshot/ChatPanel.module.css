@@ -19,6 +19,26 @@
   border-bottom: 1px solid var(--border);
 }
 
+.headerCopy {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.headerTitle {
+  color: var(--text-1);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 18px;
+}
+
+.saved {
+  color: var(--text-2);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  line-height: 14px;
+}
+
 .close {
   flex: none;
 }
@@ -41,8 +61,78 @@
   border: 1px solid transparent;
   border-radius: var(--radius-xl);
   overflow-wrap: anywhere;
-  white-space: pre-wrap;
   line-height: 20px;
+}
+
+.messageBody {
+  white-space: pre-wrap;
+}
+
+.messageBody :global(p),
+.messageBody :global(ul),
+.messageBody :global(ol),
+.messageBody :global(pre),
+.messageBody :global(blockquote) {
+  margin: 0 0 var(--space-2);
+}
+
+.messageBody :global(p:last-child),
+.messageBody :global(ul:last-child),
+.messageBody :global(ol:last-child),
+.messageBody :global(pre:last-child),
+.messageBody :global(blockquote:last-child) {
+  margin-bottom: 0;
+}
+
+.messageBody :global(ul),
+.messageBody :global(ol) {
+  padding-left: var(--space-5);
+}
+
+.messageBody :global(pre) {
+  max-width: 100%;
+  overflow-x: auto;
+  padding: var(--space-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  white-space: pre;
+}
+
+.messageBody :global(code) {
+  font-family: var(--font-mono);
+  font-size: 0.92em;
+}
+
+.messageRefs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  margin-top: var(--space-2);
+}
+
+.messageRef {
+  min-height: 24px;
+  padding: 2px var(--space-2);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  color: var(--text-2);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  line-height: 16px;
+}
+
+.messageRef:hover {
+  border-color: var(--ink);
+  color: var(--text-1);
+}
+
+.messageRef:disabled {
+  cursor: default;
+  opacity: 0.75;
 }
 
 .user {
@@ -227,5 +317,11 @@
 
   .shortcut {
     display: none;
+  }
+
+  .messageRef {
+    min-height: 36px;
+    padding-right: var(--space-3);
+    padding-left: var(--space-3);
   }
 }

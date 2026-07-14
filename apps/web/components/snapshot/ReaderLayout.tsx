@@ -42,6 +42,16 @@ export function ReaderLayout({
   function removeAttachment(id: string) {
     setAttachments((xs) => xs.filter((x) => x.id !== id));
   }
+  function openReference(id: string) {
+    const block = document.querySelector<HTMLElement>(
+      `[data-block-id="${id}"]`,
+    );
+    if (!block) return;
+    if (window.innerWidth <= 1180) setChatOpen(false);
+    block.dataset.chatTarget = "true";
+    block.scrollIntoView({ behavior: "smooth", block: "center" });
+    window.setTimeout(() => delete block.dataset.chatTarget, 1800);
+  }
 
   const chatShown = packReady && chatOpen;
 
@@ -68,11 +78,21 @@ export function ReaderLayout({
           <div className={styles.reading}>{children}</div>
         </div>
         {chatShown && (
+          <button
+            type="button"
+            className={styles.backdrop}
+            aria-label="Dismiss chat"
+            onClick={() => setChatOpen(false)}
+          />
+        )}
+        {chatShown && (
           <div className={styles.chat}>
             <ChatPanel
               snapshotId={snapshotId}
               attachments={attachments}
               onRemoveAttachment={removeAttachment}
+              onClearAttachments={() => setAttachments([])}
+              onOpenReference={openReference}
               onClose={() => setChatOpen(false)}
             />
           </div>

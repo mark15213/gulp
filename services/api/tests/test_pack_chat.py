@@ -136,10 +136,38 @@ def test_answer_stream_drops_unknown_block_refs(db) -> None:  # type: ignore[no-
 
 def test_answer_stream_system_lists_citable_blocks(db) -> None:  # type: ignore[no-untyped-def]
     ids = _pack(db)
+    block = db.get(PackBlock, ids["block"])
+    block.data = {"content": "Masked language modeling. " + ("detail " * 20) + "deep tail."}
+    db.commit()
     fake = FakeStreamProvider("ok")
     asyncio.run(_collect(answer_stream(db, ids["snap"], "Q", provider=fake)))
     assert str(ids["block"]) in (fake.last_system or "")
     assert "[[block:" in (fake.last_system or "")  # citation instruction present
+    assert "deep tail." in (fake.last_system or "")
+
+
+def test_answer_stream_grounds_code_blocks(db) -> None:  # type: ignore[no-untyped-def]
+    ids = _pack(db)
+    first = db.get(PackBlock, ids["block"])
+    code = PackBlock(
+        section_id=first.section_id,
+        block_type=PackBlockType.code,
+        data={"language": "python", "content": "result = train(model)"},
+        position=1,
+    )
+    db.add(code)
+    db.commit()
+    fake = FakeStreamProvider("ok")
+    asyncio.run(_collect(answer_stream(db, ids["snap"], "How is it trained?", provider=fake)))
+    assert "result = train(model)" in (fake.last_system or "")
+
+
+def test_answer_stream_does_not_persist_unscoped_attachment_refs(db) -> None:  # type: ignore[no-untyped-def]
+    ids = _pack(db)
+    unknown = uuid.uuid4()
+    fake = FakeStreamProvider("ok")
+    asyncio.run(_collect(answer_stream(db, ids["snap"], "Q", [unknown], provider=fake)))
+    assert list_messages(db, ids["snap"])[0].block_refs == []
 
 
 # ── routes ───────────────────────────────────────────────────────────────────
@@ -165,9 +193,7 @@ def client(db, monkeypatch):  # type: ignore[no-untyped-def]
 
 def _sse_events(r) -> list[dict[str, Any]]:  # type: ignore[no-untyped-def]
     return [
-        json.loads(line[len("data: ") :])
-        for line in r.iter_lines()
-        if line.startswith("data: ")
+        json.loads(line[len("data: ") :]) for line in r.iter_lines() if line.startswith("data: ")
     ]
 
 

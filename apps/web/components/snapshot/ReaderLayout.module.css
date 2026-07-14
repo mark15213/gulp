@@ -46,6 +46,10 @@
   background: var(--surface);
 }
 
+.backdrop {
+  display: none;
+}
+
 @media (max-width: 1180px) {
   .layout[data-nav="open"][data-chat="open"] {
     grid-template-columns: var(--sidebar-w) minmax(0, 1fr);
@@ -63,6 +67,16 @@
     bottom: 0;
     width: var(--reader-chat-w);
     box-shadow: var(--shadow-overlay);
+  }
+
+  .backdrop {
+    position: fixed;
+    z-index: 20;
+    inset: 0;
+    display: block;
+    padding: 0;
+    border: 0;
+    background: var(--overlay-scrim);
   }
 }
 

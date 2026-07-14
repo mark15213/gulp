@@ -111,6 +111,26 @@ describe("ChatPanel", () => {
     expect(onRemove).toHaveBeenCalledWith("b1");
   });
 
+  it("renders saved assistant answers as markdown and opens their article references", async () => {
+    const onOpenReference = vi.fn();
+    getPackMessages.mockResolvedValueOnce([
+      { ...ANSWER, content: "**Bold answer**", block_refs: ["b1"] },
+    ]);
+    render(
+      <ChatPanel
+        snapshotId="s1"
+        attachments={[]}
+        onRemoveAttachment={() => {}}
+        onOpenReference={onOpenReference}
+        onClose={() => {}}
+      />,
+    );
+    const answer = await screen.findByText("Bold answer");
+    expect(answer.tagName).toBe("STRONG");
+    await userEvent.click(screen.getByRole("button", { name: "Passage 1" }));
+    expect(onOpenReference).toHaveBeenCalledWith("b1");
+  });
+
   it("renders deltas incrementally then the final message", async () => {
     streamPackMessage.mockImplementation(() =>
       stream([
@@ -157,11 +177,13 @@ describe("ChatPanel", () => {
   });
 
   it("sends with the attached block_refs", async () => {
+    const onClearAttachments = vi.fn();
     render(
       <ChatPanel
         snapshotId="s1"
         attachments={[{ id: "b1", label: "para" }]}
         onRemoveAttachment={() => {}}
+        onClearAttachments={onClearAttachments}
         onClose={() => {}}
       />,
     );
@@ -174,9 +196,10 @@ describe("ChatPanel", () => {
         block_refs: ["b1"],
       }),
     );
+    await waitFor(() => expect(onClearAttachments).toHaveBeenCalledOnce());
   });
 
-  it("sends with Ctrl+Enter", async () => {
+  it("sends with Enter", async () => {
     render(
       <ChatPanel
         snapshotId="s1"
@@ -186,16 +209,44 @@ describe("ChatPanel", () => {
       />,
     );
     await screen.findByText("Start a conversation");
-    await userEvent.type(
-      screen.getByRole("textbox"),
-      "hello{Control>}{Enter}{/Control}",
-    );
+    await userEvent.type(screen.getByRole("textbox"), "hello{Enter}");
     await waitFor(() =>
       expect(streamPackMessage).toHaveBeenCalledWith("s1", {
         content: "hello",
         block_refs: [],
       }),
     );
+  });
+
+  it("keeps Shift+Enter as a new line", async () => {
+    render(
+      <ChatPanel
+        snapshotId="s1"
+        attachments={[]}
+        onRemoveAttachment={() => {}}
+        onClose={() => {}}
+      />,
+    );
+    await screen.findByText("Start a conversation");
+    const input = screen.getByRole("textbox") as HTMLTextAreaElement;
+    await userEvent.type(input, "line one{Shift>}{Enter}{/Shift}line two");
+    expect(streamPackMessage).not.toHaveBeenCalled();
+    expect(input.value).toBe("line one\nline two");
+  });
+
+  it("closes with Escape", async () => {
+    const onClose = vi.fn();
+    render(
+      <ChatPanel
+        snapshotId="s1"
+        attachments={[]}
+        onRemoveAttachment={() => {}}
+        onClose={onClose}
+      />,
+    );
+    await screen.findByText("Start a conversation");
+    await userEvent.keyboard("{Escape}");
+    expect(onClose).toHaveBeenCalledOnce();
   });
 
   it("rolls back an optimistic message and restores the draft after a send error", async () => {
