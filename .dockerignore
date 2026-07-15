@@ -1,0 +1,13 @@
+# Build context is the repo root for both image builds; keep it lean.
+.git
+**/node_modules
+**/.next
+**/.venv
+.venv
+**/__pycache__
+**/.pytest_cache
+**/.mypy_cache
+**/.ruff_cache
+**/.turbo
+*.log
+.DS_Store

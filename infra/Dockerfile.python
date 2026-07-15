@@ -1,0 +1,24 @@
+# syntax=docker/dockerfile:1.7
+# One image for both Python services. api and worker each expose a top-level
+# `app` package; they are disambiguated at run time by `uv run --package ...`
+# (the same mechanism the justfile uses), set as each service's compose command.
+# Build context = repo root (uv workspace needs uv.lock + root pyproject + services/*).
+FROM python:3.13-slim
+
+# uv provides the workspace-aware run/sync used by the compose commands.
+# (Pin to a specific version tag, e.g. uv:0.5.x, once a known-good one is chosen.)
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+
+ENV UV_COMPILE_BYTECODE=1 \
+    UV_LINK_MODE=copy \
+    UV_PYTHON_DOWNLOADS=never \
+    PYTHONUNBUFFERED=1
+
+WORKDIR /app
+COPY . /app
+RUN uv sync --frozen --no-dev
+
+EXPOSE 8000
+# Default to the API; compose overrides working_dir + command for the worker
+# and for the one-off alembic migration.
+CMD ["uv", "run", "--no-sync", "--package", "gulp-api", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
