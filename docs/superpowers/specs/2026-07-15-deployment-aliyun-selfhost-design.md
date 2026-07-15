@@ -1,7 +1,7 @@
 # Deployment — self-hosted single VPS on Alibaba Cloud (Singapore), Docker Compose + Caddy
 
 **Date:** 2026-07-15
-**Status:** approved (design)
+**Status:** ⛔ SUPERSEDED / ABANDONED (2026-07-15) — the owner chose the lighter managed route instead. See [`2026-07-15-deployment-railway-vercel-active.md`](2026-07-15-deployment-railway-vercel-active.md). The invite-code gate built for this spec carries over; the self-host infra kit (`compose.prod.yml`, `Caddyfile`, `Dockerfile.web`, `deploy.sh`, `backup.sh`, `env.prod.example`, `README.md`) was removed. Kept for the record.
 **Scope:** first real hosted deployment of the web-first stack (web + api + worker + Postgres + Redis + RSSHub) as a **private beta** — self plus a handful of invited users. One overseas host, all services in one Docker Compose stack behind Caddy (automatic HTTPS), deployed by a shell script. Infra/config plus **three small code changes** (§10).
 
 > **Supersedes [`2026-07-07-deployment-railway-vercel-design.md`](2026-07-07-deployment-railway-vercel-design.md).** That spec targeted managed PaaS (Railway backend + Vercel web, cross-origin, push-to-deploy) for a "geography-undecided" audience. This one replaces it: a single self-hosted VPS keeps the **same-origin cookie model** intact (no CORS/cross-origin split), fits the private-beta scale, and is fully config-as-code. The prior spec **rejected Alibaba Cloud** only for the *mainland-China + ICP filing* scenario — this deployment uses Alibaba Cloud's **Singapore international region**, which is an ordinary overseas host: clean egress, **no ICP filing**, no proxy layer. The two are not in conflict.
