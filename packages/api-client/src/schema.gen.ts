@@ -1436,6 +1436,8 @@ export interface components {
             display_name?: string | null;
             /** @default en */
             locale: components["schemas"]["Locale"];
+            /** Invite Code */
+            invite_code?: string | null;
         };
         /** ReviewIn */
         ReviewIn: {

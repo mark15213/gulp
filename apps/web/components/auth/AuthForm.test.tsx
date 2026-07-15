@@ -32,6 +32,21 @@ describe("AuthForm", () => {
     });
   });
 
+  it("passes the invite code when registering", async () => {
+    (api.register as Mock).mockResolvedValue({ email: "a@b.com" });
+    render(<AuthForm mode="register" />);
+    await userEvent.type(screen.getByLabelText("Email"), "a@b.com");
+    await userEvent.type(screen.getByLabelText("Password"), "hunter2hunter");
+    await userEvent.type(screen.getByLabelText("Invite code"), "5566");
+    await userEvent.click(screen.getByRole("button", { name: "Create account" }));
+    expect(api.register).toHaveBeenCalledWith({
+      email: "a@b.com",
+      password: "hunter2hunter",
+      locale: "en",
+      invite_code: "5566",
+    });
+  });
+
   it("surfaces an error on failure", async () => {
     (api.login as Mock).mockRejectedValue(new Error("bad"));
     render(<AuthForm mode="login" />);

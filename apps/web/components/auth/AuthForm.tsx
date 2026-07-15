@@ -13,6 +13,7 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
   const { setUser } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [inviteCode, setInviteCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -28,7 +29,7 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
       // defaultNonNullable on the Pydantic default) — pass it explicitly.
       const user = isLogin
         ? await login({ email, password })
-        : await register({ email, password, locale: "en" });
+        : await register({ email, password, locale: "en", invite_code: inviteCode });
       setUser(user);
       router.replace("/");
     } catch {
@@ -65,6 +66,18 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
           required
         />
       </label>
+      {!isLogin && (
+        <label className={styles.field}>
+          <span className="t-label">Invite code</span>
+          <input
+            className={styles.input}
+            type="text"
+            value={inviteCode}
+            onChange={(e) => setInviteCode(e.target.value)}
+            required
+          />
+        </label>
+      )}
       {error && (
         <p className={styles.error} role="alert">
           {error}
