@@ -1,5 +1,6 @@
 """Application settings, loaded from the environment (see .env.example)."""
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -27,6 +28,20 @@ class Settings(BaseSettings):
     feed_poll_interval_minutes: int = 30
     feed_entry_retention_days: int = 90
     log_level: str = "INFO"
+
+    @field_validator("database_url", mode="after")
+    @classmethod
+    def _psycopg_dsn(cls, v: str) -> str:
+        """Managed providers (e.g. Railway) inject a bare `postgresql://` DSN, but
+        SQLAlchemy needs the psycopg-3 driver prefix. Rewrite it; leave an already
+        prefixed or non-postgres DSN untouched (idempotent)."""
+        if v.startswith("postgresql+"):
+            return v
+        if v.startswith("postgresql://"):
+            return "postgresql+psycopg://" + v[len("postgresql://") :]
+        if v.startswith("postgres://"):
+            return "postgresql+psycopg://" + v[len("postgres://") :]
+        return v
 
     @property
     def cors_origins(self) -> list[str]:
