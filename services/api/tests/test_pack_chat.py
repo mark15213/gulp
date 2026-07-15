@@ -9,7 +9,8 @@ from app.main import app
 from app.services.chat import MarkerFilter, answer_stream, list_messages
 from fastapi.testclient import TestClient
 from gulp_shared.llm import catalog as llm_catalog
-from gulp_shared.llm.base import DoneEvent, TextDelta
+from gulp_shared.llm.base import DoneEvent, ModelConfig, TextDelta
+from gulp_shared.llm.crypto import encrypt_key
 from gulp_shared.models.knowledge_pack import (
     KnowledgePack,
     PackBlock,
@@ -20,6 +21,7 @@ from gulp_shared.models.knowledge_pack import (
 )
 from gulp_shared.models.source import SnapshotStatus, Source, SourceKind
 from gulp_shared.models.user import DEV_USER_ID
+from gulp_shared.models.user_llm_credential import UserLLMCredential
 from gulp_shared.settings import settings
 
 
@@ -27,12 +29,14 @@ class FakeStreamProvider:
     def __init__(self, *chunks: str) -> None:
         self.chunks = chunks
         self.last_system: str | None = None
+        self.last_config: ModelConfig | None = None
 
     async def complete_json(self, **kw: Any) -> dict[str, Any]:
         raise AssertionError("streaming path must not call complete_json")
 
     async def stream_chat(self, *, system, messages, tools, config):  # type: ignore[no-untyped-def]
         self.last_system = system
+        self.last_config = config
         for c in self.chunks:
             yield TextDelta(text=c)
         yield DoneEvent(stop_reason="stop")
@@ -170,6 +174,28 @@ def test_answer_stream_does_not_persist_unscoped_attachment_refs(db) -> None:  #
     assert list_messages(db, ids["snap"])[0].block_refs == []
 
 
+def test_answer_stream_passes_explicit_model_to_provider(db) -> None:  # type: ignore[no-untyped-def]
+    ids = _pack(db)
+    fake = FakeStreamProvider("ok")
+    asyncio.run(
+        _collect(
+            answer_stream(
+                db,
+                ids["snap"],
+                "Q",
+                provider_name="deepseek",
+                model="deepseek-reasoner",
+                provider=fake,
+            )
+        )
+    )
+    assert fake.last_config is not None
+    assert (fake.last_config.provider, fake.last_config.model) == (
+        "deepseek",
+        "deepseek-reasoner",
+    )
+
+
 # ── routes ───────────────────────────────────────────────────────────────────
 
 
@@ -225,6 +251,53 @@ def test_stream_endpoint_surfaces_not_configured(client, db, monkeypatch) -> Non
     assert events == [{"type": "error", "code": "llm_not_configured"}]
     g = client.get(f"/snapshots/{ids['snap']}/messages")
     assert g.json() == []  # nothing persisted
+
+
+def test_stream_endpoint_uses_model_selected_by_chat(client, db, monkeypatch) -> None:  # type: ignore[no-untyped-def]
+    ids = _pack(db)
+    db.add(
+        UserLLMCredential(
+            user_id=DEV_USER_ID,
+            provider="deepseek",
+            api_key_encrypted=encrypt_key("sk-chat"),
+        )
+    )
+    db.commit()
+    spec = llm_catalog.PROVIDERS["deepseek"]
+    fake = FakeStreamProvider("Selected model answer.")
+    monkeypatch.setitem(
+        llm_catalog.PROVIDERS,
+        "deepseek",
+        llm_catalog.ProviderSpec(
+            name=spec.name,
+            adapter=fake,
+            base_url=spec.base_url,
+            capabilities=spec.capabilities,
+            models=spec.models,
+        ),
+    )
+    with client.stream(
+        "POST",
+        f"/snapshots/{ids['snap']}/messages/stream",
+        json={
+            "content": "Q",
+            "provider": "deepseek",
+            "model": "deepseek-reasoner",
+        },
+    ) as response:
+        assert response.status_code == 200
+        assert _sse_events(response)[-1]["type"] == "done"
+    assert fake.last_config is not None
+    assert fake.last_config.model == "deepseek-reasoner"
+
+
+def test_stream_endpoint_requires_provider_and_model_together(client, db) -> None:  # type: ignore[no-untyped-def]
+    ids = _pack(db)
+    response = client.post(
+        f"/snapshots/{ids['snap']}/messages/stream",
+        json={"content": "Q", "provider": "deepseek"},
+    )
+    assert response.status_code == 422
 
 
 def test_old_json_post_is_gone(client, db) -> None:  # type: ignore[no-untyped-def]

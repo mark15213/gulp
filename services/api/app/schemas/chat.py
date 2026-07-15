@@ -3,7 +3,7 @@
 import datetime
 import uuid
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 class MessageOut(BaseModel):
@@ -18,4 +18,12 @@ class MessageOut(BaseModel):
 
 class MessageCreate(BaseModel):
     content: str
-    block_refs: list[uuid.UUID] = []
+    block_refs: list[uuid.UUID] = Field(default_factory=list)
+    provider: str | None = None
+    model: str | None = None
+
+    @model_validator(mode="after")
+    def provider_and_model_are_a_pair(self) -> "MessageCreate":
+        if (self.provider is None) != (self.model is None):
+            raise ValueError("provider and model must be selected together")
+        return self

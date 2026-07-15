@@ -202,6 +202,8 @@ async def answer_stream(
     snapshot_id: uuid.UUID,
     question: str,
     block_refs: list[uuid.UUID] | None = None,
+    provider_name: str | None = None,
+    model: str | None = None,
     *,
     provider: LLMProvider | None = None,
 ) -> AsyncIterator[dict[str, Any]]:
@@ -228,12 +230,20 @@ async def answer_stream(
     mf = MarkerFilter()
     try:
         if provider is not None:
-            cfg = ModelConfig()  # injected fakes ignore the config
+            cfg = ModelConfig(
+                provider=provider_name or "anthropic",
+                model=model or "claude-sonnet-4-6",
+            )
             prov = provider
         elif source is None:
             raise LookupError("snapshot not found")  # routes 404 before this
         else:
-            cfg = resolve_model_config(db, source.owner_id)
+            cfg = resolve_model_config(
+                db,
+                source.owner_id,
+                provider_name=provider_name,
+                model=model,
+            )
             prov = get_spec(cfg.provider).adapter
         async for ev in prov.stream_chat(system=system, messages=messages, tools=None, config=cfg):
             if isinstance(ev, TextDelta):

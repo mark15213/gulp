@@ -6,7 +6,6 @@ import {
   deleteLLMCredential,
   getLLMSettings,
   putLLMCredential,
-  putLLMDefault,
   type LLMSettingsOut,
 } from "@gulp/api-client";
 import { Button } from "@/components/ui/Button";
@@ -24,15 +23,11 @@ export function AISettings() {
   const [error, setError] = useState<string | null>(null);
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
-  const [defProvider, setDefProvider] = useState("");
-  const [defModel, setDefModel] = useState("");
 
   const refresh = useCallback(async () => {
     try {
       const s = await getLLMSettings();
       setData(s);
-      setDefProvider(s.default_provider ?? "");
-      setDefModel(s.default_model ?? "");
     } catch {
       setError("Couldn't load AI settings.");
     }
@@ -64,24 +59,27 @@ export function AISettings() {
   }
 
   const configured = new Set(data.credentials.map((c) => c.provider));
-  const masked = new Map(data.credentials.map((c) => [c.provider, c.masked_key]));
-  const models = data.catalog.find((c) => c.provider === defProvider)?.models ?? [];
+  const masked = new Map(
+    data.credentials.map((c) => [c.provider, c.masked_key]),
+  );
 
   return (
     <div className={styles.root}>
       <Link href="/settings" className={styles.backLink}>
         ← Settings
       </Link>
-      <h1 className={styles.title}>AI models</h1>
+      <h1 className={styles.title}>AI providers</h1>
       <p className={styles.muted}>
         Bring your own API keys. Gulp calls providers with your key and never
-        shows it again after saving.
+        shows it again after saving. Choose the model directly in each chat.
       </p>
       {error && <p className={styles.error}>{error}</p>}
       {data.catalog.map((p) => (
         <section key={p.provider} className={styles.card}>
           <header className={styles.cardHeader}>
-            <h2 className={styles.cardTitle}>{PROVIDER_LABELS[p.provider] ?? p.provider}</h2>
+            <h2 className={styles.cardTitle}>
+              {PROVIDER_LABELS[p.provider] ?? p.provider}
+            </h2>
             <span className={styles.caps}>{p.capabilities.join(" · ")}</span>
           </header>
           {configured.has(p.provider) ? (
@@ -90,7 +88,10 @@ export function AISettings() {
               <Button
                 disabled={busy}
                 onClick={() =>
-                  void act(() => deleteLLMCredential(p.provider), "Couldn't delete the key.")
+                  void act(
+                    () => deleteLLMCredential(p.provider),
+                    "Couldn't delete the key.",
+                  )
                 }
               >
                 Delete key
@@ -111,7 +112,10 @@ export function AISettings() {
                 disabled={busy || !(drafts[p.provider] ?? "").trim()}
                 onClick={() =>
                   void act(async () => {
-                    await putLLMCredential(p.provider, (drafts[p.provider] ?? "").trim());
+                    await putLLMCredential(
+                      p.provider,
+                      (drafts[p.provider] ?? "").trim(),
+                    );
                     setDrafts((d) => ({ ...d, [p.provider]: "" }));
                   }, "Couldn't save the key.")
                 }
@@ -122,58 +126,6 @@ export function AISettings() {
           )}
         </section>
       ))}
-      <section className={styles.card}>
-        <h2 className={styles.cardTitle}>Default model</h2>
-        <div className={styles.row}>
-          <label className={styles.label} htmlFor="def-provider">
-            Default provider
-          </label>
-          <select
-            id="def-provider"
-            className={styles.select}
-            value={defProvider}
-            onChange={(e) => {
-              setDefProvider(e.target.value);
-              setDefModel("");
-            }}
-          >
-            <option value="">—</option>
-            {[...configured].map((p) => (
-              <option key={p} value={p}>
-                {PROVIDER_LABELS[p] ?? p}
-              </option>
-            ))}
-          </select>
-          <label className={styles.label} htmlFor="def-model">
-            Default model
-          </label>
-          <select
-            id="def-model"
-            className={styles.select}
-            value={defModel}
-            onChange={(e) => setDefModel(e.target.value)}
-          >
-            <option value="">—</option>
-            {models.map((m) => (
-              <option key={m.id} value={m.id}>
-                {m.label}
-              </option>
-            ))}
-          </select>
-          <Button
-            variant="primary"
-            disabled={busy || !defProvider || !defModel}
-            onClick={() =>
-              void act(() => putLLMDefault(defProvider, defModel), "Couldn't save the default.")
-            }
-          >
-            Save default
-          </Button>
-        </div>
-        {configured.size === 0 && (
-          <p className={styles.muted}>Add a key first to pick a default.</p>
-        )}
-      </section>
     </div>
   );
 }

@@ -8,7 +8,7 @@ from pydantic import SecretStr
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from gulp_shared.llm.base import ChatMessage, LLMNotConfiguredError, ModelConfig
+from gulp_shared.llm.base import ChatMessage, LLMError, LLMNotConfiguredError, ModelConfig
 from gulp_shared.llm.catalog import get_spec
 from gulp_shared.llm.crypto import decrypt_key
 from gulp_shared.models.user import User
@@ -16,24 +16,56 @@ from gulp_shared.models.user_llm_credential import UserLLMCredential
 from gulp_shared.settings import settings
 
 
-def resolve_model_config(db: Session, user_id: uuid.UUID) -> ModelConfig:
+def _stored_config(
+    db: Session, user_id: uuid.UUID, provider_name: str, model: str
+) -> ModelConfig | None:
+    spec = get_spec(provider_name)
+    if model not in {item.id for item in spec.models}:
+        raise LLMError(f"unknown model {model!r} for {provider_name}")
+    cred = db.scalar(
+        select(UserLLMCredential).where(
+            UserLLMCredential.user_id == user_id,
+            UserLLMCredential.provider == provider_name,
+            UserLLMCredential.deleted_at.is_(None),
+        )
+    )
+    if cred is None:
+        return None
+    return ModelConfig(
+        provider=spec.name,
+        model=model,
+        api_key=SecretStr(decrypt_key(cred.api_key_encrypted)),
+        base_url=spec.base_url,
+    )
+
+
+def resolve_model_config(
+    db: Session,
+    user_id: uuid.UUID,
+    *,
+    provider_name: str | None = None,
+    model: str | None = None,
+) -> ModelConfig:
+    """Resolve an explicit interactive choice or the user's stored default.
+
+    Chat passes ``provider_name`` + ``model`` from its model picker. Explicit
+    choices never fall back to a different provider: doing so would make the UI
+    claim one model while silently calling another.
+    """
+
+    if (provider_name is None) != (model is None):
+        raise LLMError("provider and model must be selected together")
+    if provider_name is not None and model is not None:
+        selected = _stored_config(db, user_id, provider_name, model)
+        if selected is None:
+            raise LLMNotConfiguredError(f"no credential configured for {provider_name}")
+        return selected
+
     user = db.get(User, user_id)
     if user is not None and user.llm_provider and user.llm_model:
-        cred = db.scalar(
-            select(UserLLMCredential).where(
-                UserLLMCredential.user_id == user_id,
-                UserLLMCredential.provider == user.llm_provider,
-                UserLLMCredential.deleted_at.is_(None),
-            )
-        )
-        if cred is not None:
-            spec = get_spec(user.llm_provider)
-            return ModelConfig(
-                provider=spec.name,
-                model=user.llm_model,
-                api_key=SecretStr(decrypt_key(cred.api_key_encrypted)),
-                base_url=spec.base_url,
-            )
+        selected = _stored_config(db, user_id, user.llm_provider, user.llm_model)
+        if selected is not None:
+            return selected
     return _env_fallback()
 
 

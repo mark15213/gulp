@@ -5,7 +5,7 @@ import uuid
 import pytest
 from gulp_shared.db import Base
 from gulp_shared.llm import catalog
-from gulp_shared.llm.base import LLMNotConfiguredError, TextDelta
+from gulp_shared.llm.base import LLMError, LLMNotConfiguredError, TextDelta
 from gulp_shared.llm.crypto import encrypt_key
 from gulp_shared.llm.resolve import ping_credential, resolve_model_config
 from gulp_shared.models.user import User
@@ -67,6 +67,40 @@ def test_default_without_credential_falls_back(monkeypatch: pytest.MonkeyPatch) 
     s.flush()
     assert resolve_model_config(s, user.id).api_key.get_secret_value() == "sk-env"
     s.close()
+
+
+def test_explicit_chat_selection_uses_matching_byok() -> None:
+    s = _session()
+    user = User(display_name="E", llm_provider="qwen", llm_model="qwen-plus")
+    s.add(user)
+    s.flush()
+    s.add(
+        UserLLMCredential(
+            user_id=user.id, provider="deepseek", api_key_encrypted=encrypt_key("sk-chat")
+        )
+    )
+    s.flush()
+    cfg = resolve_model_config(s, user.id, provider_name="deepseek", model="deepseek-reasoner")
+    assert cfg.provider == "deepseek" and cfg.model == "deepseek-reasoner"
+    assert cfg.api_key.get_secret_value() == "sk-chat"
+    s.close()
+
+
+def test_explicit_chat_selection_never_falls_back_to_env(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(settings, "anthropic_api_key", "sk-env")
+    with pytest.raises(LLMNotConfiguredError):
+        resolve_model_config(
+            _session(), uuid.uuid4(), provider_name="deepseek", model="deepseek-chat"
+        )
+
+
+def test_explicit_chat_selection_rejects_unknown_model() -> None:
+    with pytest.raises(LLMError):
+        resolve_model_config(
+            _session(), uuid.uuid4(), provider_name="deepseek", model="not-a-model"
+        )
 
 
 async def test_ping_credential_hits_stream_once(monkeypatch: pytest.MonkeyPatch) -> None:

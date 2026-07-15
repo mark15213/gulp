@@ -6,9 +6,9 @@ import { SettingsHome } from "./SettingsHome";
 afterEach(cleanup);
 
 describe("SettingsHome", () => {
-  it("links the AI models card to its page", () => {
+  it("links the AI providers card to its page", () => {
     render(<SettingsHome />);
-    const card = screen.getByRole("link", { name: /AI models/ });
+    const card = screen.getByRole("link", { name: /AI providers/ });
     expect(card.getAttribute("href")).toBe("/settings/ai");
   });
 

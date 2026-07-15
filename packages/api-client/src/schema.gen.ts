@@ -1289,11 +1289,12 @@ export interface components {
         MessageCreate: {
             /** Content */
             content: string;
-            /**
-             * Block Refs
-             * @default []
-             */
-            block_refs: string[];
+            /** Block Refs */
+            block_refs?: string[];
+            /** Provider */
+            provider?: string | null;
+            /** Model */
+            model?: string | null;
         };
         /** MessageOut */
         MessageOut: {

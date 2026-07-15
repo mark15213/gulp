@@ -1,6 +1,12 @@
 import React from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { cleanup, render, screen, waitFor, within } from "@testing-library/react";
+import {
+  cleanup,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { AISettings } from "./AISettings";
 
@@ -25,13 +31,11 @@ const settings = {
 const getLLMSettings = vi.fn();
 const putLLMCredential = vi.fn();
 const deleteLLMCredential = vi.fn();
-const putLLMDefault = vi.fn();
 
 vi.mock("@gulp/api-client", () => ({
   getLLMSettings: (...a: unknown[]) => getLLMSettings(...a),
   putLLMCredential: (...a: unknown[]) => putLLMCredential(...a),
   deleteLLMCredential: (...a: unknown[]) => deleteLLMCredential(...a),
-  putLLMDefault: (...a: unknown[]) => putLLMDefault(...a),
 }));
 
 beforeEach(() => {
@@ -58,7 +62,9 @@ describe("AISettings", () => {
     const scoped = within(card as HTMLElement);
     await userEvent.type(scoped.getByPlaceholderText("API key"), "sk-x");
     await userEvent.click(scoped.getByRole("button", { name: "Save key" }));
-    await waitFor(() => expect(putLLMCredential).toHaveBeenCalledWith("deepseek", "sk-x"));
+    await waitFor(() =>
+      expect(putLLMCredential).toHaveBeenCalledWith("deepseek", "sk-x"),
+    );
     expect(getLLMSettings).toHaveBeenCalledTimes(2);
   });
 
@@ -69,8 +75,12 @@ describe("AISettings", () => {
     });
     render(<AISettings />);
     expect(await screen.findByText("…3456")).toBeTruthy();
-    const card = screen.getByRole("heading", { name: "DeepSeek" }).closest("section");
-    expect(within(card as HTMLElement).getByRole("button", { name: "Delete key" })).toBeTruthy();
+    const card = screen
+      .getByRole("heading", { name: "DeepSeek" })
+      .closest("section");
+    expect(
+      within(card as HTMLElement).getByRole("button", { name: "Delete key" }),
+    ).toBeTruthy();
   });
 
   it("surfaces a rejected key", async () => {
@@ -80,20 +90,19 @@ describe("AISettings", () => {
     const scoped = within(card as HTMLElement);
     await userEvent.type(scoped.getByPlaceholderText("API key"), "sk-bad");
     await userEvent.click(scoped.getByRole("button", { name: "Save key" }));
-    expect(await screen.findByText("That key was rejected by the provider.")).toBeTruthy();
+    expect(
+      await screen.findByText("That key was rejected by the provider."),
+    ).toBeTruthy();
   });
 
-  it("saves the default provider+model", async () => {
-    getLLMSettings.mockResolvedValue({
-      ...structuredClone(settings),
-      credentials: [{ provider: "deepseek", masked_key: "…3456" }],
-    });
-    putLLMDefault.mockResolvedValue(undefined);
+  it("keeps model choice out of settings", async () => {
     render(<AISettings />);
-    await screen.findByRole("heading", { name: "DeepSeek" });
-    await userEvent.selectOptions(screen.getByLabelText("Default provider"), "deepseek");
-    await userEvent.selectOptions(screen.getByLabelText("Default model"), "deepseek-chat");
-    await userEvent.click(screen.getByRole("button", { name: "Save default" }));
-    await waitFor(() => expect(putLLMDefault).toHaveBeenCalledWith("deepseek", "deepseek-chat"));
+    expect(
+      await screen.findByRole("heading", { name: "AI providers" }),
+    ).toBeTruthy();
+    expect(
+      screen.getByText(/Choose the model directly in each chat/),
+    ).toBeTruthy();
+    expect(screen.queryByLabelText("Default model")).toBeNull();
   });
 });

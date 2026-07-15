@@ -110,7 +110,14 @@ async def stream_message_route(
     _owned_snapshot(db, snapshot_id, user)
 
     async def gen() -> AsyncIterator[str]:
-        async for ev in answer_stream(db, snapshot_id, body.content, body.block_refs):
+        async for ev in answer_stream(
+            db,
+            snapshot_id,
+            body.content,
+            body.block_refs,
+            provider_name=body.provider,
+            model=body.model,
+        ):
             yield f"data: {json.dumps(ev)}\n\n"
 
     return StreamingResponse(

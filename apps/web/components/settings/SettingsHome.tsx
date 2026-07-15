@@ -7,8 +7,8 @@ import styles from "./SettingsHome.module.css";
 const SECTIONS = [
   {
     key: "ai",
-    title: "AI models",
-    description: "Bring your own provider keys and pick the default model.",
+    title: "AI providers",
+    description: "Manage provider API keys. Choose a model inside chat.",
     href: "/settings/ai",
   },
   {

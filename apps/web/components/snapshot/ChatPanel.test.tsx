@@ -11,10 +11,39 @@ const ANSWER = {
   block_refs: [],
   created_at: "",
 };
+const LLM_SETTINGS = {
+  default_provider: "anthropic",
+  default_model: "claude-sonnet-4-6",
+  credentials: [
+    { provider: "anthropic", masked_key: "…1111" },
+    { provider: "deepseek", masked_key: "…2222" },
+  ],
+  catalog: [
+    {
+      provider: "anthropic",
+      capabilities: ["stream"],
+      models: [{ id: "claude-sonnet-4-6", label: "Claude Sonnet 4.6" }],
+    },
+    {
+      provider: "deepseek",
+      capabilities: ["stream"],
+      models: [
+        { id: "deepseek-chat", label: "DeepSeek Chat" },
+        { id: "deepseek-reasoner", label: "DeepSeek Reasoner" },
+      ],
+    },
+  ],
+};
+const DEFAULT_MODEL = {
+  provider: "anthropic",
+  model: "claude-sonnet-4-6",
+};
 const getPackMessages = vi.fn();
+const getLLMSettings = vi.fn();
 const streamPackMessage = vi.fn();
 vi.mock("@gulp/api-client", () => ({
   getPackMessages: (...a: unknown[]) => getPackMessages(...a),
+  getLLMSettings: (...a: unknown[]) => getLLMSettings(...a),
   streamPackMessage: (...a: unknown[]) => streamPackMessage(...a),
 }));
 
@@ -25,8 +54,11 @@ function stream(events: unknown[]) {
 }
 
 beforeEach(() => {
+  localStorage.clear();
   getPackMessages.mockReset();
   getPackMessages.mockResolvedValue([]);
+  getLLMSettings.mockReset();
+  getLLMSettings.mockResolvedValue(structuredClone(LLM_SETTINGS));
   streamPackMessage.mockReset();
   streamPackMessage.mockImplementation(() =>
     stream([
@@ -37,6 +69,14 @@ beforeEach(() => {
 });
 
 afterEach(cleanup);
+
+async function waitForChatReady() {
+  await screen.findByText("Start a conversation");
+  const select = screen.getByRole("combobox", {
+    name: "AI model",
+  }) as HTMLSelectElement;
+  await waitFor(() => expect(select.value).toBe("anthropic:claude-sonnet-4-6"));
+}
 
 describe("ChatPanel", () => {
   it("shows a loading state while the conversation is being fetched", () => {
@@ -65,6 +105,60 @@ describe("ChatPanel", () => {
       />,
     );
     expect(await screen.findByText("Start a conversation")).toBeTruthy();
+    expect(screen.getByRole("combobox", { name: "AI model" })).toBeTruthy();
+  });
+
+  it("selects the model in chat and sends that exact provider and model", async () => {
+    render(
+      <ChatPanel
+        snapshotId="s1"
+        attachments={[]}
+        onRemoveAttachment={() => {}}
+        onClose={() => {}}
+      />,
+    );
+    await waitForChatReady();
+    await userEvent.selectOptions(
+      screen.getByRole("combobox", { name: "AI model" }),
+      "deepseek:deepseek-reasoner",
+    );
+    await userEvent.type(screen.getByRole("textbox"), "compare this");
+    await userEvent.click(screen.getByRole("button", { name: "Send" }));
+    await waitFor(() =>
+      expect(streamPackMessage).toHaveBeenCalledWith("s1", {
+        content: "compare this",
+        block_refs: [],
+        provider: "deepseek",
+        model: "deepseek-reasoner",
+      }),
+    );
+    expect(localStorage.getItem("chat:selectedModel")).toBe(
+      "deepseek:deepseek-reasoner",
+    );
+  });
+
+  it("points to provider settings and disables chat when no key is configured", async () => {
+    getLLMSettings.mockResolvedValueOnce({
+      ...structuredClone(LLM_SETTINGS),
+      default_provider: null,
+      default_model: null,
+      credentials: [],
+    });
+    render(
+      <ChatPanel
+        snapshotId="s1"
+        attachments={[]}
+        onRemoveAttachment={() => {}}
+        onClose={() => {}}
+      />,
+    );
+    const setup = await screen.findByRole("link", {
+      name: "Settings → AI providers",
+    });
+    expect(setup.getAttribute("href")).toBe("/settings/ai");
+    expect((screen.getByRole("textbox") as HTMLTextAreaElement).disabled).toBe(
+      true,
+    );
   });
 
   it("closes the panel from the header", async () => {
@@ -147,13 +241,14 @@ describe("ChatPanel", () => {
         onClose={() => {}}
       />,
     );
-    await screen.findByText("Start a conversation");
+    await waitForChatReady();
     await userEvent.type(screen.getByRole("textbox"), "hi");
     await userEvent.click(screen.getByRole("button", { name: "Send" }));
     expect(await screen.findByText("Hello")).toBeTruthy();
     expect(streamPackMessage).toHaveBeenCalledWith("s1", {
       content: "hi",
       block_refs: [],
+      ...DEFAULT_MODEL,
     });
   });
 
@@ -169,11 +264,11 @@ describe("ChatPanel", () => {
         onClose={() => {}}
       />,
     );
-    await screen.findByText("Start a conversation");
+    await waitForChatReady();
     await userEvent.type(screen.getByRole("textbox"), "hi");
     await userEvent.click(screen.getByRole("button", { name: "Send" }));
     const alert = await screen.findByRole("alert");
-    expect(alert.textContent).toContain("Settings → AI models");
+    expect(alert.textContent).toContain("Settings → AI providers");
   });
 
   it("sends with the attached block_refs", async () => {
@@ -187,13 +282,14 @@ describe("ChatPanel", () => {
         onClose={() => {}}
       />,
     );
-    await screen.findByText("Start a conversation");
+    await waitForChatReady();
     await userEvent.type(screen.getByRole("textbox"), "hello");
     await userEvent.click(screen.getByRole("button", { name: "Send" }));
     await waitFor(() =>
       expect(streamPackMessage).toHaveBeenCalledWith("s1", {
         content: "hello",
         block_refs: ["b1"],
+        ...DEFAULT_MODEL,
       }),
     );
     await waitFor(() => expect(onClearAttachments).toHaveBeenCalledOnce());
@@ -208,12 +304,13 @@ describe("ChatPanel", () => {
         onClose={() => {}}
       />,
     );
-    await screen.findByText("Start a conversation");
+    await waitForChatReady();
     await userEvent.type(screen.getByRole("textbox"), "hello{Enter}");
     await waitFor(() =>
       expect(streamPackMessage).toHaveBeenCalledWith("s1", {
         content: "hello",
         block_refs: [],
+        ...DEFAULT_MODEL,
       }),
     );
   });
@@ -227,7 +324,7 @@ describe("ChatPanel", () => {
         onClose={() => {}}
       />,
     );
-    await screen.findByText("Start a conversation");
+    await waitForChatReady();
     const input = screen.getByRole("textbox") as HTMLTextAreaElement;
     await userEvent.type(input, "line one{Shift>}{Enter}{/Shift}line two");
     expect(streamPackMessage).not.toHaveBeenCalled();
@@ -244,7 +341,7 @@ describe("ChatPanel", () => {
         onClose={onClose}
       />,
     );
-    await screen.findByText("Start a conversation");
+    await waitForChatReady();
     await userEvent.keyboard("{Escape}");
     expect(onClose).toHaveBeenCalledOnce();
   });
@@ -261,7 +358,7 @@ describe("ChatPanel", () => {
         onClose={() => {}}
       />,
     );
-    await screen.findByText("Start a conversation");
+    await waitForChatReady();
     const input = screen.getByRole("textbox") as HTMLTextAreaElement;
     await userEvent.type(input, "keep this question");
     await userEvent.click(screen.getByRole("button", { name: "Send" }));

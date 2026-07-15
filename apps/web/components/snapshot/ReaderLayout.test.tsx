@@ -6,6 +6,18 @@ import { ReaderLayout } from "./ReaderLayout";
 
 vi.mock("@gulp/api-client", () => ({
   getPackMessages: vi.fn().mockResolvedValue([]),
+  getLLMSettings: vi.fn().mockResolvedValue({
+    default_provider: "anthropic",
+    default_model: "claude-sonnet-4-6",
+    credentials: [{ provider: "anthropic", masked_key: "…1111" }],
+    catalog: [
+      {
+        provider: "anthropic",
+        capabilities: ["stream"],
+        models: [{ id: "claude-sonnet-4-6", label: "Claude Sonnet 4.6" }],
+      },
+    ],
+  }),
   streamPackMessage: vi.fn(() =>
     (async function* () {
       yield { type: "done", message: {} };

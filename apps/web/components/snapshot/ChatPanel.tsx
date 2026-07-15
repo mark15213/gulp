@@ -1,9 +1,12 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import {
+  getLLMSettings,
   getPackMessages,
   streamPackMessage,
+  type LLMSettingsOut,
   type MessageOut,
 } from "@gulp/api-client";
 import { Button } from "@/components/ui/Button";
@@ -12,6 +15,35 @@ import { IconClose } from "@/components/ui/icons";
 import type { ChatAttachment } from "./ReaderChatContext";
 import { Md } from "./Md";
 import styles from "./ChatPanel.module.css";
+
+const MODEL_STORAGE_KEY = "chat:selectedModel";
+const PROVIDER_LABELS: Record<string, string> = {
+  anthropic: "Anthropic",
+  openai: "OpenAI",
+  deepseek: "DeepSeek",
+  qwen: "Qwen",
+};
+
+type ModelChoice = {
+  key: string;
+  provider: string;
+  model: string;
+  label: string;
+};
+
+function availableModels(settings: LLMSettingsOut): ModelChoice[] {
+  const configured = new Set(settings.credentials.map((item) => item.provider));
+  return settings.catalog.flatMap((provider) =>
+    configured.has(provider.provider)
+      ? provider.models.map((model) => ({
+          key: `${provider.provider}:${model.id}`,
+          provider: provider.provider,
+          model: model.id,
+          label: model.label,
+        }))
+      : [],
+  );
+}
 
 export function ChatPanel({
   snapshotId,
@@ -34,9 +66,16 @@ export function ChatPanel({
   const [sending, setSending] = useState(false);
   const [streamText, setStreamText] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [modelError, setModelError] = useState<string | null>(null);
+  const [modelChoices, setModelChoices] = useState<ModelChoice[]>([]);
+  const [selectedModelKey, setSelectedModelKey] = useState("");
+  const [modelsLoading, setModelsLoading] = useState(true);
   const tmpIdRef = useRef(0);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const selectedModel = modelChoices.find(
+    (choice) => choice.key === selectedModelKey,
+  );
 
   useEffect(() => {
     let active = true;
@@ -59,8 +98,41 @@ export function ChatPanel({
   }, [snapshotId]);
 
   useEffect(() => {
-    if (!loading) inputRef.current?.focus();
-  }, [loading]);
+    let active = true;
+    setModelsLoading(true);
+    setModelError(null);
+    getLLMSettings()
+      .then((settings) => {
+        if (!active) return;
+        const choices = availableModels(settings);
+        const saved = localStorage.getItem(MODEL_STORAGE_KEY);
+        const legacyDefault =
+          settings.default_provider && settings.default_model
+            ? `${settings.default_provider}:${settings.default_model}`
+            : null;
+        const initial =
+          choices.find((choice) => choice.key === saved) ??
+          choices.find((choice) => choice.key === legacyDefault) ??
+          choices[0];
+        setModelChoices(choices);
+        setSelectedModelKey(initial?.key ?? "");
+      })
+      .catch(() => {
+        if (active) setModelError("Couldn't load your available AI models.");
+      })
+      .finally(() => {
+        if (active) setModelsLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!loading && !modelsLoading && selectedModel) {
+      inputRef.current?.focus();
+    }
+  }, [loading, modelsLoading, selectedModel]);
 
   useEffect(() => {
     if (!loading) bottomRef.current?.scrollIntoView?.({ block: "end" });
@@ -75,14 +147,16 @@ export function ChatPanel({
   }, [onClose]);
 
   const ERROR_COPY: Record<string, string> = {
-    llm_not_configured: "Add an AI provider key in Settings → AI models first.",
-    llm_key_invalid: "Your AI key was rejected — check Settings → AI models.",
+    llm_not_configured:
+      "Add an AI provider key in Settings → AI providers first.",
+    llm_key_invalid:
+      "Your AI key was rejected — check Settings → AI providers.",
     llm_rate_limited: "The provider rate-limited this key — try again shortly.",
   };
 
   async function send() {
     const q = draft.trim();
-    if (!q || sending) return;
+    if (!q || sending || !selectedModel) return;
     const refs = attachments.map((a) => a.id);
     setError(null);
     setSending(true);
@@ -102,6 +176,8 @@ export function ChatPanel({
       for await (const ev of streamPackMessage(snapshotId, {
         content: q,
         block_refs: refs,
+        provider: selectedModel.provider,
+        model: selectedModel.model,
       })) {
         if (ev.type === "delta") {
           acc += ev.text;
@@ -135,13 +211,46 @@ export function ChatPanel({
           <span className={styles.headerTitle}>Discuss this article</span>
           <span className={styles.saved}>Saved automatically</span>
         </div>
-        <IconButton
-          label="Close chat"
-          className={styles.close}
-          onClick={onClose}
-        >
-          <IconClose />
-        </IconButton>
+        <div className={styles.headerActions}>
+          <select
+            aria-label="AI model"
+            className={styles.modelSelect}
+            value={selectedModelKey}
+            disabled={modelsLoading || sending || modelChoices.length === 0}
+            onChange={(event) => {
+              setSelectedModelKey(event.target.value);
+              localStorage.setItem(MODEL_STORAGE_KEY, event.target.value);
+            }}
+          >
+            {modelsLoading && <option value="">Loading models…</option>}
+            {!modelsLoading && modelChoices.length === 0 && (
+              <option value="">No model configured</option>
+            )}
+            {[...new Set(modelChoices.map((choice) => choice.provider))].map(
+              (provider) => (
+                <optgroup
+                  key={provider}
+                  label={PROVIDER_LABELS[provider] ?? provider}
+                >
+                  {modelChoices
+                    .filter((choice) => choice.provider === provider)
+                    .map((choice) => (
+                      <option key={choice.key} value={choice.key}>
+                        {choice.label}
+                      </option>
+                    ))}
+                </optgroup>
+              ),
+            )}
+          </select>
+          <IconButton
+            label="Close chat"
+            className={styles.close}
+            onClick={onClose}
+          >
+            <IconClose />
+          </IconButton>
+        </div>
       </div>
       <div
         className={styles.messages}
@@ -210,6 +319,18 @@ export function ChatPanel({
         <div ref={bottomRef} aria-hidden="true" />
       </div>
       <div className={styles.composer}>
+        {modelError && (
+          <div className={styles.modelNotice} role="alert">
+            {modelError}
+          </div>
+        )}
+        {!modelsLoading && !modelError && modelChoices.length === 0 && (
+          <div className={styles.modelNotice}>
+            Add a provider key in{" "}
+            <Link href="/settings/ai">Settings → AI providers</Link> to start
+            chatting.
+          </div>
+        )}
         {attachments.length > 0 && (
           <div
             className={styles.attachments}
@@ -253,7 +374,9 @@ export function ChatPanel({
           }}
           placeholder="Ask about this article…"
           rows={3}
-          disabled={loading || sending}
+          disabled={
+            loading || sending || modelsLoading || selectedModel === undefined
+          }
         />
         <div className={styles.composerFooter}>
           <span className={styles.shortcut}>
@@ -263,7 +386,13 @@ export function ChatPanel({
             variant="primary"
             className={styles.send}
             onClick={send}
-            disabled={loading || sending || !draft.trim()}
+            disabled={
+              loading ||
+              sending ||
+              modelsLoading ||
+              selectedModel === undefined ||
+              !draft.trim()
+            }
           >
             Send
           </Button>
