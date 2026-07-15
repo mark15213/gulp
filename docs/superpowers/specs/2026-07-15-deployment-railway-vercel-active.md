@@ -28,7 +28,7 @@ Put the stack online for a small invited group with **minimum ops** and **push-t
 | D4 | Same-origin routing | Browser hits only the Vercel origin; the Next rewrite proxies `/api/*` to the Railway backend URL (`API_INTERNAL_URL=https://<railway-app>`). First-party cookie, **no CORS, no code change** (api-client browser base is the static `/api`). Better than the 2026-07-07 spec's cross-origin CORS. |
 | D5 | Postgres DSN | **Code change:** a `field_validator` on `settings.database_url` rewrites a leading `postgresql://` / `postgres://` to `postgresql+psycopg://`, because Railway's Postgres plugin injects the bare `postgresql://` DSN and SQLAlchemy needs the psycopg-3 driver prefix (§8). |
 | D6 | Images | Reuse `infra/Dockerfile.python` for the combined service (full uv workspace synced). Web needs **no Dockerfile** — Vercel builds Next natively via Turborepo. Revert `output: "standalone"` (added for the dropped self-host web image, unused on Vercel). |
-| D7 | Migrations | Railway **pre-deploy (release) command**: `cd services/api && uv run --no-sync --package gulp-api alembic upgrade head`, before the new release serves. |
+| D7 | Migrations | Run at the **top of `start-combined.sh`** (`alembic upgrade head`, cwd `services/api`, idempotent) before api/worker launch — robust for a single-instance service and avoids depending on a platform-specific pre-deploy field. |
 | D8 | Registration gate | `INVITE_CODE=5566` on the Railway service (feature already shipped). |
 | D9 | RSSHub | Optional 5th Railway service (`diygod/rsshub`) or point `RSSHUB_BASE_URL` at a public instance; feeds are non-core for the initial beta. |
 | D10 | Deploy trigger | Push to GitHub `main` → Railway + Vercel auto-deploy (PR previews on Vercel). |
@@ -62,7 +62,7 @@ Put the stack online for a small invited group with **minimum ops** and **push-t
 
 - **Carries over (already on `main`):** invite-code gate (backend + web + client). Reused: `infra/Dockerfile.python`, repo-root `.dockerignore`, `infra/docker-compose.yml` (local dev).
 - **Dropped (self-host only):** `infra/Dockerfile.web`, `compose.prod.yml`, `Caddyfile`, `deploy.sh`, `backup.sh`, `env.prod.example`, `README.md`.
-- **New:** the DSN validator (§8), `infra/start-combined.sh`, `railway.json` (build + start + release config-as-code), `vercel.json`, revert of `output: "standalone"`, and the deploy guide `docs/deploy-railway-vercel.md`.
+- **New:** the DSN validator (§8), `infra/start-combined.sh`, `railway.json` (Dockerfile build + start command + healthcheck), a slimmed `.dockerignore`, revert of `output: "standalone"`, and the deploy guide `docs/deploy-railway-vercel.md`. Vercel is configured in its dashboard — no committed `vercel.json`.
 
 ## 5. Environment / secrets
 
@@ -87,7 +87,7 @@ Put the stack online for a small invited group with **minimum ops** and **push-t
 
 ## 6. Migrations & first-boot
 
-- Railway **pre-deploy command** runs `alembic upgrade head` (cwd `services/api`) before the new release serves; the worker performs no migrations.
+- `start-combined.sh` runs `alembic upgrade head` (cwd `services/api`, idempotent) before launching api/worker; the worker performs no migrations.
 - **Seeded dev account** (`dev@example.com`): remove or change its password immediately after first deploy.
 
 ## 7. Deploy flow
@@ -99,7 +99,7 @@ Push to GitHub `main` → Railway rebuilds the app service (release command migr
 1. **DSN normalization** — `services/shared/gulp_shared/settings.py`: a pydantic `field_validator` on `database_url` rewriting `postgresql://` / `postgres://` → `postgresql+psycopg://` (idempotent; leaves an already-prefixed DSN untouched). Portable to any provider's raw DSN. Test-covered.
 2. **Revert standalone** — remove `output: "standalone"` from `apps/web/next.config.ts` (unused on Vercel).
 
-Plus config-as-code (not app logic): `infra/start-combined.sh`, `railway.json`, `vercel.json`, and file removals (§4).
+Plus config-as-code (not app logic): `infra/start-combined.sh`, `railway.json`, the slimmed `.dockerignore`, and file removals (§4). Vercel settings live in its dashboard (documented in the guide).
 
 ## 9. Console setup (owner; full steps in `docs/deploy-railway-vercel.md`)
 

@@ -1,4 +1,7 @@
-# Build context is the repo root for both image builds; keep it lean.
+# Build context for the Railway Python image (infra/Dockerfile.python). Only the
+# Python workspace (services/*, uv.lock, pyproject.toml) is needed — exclude the
+# TS/asset trees so the Railway build stays lean. (Vercel builds web separately
+# and does not use this file.)
 .git
 **/node_modules
 **/.next
@@ -9,5 +12,11 @@
 **/.mypy_cache
 **/.ruff_cache
 **/.turbo
+apps
+packages
+docs
+design
 *.log
+*.png
+*.pdf
 .DS_Store
