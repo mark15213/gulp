@@ -6,8 +6,6 @@ const API =
   "http://localhost:8000";
 
 const nextConfig: NextConfig = {
-  // Self-contained server build for the container runtime image (infra/Dockerfile.web).
-  output: "standalone",
   // Allow importing source (incl. tokens.css) from the workspace design system.
   transpilePackages: ["@gulp/ui"],
   async rewrites() {
