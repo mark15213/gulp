@@ -2,6 +2,7 @@
 
 from fastapi import HTTPException
 from gulp_shared.models.user import User
+from gulp_shared.settings import settings
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -11,6 +12,8 @@ from app.schemas.auth import LoginRequest, RegisterRequest
 
 
 def register(db: Session, req: RegisterRequest) -> User:
+    if settings.invite_code and req.invite_code != settings.invite_code:
+        raise HTTPException(status_code=400, detail="invite_required")
     email = req.email.lower()
     exists = db.scalar(select(User).where(User.email == email))
     if exists is not None:

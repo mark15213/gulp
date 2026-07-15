@@ -1,3 +1,6 @@
+from gulp_shared.settings import settings
+
+
 def test_register_sets_cookie_and_returns_user(auth_client) -> None:  # type: ignore[no-untyped-def]
     resp = auth_client.post(
         "/auth/register",
@@ -51,3 +54,50 @@ def test_logout_clears_session(auth_client) -> None:  # type: ignore[no-untyped-
     auth_client.post("/auth/logout")
     auth_client.cookies.clear()  # server cleared it; drop any client copy
     assert auth_client.get("/auth/me").status_code == 401
+
+
+def test_register_requires_invite_code_when_configured(auth_client, monkeypatch) -> None:  # type: ignore[no-untyped-def]
+    monkeypatch.setattr(settings, "invite_code", "5566")
+    resp = auth_client.post(
+        "/auth/register",
+        json={"email": "no-invite@example.com", "password": "hunter2hunter"},
+    )
+    assert resp.status_code == 400
+    assert resp.json()["detail"] == "invite_required"
+
+
+def test_register_rejects_wrong_invite_code(auth_client, monkeypatch) -> None:  # type: ignore[no-untyped-def]
+    monkeypatch.setattr(settings, "invite_code", "5566")
+    resp = auth_client.post(
+        "/auth/register",
+        json={
+            "email": "bad-invite@example.com",
+            "password": "hunter2hunter",
+            "invite_code": "0000",
+        },
+    )
+    assert resp.status_code == 400
+    assert resp.json()["detail"] == "invite_required"
+
+
+def test_register_accepts_correct_invite_code(auth_client, monkeypatch) -> None:  # type: ignore[no-untyped-def]
+    monkeypatch.setattr(settings, "invite_code", "5566")
+    resp = auth_client.post(
+        "/auth/register",
+        json={
+            "email": "good-invite@example.com",
+            "password": "hunter2hunter",
+            "invite_code": "5566",
+        },
+    )
+    assert resp.status_code == 201
+    assert resp.json()["email"] == "good-invite@example.com"
+
+
+def test_register_open_when_invite_code_empty(auth_client) -> None:  # type: ignore[no-untyped-def]
+    # Default settings.invite_code == "" -> registration stays open (no code needed).
+    resp = auth_client.post(
+        "/auth/register",
+        json={"email": "open@example.com", "password": "hunter2hunter"},
+    )
+    assert resp.status_code == 201

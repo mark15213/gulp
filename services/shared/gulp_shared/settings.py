@@ -15,6 +15,7 @@ class Settings(BaseSettings):
     session_cookie_secure: bool = False  # True in production (HTTPS)
     login_max_attempts: int = 10
     login_lockout_seconds: int = 900
+    invite_code: str = ""  # when set, /auth/register requires a matching code (beta gate)
     anthropic_api_key: str = ""
     web_origin: str = "http://localhost:3000"
     llm_provider: str = "anthropic"

@@ -12,6 +12,7 @@ class RegisterRequest(BaseModel):
     password: str = Field(min_length=8)
     display_name: str | None = None
     locale: Locale = Locale.en
+    invite_code: str | None = None
 
 
 class LoginRequest(BaseModel):
