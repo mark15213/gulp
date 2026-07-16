@@ -32,6 +32,10 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
         : await register({ email, password, locale: "en", invite_code: inviteCode });
       setUser(user);
       router.replace("/");
+      // The root Server Component omits authenticated chrome while rendering
+      // /login and /register. Refresh it after the session cookie is set so a
+      // client-side auth transition resolves the sidebar for the app route.
+      router.refresh();
     } catch {
       setError(
         isLogin ? "Invalid email or password." : "Could not create the account.",
