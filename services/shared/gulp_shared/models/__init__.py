@@ -1,3 +1,5 @@
+from gulp_shared.models.agent_job import AgentJob, AgentJobKind, AgentJobState
+from gulp_shared.models.api_token import ApiToken
 from gulp_shared.models.card import Card, CardOrigin, CardStatus, CardType, MasteryLadder
 from gulp_shared.models.concept import (
     CardConcept,
@@ -66,4 +68,8 @@ __all__ = [
     "ChatRole",
     "ReviewEvent",
     "ReviewGrade",
+    "AgentJob",
+    "AgentJobKind",
+    "AgentJobState",
+    "ApiToken",
 ]
