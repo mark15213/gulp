@@ -27,6 +27,7 @@ from app.routers import (
     pack,
     processing,
     today,
+    tokens,
 )
 
 configure_logging("api")
@@ -69,6 +70,7 @@ app.include_router(llm.router, tags=["llm"])
 app.include_router(pack.router, tags=["pack"])
 app.include_router(processing.router, tags=["processing"])
 app.include_router(today.router, tags=["today"])
+app.include_router(tokens.router, tags=["tokens"])
 
 
 @app.middleware("http")
