@@ -10,6 +10,8 @@ from app.export.templates import (
     cards_prompt_md,
     cards_schema,
     claude_md,
+    mcp_cards_claude_md,
+    mcp_claude_md,
     pack_schema,
     prompt_md,
 )
@@ -28,6 +30,7 @@ def build_job_archive(
     )
     files = {
         "CLAUDE.md": claude_md().encode(),
+        "instructions.mcp.md": mcp_claude_md().encode(),
         "prompt.md": prompt_md().encode(),
         "manifest.json": json.dumps(manifest, indent=2).encode(),
         "input/norm_doc.json": norm_doc_bytes,
@@ -58,6 +61,7 @@ def build_cards_job_archive(
     )
     files = {
         "CLAUDE.md": cards_claude_md().encode(),
+        "instructions.mcp.md": mcp_cards_claude_md().encode(),
         "prompt.md": cards_prompt_md().encode(),
         "manifest.json": json.dumps(manifest, indent=2).encode(),
         "input/pack.md": pack_text.encode(),

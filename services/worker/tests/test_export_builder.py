@@ -2,7 +2,15 @@ import json
 
 from app.export.archive import find_entry, read_zip
 from app.export.builder import build_cards_job_archive, build_job_archive
-from app.export.templates import cards_schema, claude_md, pack_schema, prompt_md
+from app.export.templates import (
+    UNTRUSTED_INPUT_CLAUSE,
+    cards_schema,
+    claude_md,
+    mcp_cards_claude_md,
+    mcp_claude_md,
+    pack_schema,
+    prompt_md,
+)
 from app.pipeline.normdoc import Anchor, NormBlock, NormDoc
 
 
@@ -68,3 +76,34 @@ def test_build_cards_job_archive_omits_empty_conversation():
     )
     files = read_zip(data)
     assert not any(name.endswith("conversation.md") for name in files)
+
+
+def test_digest_archive_has_mcp_instruction():
+    data = build_job_archive(snapshot_id="s1", owner_id="o1", normdoc=_doc(),
+                             created_at="2026-06-26T00:00:00Z")
+    files = read_zip(data)
+    text = find_entry(files, "instructions.mcp.md").decode()
+    assert text == mcp_claude_md()
+    assert "submit_result" in text
+    assert UNTRUSTED_INPUT_CLAUSE in text
+
+
+def test_cards_archive_has_mcp_instruction():
+    data = build_cards_job_archive(
+        snapshot_id="s1",
+        owner_id="o1",
+        pack_text="# BERT\nMasked language modeling.",
+        conversation_text="user: why mask?\nassistant: bidirectional context.",
+        created_at="2026-07-03T00:00:00Z",
+    )
+    files = read_zip(data)
+    text = find_entry(files, "instructions.mcp.md").decode()
+    assert text == mcp_cards_claude_md()
+    assert UNTRUSTED_INPUT_CLAUSE in text
+
+
+def test_zip_claude_md_carries_untrusted_clause():
+    data = build_job_archive(snapshot_id="s1", owner_id="o1", normdoc=_doc(),
+                             created_at="2026-06-26T00:00:00Z")
+    files = read_zip(data)
+    assert UNTRUSTED_INPUT_CLAUSE in find_entry(files, "CLAUDE.md").decode()
