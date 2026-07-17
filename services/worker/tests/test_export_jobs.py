@@ -9,6 +9,8 @@ from app.export.jobs import (
     run_import_result,
 )
 from gulp_shared.db import Base
+from gulp_shared.domain.agent_jobs import latest_job
+from gulp_shared.models import AgentJob, AgentJobKind, AgentJobState
 from gulp_shared.models.knowledge_pack import (
     KnowledgePack,
     PackBlock,
@@ -127,3 +129,81 @@ def test_import_result_invalid_sets_exported():  # type: ignore[no-untyped-def]
     s.commit()
     run_import_result(s, snap, write_zip({"result/pack.json": b'{"summary":"only"}'}))
     assert snap.status == SnapshotStatus.exported  # rejected, not ready
+
+
+def _empty_note(s):  # type: ignore[no-untyped-def]
+    """Like `_note`, but with an empty body — no origin_url means `_to_normdoc`
+    takes the note path and raises "extraction produced no content"."""
+    s.add(User(id=DEV_USER_ID, display_name="Dev"))
+    snap = Source(owner_id=DEV_USER_ID, kind=SourceKind.snapshot, title="N",
+                  status=SnapshotStatus.unprocessed, media_type=MediaType.note,
+                  content_body="")
+    s.add(snap)
+    s.flush()
+    return snap
+
+
+def _job(db, source, kind=AgentJobKind.digest, state=AgentJobState.building):  # type: ignore[no-untyped-def]
+    job = AgentJob(owner_id=source.owner_id, snapshot_id=source.id, kind=kind, state=state)
+    db.add(job)
+    db.commit()
+    return job
+
+
+async def test_build_export_flips_job_to_pending(tmp_path):  # type: ignore[no-untyped-def]
+    s = _session()
+    snap = _note(s)
+    job = _job(s, snap)
+    await run_build_export(s, snap, export_dir=str(tmp_path), now="2026-06-26T00:00:00Z")
+    s.refresh(job)
+    assert job.state is AgentJobState.pending
+
+
+async def test_build_export_failure_marks_job_failed(tmp_path):  # type: ignore[no-untyped-def]
+    s = _session()
+    snap = _empty_note(s)
+    job = _job(s, snap)
+    with pytest.raises(ValueError):
+        await run_build_export(s, snap, export_dir=str(tmp_path))
+    s.refresh(job)
+    assert job.state is AgentJobState.failed
+    assert job.last_error
+
+
+def test_import_result_completes_job():  # type: ignore[no-untyped-def]
+    s = _session()
+    snap = _note(s)
+    snap.status = SnapshotStatus.exported
+    s.commit()
+    job = _job(s, snap, state=AgentJobState.pending)
+    data = write_zip({"result/pack.json": json.dumps(_VALID).encode()})
+    run_import_result(s, snap, data)
+    s.refresh(job)
+    assert job.state is AgentJobState.done
+    assert job.completed_at is not None
+
+
+def test_import_result_failure_reverts_done_job():  # type: ignore[no-untyped-def]
+    # the MCP submit path marks done before the async deep validation runs
+    s = _session()
+    snap = _note(s)
+    snap.status = SnapshotStatus.exported
+    s.commit()
+    job = _job(s, snap, state=AgentJobState.done)
+    run_import_result(s, snap, write_zip({"result/pack.json": b'{"summary":"only"}'}))
+    s.refresh(job)
+    assert job.state is AgentJobState.pending
+    assert job.attempts == 1
+    assert "import failed" in job.last_error
+
+
+def test_import_result_without_job_row_still_works():  # type: ignore[no-untyped-def]
+    # the pre-MCP manual flow: no agent_job row exists; import must not crash
+    s = _session()
+    snap = _note(s)
+    snap.status = SnapshotStatus.exported
+    s.commit()
+    data = write_zip({"result/pack.json": json.dumps(_VALID).encode()})
+    run_import_result(s, snap, data)
+    assert snap.status == SnapshotStatus.ready
+    assert latest_job(s, snap.id, AgentJobKind.digest) is None

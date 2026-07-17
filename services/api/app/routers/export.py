@@ -6,6 +6,7 @@ from collections.abc import Callable
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from fastapi.responses import FileResponse
+from gulp_shared.models.agent_job import AgentJobKind
 from gulp_shared.models.source import Source, SourceGenre
 from gulp_shared.models.user import User
 from sqlalchemy.orm import Session
@@ -13,6 +14,7 @@ from sqlalchemy.orm import Session
 from app.core.auth import get_current_user
 from app.deps import get_db, get_enqueue
 from app.schemas.capture import SnapshotOut
+from app.services.agent_jobs import publish
 from app.services.export import job_path, shallow_check, stash_result
 from app.services.snapshots import to_out
 
@@ -41,6 +43,7 @@ def export_snapshot(
         raise HTTPException(
             status_code=400, detail="digest jobs only apply to paper sources"
         )
+    publish(db, source, AgentJobKind.digest)
     enqueue("build_export", str(source.id))
     return to_out(db, source)
 

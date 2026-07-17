@@ -7,6 +7,7 @@ from typing import Literal, cast
 
 from gulp_shared.contracts.cards import CardDraft, CardsPayload
 from gulp_shared.domain import mastery
+from gulp_shared.models.agent_job import AgentJobKind
 from gulp_shared.models.card import Card, CardOrigin, CardStatus
 from gulp_shared.models.knowledge_pack import KnowledgePack, PackStatus
 from gulp_shared.models.source import CardsStatus, Source
@@ -14,6 +15,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.schemas.cards import CardOut, CardPatch
+from app.services.agent_jobs import publish
 from app.services.gulp import init_scheduling_on_accept
 
 _Daily = Literal["new", "learning", "known"]
@@ -51,6 +53,7 @@ def start_cards_export(db: Session, source: Source, enqueue: Callable[..., None]
     pack = db.scalar(select(KnowledgePack).where(KnowledgePack.snapshot_id == source.id))
     if pack is None or pack.status is not PackStatus.ready:
         raise NoReadyPackError("no ready pack to build a cards job from — run Start first")
+    publish(db, source, AgentJobKind.cards)
     enqueue("build_cards_export", str(source.id))
 
 

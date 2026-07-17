@@ -111,6 +111,18 @@ def test_export_cards_enqueues(client: TestClient, db) -> None:  # type: ignore[
     assert client.enqueue_calls == [("build_cards_export", sid)]  # type: ignore[attr-defined]
 
 
+def test_cards_export_publishes_agent_job(client, db):  # type: ignore[no-untyped-def]
+    from gulp_shared.domain.agent_jobs import latest_job
+    from gulp_shared.models import AgentJobKind, AgentJobState
+
+    sid = _capture(client)
+    _ready_pack(db, sid)
+    r = client.post(f"/snapshots/{sid}/cards/export")
+    assert r.status_code == 202
+    job = latest_job(db, uuid.UUID(sid), AgentJobKind.cards)
+    assert job is not None and job.state is AgentJobState.building
+
+
 def test_export_cards_without_ready_pack_400(client: TestClient) -> None:
     sid = _capture(client)
     r = client.post(f"/snapshots/{sid}/cards/export")

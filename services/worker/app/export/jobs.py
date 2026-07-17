@@ -5,6 +5,8 @@ import os
 from collections.abc import Awaitable, Callable
 from datetime import UTC, datetime
 
+from gulp_shared.domain.agent_jobs import latest_job
+from gulp_shared.models.agent_job import AgentJobKind, AgentJobState
 from gulp_shared.models.knowledge_pack import KnowledgePack, PackStatus
 from gulp_shared.models.source import (
     MediaType,
@@ -27,6 +29,25 @@ from app.pipeline.schemas import draft_from_paper_report
 logger = logging.getLogger("gulp.worker")
 
 FetchFn = Callable[[str], Awaitable[FetchedDoc]]
+
+
+def _flip_job(
+    db: Session,
+    source: Source,
+    kind: AgentJobKind,
+    state: AgentJobState,
+    *,
+    error: str | None = None,
+) -> None:
+    """Best-effort queue-row transition; the manual (pre-MCP) flow has no row."""
+    job = latest_job(db, source.id, kind)
+    if job is None:
+        return
+    job.state = state
+    job.last_error = error
+    if state is AgentJobState.done:
+        job.completed_at = datetime.now(UTC)
+        job.lease_expires_at = None
 
 
 async def run_build_export(
@@ -62,11 +83,13 @@ async def run_build_export(
         with open(path, "wb") as f:
             f.write(data)
         source.status = SnapshotStatus.exported
+        _flip_job(db, source, AgentJobKind.digest, AgentJobState.pending)
         db.commit()
         return path
     except Exception:
         db.rollback()
         source.status = SnapshotStatus.needs_attention
+        _flip_job(db, source, AgentJobKind.digest, AgentJobState.failed, error="build failed")
         db.commit()
         logger.exception("build_export failed for %s", source.id)
         raise
@@ -88,18 +111,25 @@ def run_build_cards_export(
     )
     if pack is None or pack.status is not PackStatus.ready:
         raise ValueError("no ready pack to build a cards job from")
-    data = build_cards_job_archive(
-        snapshot_id=str(source.id),
-        owner_id=str(source.owner_id),
-        pack_text=render_pack_text(pack),
-        conversation_text=render_conversation(db, pack),
-        created_at=now or datetime.now(UTC).isoformat(),
-    )
-    os.makedirs(out_dir, exist_ok=True)
-    path = os.path.join(out_dir, f"{source.id}-cards.zip")
-    with open(path, "wb") as f:
-        f.write(data)
-    return path
+    try:
+        data = build_cards_job_archive(
+            snapshot_id=str(source.id),
+            owner_id=str(source.owner_id),
+            pack_text=render_pack_text(pack),
+            conversation_text=render_conversation(db, pack),
+            created_at=now or datetime.now(UTC).isoformat(),
+        )
+        os.makedirs(out_dir, exist_ok=True)
+        path = os.path.join(out_dir, f"{source.id}-cards.zip")
+        with open(path, "wb") as f:
+            f.write(data)
+        _flip_job(db, source, AgentJobKind.cards, AgentJobState.pending)
+        db.commit()
+        return path
+    except Exception:
+        _flip_job(db, source, AgentJobKind.cards, AgentJobState.failed, error="build failed")
+        db.commit()
+        raise
 
 
 def run_import_result(db: Session, source: Source, data: bytes) -> None:
@@ -107,9 +137,16 @@ def run_import_result(db: Session, source: Source, data: bytes) -> None:
         digest = import_result_archive(data)
         persist_pack(db, source, draft_from_paper_report(digest))
         source.status = SnapshotStatus.ready
+        _flip_job(db, source, AgentJobKind.digest, AgentJobState.done)
         db.commit()
     except Exception:
         db.rollback()
         source.status = SnapshotStatus.exported
+        job = latest_job(db, source.id, AgentJobKind.digest)
+        if job is not None:
+            job.state = AgentJobState.pending
+            job.attempts += 1
+            job.last_error = "import failed (deep validation)"
+            job.lease_expires_at = None
         db.commit()
         logger.exception("import_result failed for %s", source.id)

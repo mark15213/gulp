@@ -1,11 +1,14 @@
 import io
 import json
+import uuid
 import zipfile
 
 import pytest
 from app.deps import get_db, get_enqueue
 from app.main import app
 from fastapi.testclient import TestClient
+from gulp_shared.domain.agent_jobs import latest_job
+from gulp_shared.models import AgentJobKind, AgentJobState
 from gulp_shared.models.source import SnapshotStatus, Source, SourceGenre, SourceKind
 from gulp_shared.models.user import DEV_USER_ID
 
@@ -131,3 +134,24 @@ def test_cards_job_head_404_when_not_built(client, db, tmp_path, monkeypatch):  
     sid = _snap(db, status=SnapshotStatus.ready)
     r = client.head(f"/snapshots/{sid}/cards/job")
     assert r.status_code == 404
+
+
+def test_export_publishes_agent_job(client, db):  # type: ignore[no-untyped-def]
+    sid = _snap(db)
+    client.post(f"/snapshots/{sid}/export")
+    job = latest_job(db, uuid.UUID(sid), AgentJobKind.digest)
+    assert job is not None and job.state is AgentJobState.building
+
+
+def test_re_export_resets_existing_job(client, db):  # type: ignore[no-untyped-def]
+    sid = _snap(db)
+    client.post(f"/snapshots/{sid}/export")
+    job = latest_job(db, uuid.UUID(sid), AgentJobKind.digest)
+    job.state = AgentJobState.pending
+    job.attempts = 2
+    job.last_error = "boom"
+    db.commit()
+    client.post(f"/snapshots/{sid}/export")
+    db.refresh(job)
+    assert job.state is AgentJobState.building
+    assert job.attempts == 0 and job.last_error is None
