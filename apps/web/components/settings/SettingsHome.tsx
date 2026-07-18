@@ -12,6 +12,12 @@ const SECTIONS = [
     href: "/settings/ai",
   },
   {
+    key: "tokens",
+    title: "API tokens",
+    description: "Personal access tokens for local agents (MCP).",
+    href: "/settings/tokens",
+  },
+  {
     key: "account",
     title: "Account",
     description: "Display name, email, and password.",
