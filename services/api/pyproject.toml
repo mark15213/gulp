@@ -16,6 +16,7 @@ dependencies = [
     "httpx>=0.28",
     "redis>=5",
     "jsonschema>=4.23",
+    "mcp>=1.10",
 ]
 
 [tool.uv.sources]

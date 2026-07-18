@@ -3,7 +3,8 @@
 import logging
 import time
 import uuid
-from collections.abc import Awaitable, Callable
+from collections.abc import AsyncIterator, Awaitable, Callable
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -12,7 +13,10 @@ from gulp_shared.logging import configure_logging, reset_request_id, set_request
 from gulp_shared.settings import settings
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
+from starlette.routing import Route
 
+from app.mcp.auth import PATAuthMiddleware
+from app.mcp.server import mcp as mcp_server
 from app.routers import (
     auth,
     capture,
@@ -33,7 +37,25 @@ from app.routers import (
 configure_logging("api")
 logger = logging.getLogger("gulp.api")
 
-app = FastAPI(title="Gulp API")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+    # the MCP session manager must be running for /mcp to serve requests
+    manager = mcp_server.session_manager
+    try:
+        async with manager.run():
+            yield
+    finally:
+        # The SDK guards run() as one-shot per instance (_has_started, never
+        # reset on exit), but the test suite re-enters this lifespan once per
+        # `with TestClient(app)`, each on a fresh event loop. Stateless mode
+        # keeps no cross-request state, so clearing the guard lets the next
+        # startup re-run the same instance with a fresh task group. In
+        # production the app starts once, so this is a harmless no-op.
+        manager._has_started = False
+
+
+app = FastAPI(title="Gulp API", lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,
@@ -110,3 +132,15 @@ async def log_requests(
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
+
+
+# Attached as a Route scoped to exactly /mcp (FastMCP's default
+# streamable_http_path), not a root Mount: a Mount("/") is a full match for
+# every path and would shadow FastAPI's 405 semantics on real routes (a POST to
+# a GET-only endpoint would 404 through the sub-app instead of 405). A Route
+# matches only "/mcp" for any method, so unknown paths still 404 and method
+# mismatches on other routes still 405. The PAT middleware guards it; the
+# wrapped sub-app routes "/mcp" internally to the streamable-HTTP handler.
+app.router.routes.append(
+    Route("/mcp", PATAuthMiddleware(mcp_server.streamable_http_app()))
+)
