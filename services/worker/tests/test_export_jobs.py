@@ -102,6 +102,20 @@ def test_build_cards_export_without_ready_pack_raises(tmp_path):  # type: ignore
         run_build_cards_export(s, snap, export_dir=str(tmp_path))
 
 
+def test_build_cards_export_no_pack_flips_building_job_failed(tmp_path):  # type: ignore[no-untyped-def]
+    # A claim-triggered rebuild against a missing pack must not wedge the job in
+    # `building`: the ready-pack check flips it to `failed` and still raises.
+    s = _session()
+    snap = _note(s)  # no ready pack
+    s.commit()
+    job = _job(s, snap, kind=AgentJobKind.cards, state=AgentJobState.building)
+    with pytest.raises(ValueError):
+        run_build_cards_export(s, snap, export_dir=str(tmp_path))
+    s.refresh(job)
+    assert job.state is AgentJobState.failed
+    assert job.last_error
+
+
 _VALID = {
     "title": "T",
     "core_contributions": ["c"],

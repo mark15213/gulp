@@ -30,6 +30,14 @@ logger = logging.getLogger("gulp.worker")
 
 FetchFn = Callable[[str], Awaitable[FetchedDoc]]
 
+_ERR_MAX = 500
+
+
+def _err(exc: Exception) -> str:
+    """Persist a bounded reason so `last_error` carries the actual failure, not a
+    generic string (spec §5: failure reasons surface in the UI)."""
+    return str(exc)[:_ERR_MAX] or exc.__class__.__name__
+
 
 def _flip_job(
     db: Session,
@@ -86,10 +94,10 @@ async def run_build_export(
         _flip_job(db, source, AgentJobKind.digest, AgentJobState.pending)
         db.commit()
         return path
-    except Exception:
+    except Exception as exc:
         db.rollback()
         source.status = SnapshotStatus.needs_attention
-        _flip_job(db, source, AgentJobKind.digest, AgentJobState.failed, error="build failed")
+        _flip_job(db, source, AgentJobKind.digest, AgentJobState.failed, error=_err(exc))
         db.commit()
         logger.exception("build_export failed for %s", source.id)
         raise
@@ -106,12 +114,15 @@ def run_build_cards_export(
     user can run in Claude Code / Codex, then import the result via cards.json.
     Cheap and offline — the pack already exists, so there is no fetch."""
     out_dir = export_dir or settings.export_dir
-    pack = db.scalar(
-        select(KnowledgePack).where(KnowledgePack.snapshot_id == source.id)
-    )
-    if pack is None or pack.status is not PackStatus.ready:
-        raise ValueError("no ready pack to build a cards job from")
     try:
+        # The ready-pack check lives inside the try so a claim-triggered rebuild
+        # against a missing/not-ready pack flips the job to `failed` instead of
+        # wedging it in `building` forever. It still raises ValueError to callers.
+        pack = db.scalar(
+            select(KnowledgePack).where(KnowledgePack.snapshot_id == source.id)
+        )
+        if pack is None or pack.status is not PackStatus.ready:
+            raise ValueError("no ready pack to build a cards job from")
         data = build_cards_job_archive(
             snapshot_id=str(source.id),
             owner_id=str(source.owner_id),
@@ -126,8 +137,8 @@ def run_build_cards_export(
         _flip_job(db, source, AgentJobKind.cards, AgentJobState.pending)
         db.commit()
         return path
-    except Exception:
-        _flip_job(db, source, AgentJobKind.cards, AgentJobState.failed, error="build failed")
+    except Exception as exc:
+        _flip_job(db, source, AgentJobKind.cards, AgentJobState.failed, error=_err(exc))
         db.commit()
         raise
 
