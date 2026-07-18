@@ -7,7 +7,8 @@ from typing import Literal, cast
 
 from gulp_shared.contracts.cards import CardDraft, CardsPayload
 from gulp_shared.domain import mastery
-from gulp_shared.models.agent_job import AgentJobKind
+from gulp_shared.domain.agent_jobs import latest_job
+from gulp_shared.models.agent_job import AgentJobKind, AgentJobState
 from gulp_shared.models.card import Card, CardOrigin, CardStatus
 from gulp_shared.models.knowledge_pack import KnowledgePack, PackStatus
 from gulp_shared.models.source import CardsStatus, Source
@@ -57,6 +58,23 @@ def start_cards_export(db: Session, source: Source, enqueue: Callable[..., None]
     enqueue("build_cards_export", str(source.id))
 
 
+def _complete_cards_job(db: Session, source: Source) -> None:
+    """Converge the agent-job channel: a cards import (manual REST upload OR the
+    MCP submit path) completes the matching cards AgentJob, mirroring how a manual
+    digest zip upload completes digest jobs. No-op when there is no non-terminal
+    cards job, so the MCP path's own `done` flip afterwards is idempotent (the row
+    is already terminal by then)."""
+    job = latest_job(db, source.id, AgentJobKind.cards)
+    if job is not None and job.state in (
+        AgentJobState.building,
+        AgentJobState.pending,
+        AgentJobState.leased,
+    ):
+        job.state = AgentJobState.done
+        job.completed_at = datetime.now(UTC)
+        job.lease_expires_at = None
+
+
 def import_cards(db: Session, source: Source, payload: CardsPayload) -> list[Card]:
     rows = [
         Card(
@@ -71,6 +89,7 @@ def import_cards(db: Session, source: Source, payload: CardsPayload) -> list[Car
         for draft in payload.cards
     ]
     db.add_all(rows)
+    _complete_cards_job(db, source)
     db.commit()
     return rows
 

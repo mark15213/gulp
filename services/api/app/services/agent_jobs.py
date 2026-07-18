@@ -8,16 +8,17 @@ import uuid
 import zipfile
 from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
-from typing import Any
+from typing import Any, cast
 
 import jsonschema
+from gulp_shared.contracts import archive_entries as ae
 from gulp_shared.contracts.cards import CardsPayload
 from gulp_shared.domain.agent_jobs import latest_job
 from gulp_shared.models.agent_job import AgentJob, AgentJobKind, AgentJobState
 from gulp_shared.models.source import SnapshotStatus, Source
 from gulp_shared.models.user import User
 from pydantic import ValidationError
-from sqlalchemy import select
+from sqlalchemy import CursorResult, and_, or_, select, update
 from sqlalchemy.orm import Session
 
 from app.services.export import cards_job_path, job_path, stash_result
@@ -92,7 +93,13 @@ def list_jobs(db: Session, user: User, kind: str | None = None) -> list[dict[str
         .order_by(AgentJob.created_at)
     )
     if kind is not None:
-        stmt = stmt.where(AgentJob.kind == AgentJobKind(kind))
+        try:
+            kind_enum = AgentJobKind(kind)
+        except ValueError:
+            raise AgentJobUnavailable(
+                "invalid_kind", 'kind must be "digest" or "cards"'
+            ) from None
+        stmt = stmt.where(AgentJob.kind == kind_enum)
     out: list[dict[str, Any]] = []
     for job, title in db.execute(stmt):
         state = job.state
@@ -127,22 +134,22 @@ def _read_archive(snapshot_id: str, kind: AgentJobKind) -> dict[str, Any] | None
                     return zf.read(name)
             return None
 
-        instruction = read("instructions.mcp.md")
-        manifest = read("manifest.json")
+        instruction = read(ae.INSTRUCTIONS_MCP)
+        manifest = read(ae.MANIFEST)
         if instruction is None or manifest is None:
             return None  # pre-MCP archive → stale
         if kind is AgentJobKind.digest:
-            norm = read("input/norm_doc.json")
-            schema = read("schema/pack.schema.json")
+            norm = read(ae.INPUT_NORM_DOC)
+            schema = read(ae.SCHEMA_PACK)
             if norm is None or schema is None:
                 return None
             payload_input: Any = json.loads(norm)
         else:
-            pack = read("input/pack.md")
-            schema = read("schema/cards.schema.json")
+            pack = read(ae.INPUT_PACK)
+            schema = read(ae.SCHEMA_CARDS)
             if pack is None or schema is None:
                 return None
-            conv = read("input/conversation.md")
+            conv = read(ae.INPUT_CONVERSATION)
             payload_input = {
                 "pack_md": pack.decode(),
                 "conversation_md": conv.decode() if conv is not None else None,
@@ -153,6 +160,24 @@ def _read_archive(snapshot_id: str, kind: AgentJobKind) -> dict[str, Any] | None
             "output_schema": json.loads(schema),
             "manifest_raw": manifest,
         }
+
+
+def _claimable_conditions(job_id: uuid.UUID, now: datetime) -> tuple[Any, ...]:
+    """WHERE conditions for the atomic lease UPDATE (spec §3): only a `pending`
+    row, or a `leased` row whose lease has already expired, is claimable. This is
+    what excludes done/failed/building and unexpired-leased rows *inside* the
+    UPDATE, so two agents racing on the same row can't both lease it. New states
+    that should be claimable must be added here."""
+    return (
+        AgentJob.id == job_id,
+        or_(
+            AgentJob.state == AgentJobState.pending,
+            and_(
+                AgentJob.state == AgentJobState.leased,
+                AgentJob.lease_expires_at < now,
+            ),
+        ),
+    )
 
 
 def _rebuild(db: Session, job: AgentJob, enqueue: Callable[..., None]) -> AgentJobUnavailable:
@@ -180,8 +205,23 @@ def claim_job(
     payload = _read_archive(str(job.snapshot_id), job.kind)
     if payload is None:
         raise _rebuild(db, job, enqueue)
-    job.state = AgentJobState.leased
-    job.lease_expires_at = _now() + timedelta(minutes=LEASE_MINUTES)
+    # Atomic lease acquisition: re-check claimability inside the UPDATE's WHERE so
+    # a concurrent claim between the reads above and here can't double-lease. A
+    # rowcount of 0 means another agent won the row → surface the "leased" error.
+    now = _now()
+    new_expiry = now + timedelta(minutes=LEASE_MINUTES)
+    result = cast(
+        "CursorResult[Any]",
+        db.execute(
+            update(AgentJob)
+            .where(*_claimable_conditions(job.id, now))
+            .values(state=AgentJobState.leased, lease_expires_at=new_expiry)
+            .execution_options(synchronize_session=False),
+        ),
+    )
+    if result.rowcount == 0:
+        db.rollback()
+        raise AgentJobUnavailable("leased", "job was just claimed by another agent")
     db.commit()
     return {
         "job_id": str(job.id),
@@ -189,7 +229,7 @@ def claim_job(
         "instruction": payload["instruction"],
         "input": payload["input"],
         "output_schema": payload["output_schema"],
-        "lease_expires_at": job.lease_expires_at.isoformat(),
+        "lease_expires_at": new_expiry.isoformat(),
     }
 
 
@@ -245,7 +285,10 @@ def submit_result(
         job.lease_expires_at = None
         db.commit()
         return {"accepted": True}
-    # cards: validation and persistence are both synchronous
+    # cards: validation and persistence are both synchronous. There is deliberately
+    # no supersede check here (unlike digest): cards are additive, so a job stays
+    # valid regardless of snapshot status — only a gone snapshot (checked above)
+    # supersedes it.
     try:
         payload_model = CardsPayload.model_validate(result)
     except ValidationError as exc:

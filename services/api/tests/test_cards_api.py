@@ -162,6 +162,24 @@ def test_import_invalid_payload_422(client: TestClient) -> None:
     assert r.status_code == 422
 
 
+def test_manual_import_completes_pending_cards_job(client: TestClient, db) -> None:  # type: ignore[no-untyped-def]
+    # The manual REST import converges the agent-job channel: a pending cards job
+    # for this snapshot flips to done (mirrors digest zip upload completing jobs).
+    from gulp_shared.domain.agent_jobs import latest_job
+    from gulp_shared.models import AgentJob, AgentJobKind, AgentJobState
+
+    sid = _capture(client)
+    db.add(AgentJob(owner_id=db.get(Source, uuid.UUID(sid)).owner_id,
+                    snapshot_id=uuid.UUID(sid), kind=AgentJobKind.cards,
+                    state=AgentJobState.pending))
+    db.commit()
+    r = client.post(f"/snapshots/{sid}/cards/import", json=_IMPORT)
+    assert r.status_code == 201
+    job = latest_job(db, uuid.UUID(sid), AgentJobKind.cards)
+    assert job is not None
+    assert job.state is AgentJobState.done and job.completed_at is not None
+
+
 # -- list -------------------------------------------------------------------
 
 

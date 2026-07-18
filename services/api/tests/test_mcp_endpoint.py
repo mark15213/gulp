@@ -62,6 +62,20 @@ def test_mcp_rejects_oversized_body(mcp_client, pat):  # type: ignore[no-untyped
     assert r.status_code == 413
 
 
+def test_mcp_rejects_oversized_chunked_body(mcp_client, pat):  # type: ignore[no-untyped-def]
+    # No Content-Length (streamed/chunked), so the fast-path can't help — the
+    # wrapped `receive` must count cumulative body bytes and abort past the cap.
+    def _chunks():  # type: ignore[no-untyped-def]
+        for _ in range(6):
+            yield b"x" * (1024 * 1024)  # 6 MB total, > 5 MB cap
+
+    r = mcp_client.post(
+        "/mcp", content=_chunks(),
+        headers={**HEADERS, "Authorization": f"Bearer {pat}"},
+    )
+    assert r.status_code == 413
+
+
 def test_tools_list(mcp_client, pat):  # type: ignore[no-untyped-def]
     r = mcp_client.post(
         "/mcp", json=_rpc("tools/list"),

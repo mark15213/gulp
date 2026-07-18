@@ -36,6 +36,19 @@ def test_resolve_pat(client, db):  # type: ignore[no-untyped-def]
     assert resolve_pat(db, token) is None
 
 
+def test_resolve_pat_rejects_wrong_scope(client, db):  # type: ignore[no-untyped-def]
+    # /mcp only accepts scope "agent"; a token minted with a future scope must not
+    # resolve through this middleware-facing path.
+    from app.core.pat import hash_token
+    from gulp_shared.models.api_token import ApiToken
+
+    token = TOKEN_PREFIX + "someforeignscopetoken"
+    db.add(ApiToken(user_id=DEV_USER_ID, name="other", token_hash=hash_token(token),
+                    prefix=token[:16], scope="other"))
+    db.commit()
+    assert resolve_pat(db, token) is None
+
+
 def test_resolve_pat_touches_last_used(client, db):  # type: ignore[no-untyped-def]
     token = client.post("/me/tokens", json={"name": "x"}).json()["token"]
     resolve_pat(db, token)

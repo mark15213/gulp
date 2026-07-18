@@ -598,7 +598,7 @@ requires-dist = [
     { name = "gulp-shared", editable = "services/shared" },
     { name = "httpx", specifier = ">=0.28" },
     { name = "jsonschema", specifier = ">=4.23" },
-    { name = "mcp", specifier = ">=1.10" },
+    { name = "mcp", specifier = ">=1.28,<2" },
     { name = "psycopg", extras = ["binary"], specifier = ">=3.2" },
     { name = "pydantic", extras = ["email"], specifier = ">=2" },
     { name = "python-multipart", specifier = ">=0.0.9" },

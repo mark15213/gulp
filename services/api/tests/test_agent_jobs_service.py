@@ -7,6 +7,7 @@ from datetime import UTC, datetime, timedelta
 import pytest
 from app.services import agent_jobs as svc
 from app.services.agent_jobs import AgentJobUnavailable
+from gulp_shared.contracts import archive_entries as ae
 from gulp_shared.models import (
     AgentJob,
     AgentJobKind,
@@ -60,12 +61,12 @@ def _job(db, source, kind=AgentJobKind.digest, state=AgentJobState.pending, **kw
 def _write_digest_zip(source):  # type: ignore[no-untyped-def]
     buf = io.BytesIO()
     with zipfile.ZipFile(buf, "w") as zf:
-        zf.writestr("instructions.mcp.md", "# job\ndo the thing")
-        zf.writestr("manifest.json", json.dumps(
+        zf.writestr(ae.INSTRUCTIONS_MCP, "# job\ndo the thing")
+        zf.writestr(ae.MANIFEST, json.dumps(
             {"format_version": 1, "job_kind": "digest",
              "snapshot_id": str(source.id), "owner_id": str(source.owner_id)}))
-        zf.writestr("input/norm_doc.json", json.dumps({"title": "T", "content_body": "b"}))
-        zf.writestr("schema/pack.schema.json", json.dumps(PACK_SCHEMA))
+        zf.writestr(ae.INPUT_NORM_DOC, json.dumps({"title": "T", "content_body": "b"}))
+        zf.writestr(ae.SCHEMA_PACK, json.dumps(PACK_SCHEMA))
     import os
     os.makedirs(settings.export_dir, exist_ok=True)
     with open(f"{settings.export_dir}/{source.id}.zip", "wb") as f:
@@ -75,14 +76,14 @@ def _write_digest_zip(source):  # type: ignore[no-untyped-def]
 def _write_cards_zip(source, with_conversation=True):  # type: ignore[no-untyped-def]
     buf = io.BytesIO()
     with zipfile.ZipFile(buf, "w") as zf:
-        zf.writestr("instructions.mcp.md", "# cards job")
-        zf.writestr("manifest.json", json.dumps(
+        zf.writestr(ae.INSTRUCTIONS_MCP, "# cards job")
+        zf.writestr(ae.MANIFEST, json.dumps(
             {"format_version": 1, "job_kind": "cards",
              "snapshot_id": str(source.id), "owner_id": str(source.owner_id)}))
-        zf.writestr("input/pack.md", "# pack")
+        zf.writestr(ae.INPUT_PACK, "# pack")
         if with_conversation:
-            zf.writestr("input/conversation.md", "q&a")
-        zf.writestr("schema/cards.schema.json", json.dumps({"type": "object"}))
+            zf.writestr(ae.INPUT_CONVERSATION, "q&a")
+        zf.writestr(ae.SCHEMA_CARDS, json.dumps({"type": "object"}))
     import os
     os.makedirs(settings.export_dir, exist_ok=True)
     with open(f"{settings.export_dir}/{source.id}-cards.zip", "wb") as f:
@@ -211,6 +212,57 @@ def test_claim_foreign_job_not_found(db, owner, enqueue):  # type: ignore[no-unt
     with pytest.raises(AgentJobUnavailable) as exc:
         svc.claim_job(db, owner, str(job.id), enqueue)
     assert exc.value.code == "not_found"
+
+
+def test_claim_race_second_claim_raises_leased(db, owner, enqueue):  # type: ignore[no-untyped-def]
+    # As far as sqlite lets us simulate the race: the first claim leases the row,
+    # a second claim on the now-leased row is rejected.
+    s = _snap(db)
+    job = _job(db, s)
+    _write_digest_zip(s)
+    first = svc.claim_job(db, owner, str(job.id), enqueue)
+    assert first["job_id"] == str(job.id)
+    with pytest.raises(AgentJobUnavailable) as exc:
+        svc.claim_job(db, owner, str(job.id), enqueue)
+    assert exc.value.code == "leased"
+
+
+def test_claimable_where_excludes_terminal_and_held(db, owner):  # type: ignore[no-untyped-def]
+    # Direct check that the atomic UPDATE's WHERE only matches a pending row or an
+    # expired-lease row — never done/failed/building or an unexpired lease.
+    from sqlalchemy import update
+    now = datetime.now(UTC)
+    future = now + timedelta(minutes=10)
+    past = now - timedelta(minutes=10)
+    pending = _job(db, _snap(db), state=AgentJobState.pending)
+    building = _job(db, _snap(db), state=AgentJobState.building)
+    done = _job(db, _snap(db), state=AgentJobState.done)
+    failed = _job(db, _snap(db), state=AgentJobState.failed)
+    held = _job(db, _snap(db), state=AgentJobState.leased, lease_expires_at=future)
+    expired = _job(db, _snap(db), state=AgentJobState.leased, lease_expires_at=past)
+
+    def _matches(job):  # type: ignore[no-untyped-def]
+        r = db.execute(
+            update(AgentJob)
+            .where(*svc._claimable_conditions(job.id, now))
+            .values(state=AgentJobState.leased, lease_expires_at=future)
+            .execution_options(synchronize_session=False)
+        )
+        db.rollback()  # we only care whether the WHERE matched
+        return r.rowcount
+
+    assert _matches(pending) == 1
+    assert _matches(expired) == 1
+    assert _matches(building) == 0
+    assert _matches(done) == 0
+    assert _matches(failed) == 0
+    assert _matches(held) == 0
+
+
+def test_list_jobs_invalid_kind_raises(db, owner):  # type: ignore[no-untyped-def]
+    with pytest.raises(AgentJobUnavailable) as exc:
+        svc.list_jobs(db, owner, "bogus")
+    assert exc.value.code == "invalid_kind"
 
 
 # --- submit_result ---

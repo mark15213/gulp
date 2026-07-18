@@ -50,4 +50,36 @@ class PATAuthMiddleware:
             await _reject(send, 401, "not authenticated")
             return
         scope.setdefault("state", {})["gulp_user_id"] = user.id
-        await self.app(scope, receive, send)
+
+        # Content-Length lies or is absent under chunked transfer, so buffer the
+        # body here (up to the cap) BEFORE handing off — the downstream MCP app
+        # swallows exceptions raised from `receive` and would turn an over-cap
+        # abort into a 500, so we must reject before it ever runs, then replay the
+        # buffered body to it.
+        chunks: list[bytes] = []
+        received = 0
+        more_body = True
+        while more_body:
+            message = await receive()
+            if message["type"] == "http.disconnect":
+                return  # client hung up mid-body
+            if message["type"] != "http.request":
+                break
+            chunks.append(message.get("body", b""))
+            received += len(chunks[-1])
+            if received > MAX_BODY_BYTES:
+                await _reject(send, 413, "request body too large")
+                return
+            more_body = message.get("more_body", False)
+
+        body = b"".join(chunks)
+        replayed = False
+
+        async def replay_receive() -> Any:
+            nonlocal replayed
+            if not replayed:
+                replayed = True
+                return {"type": "http.request", "body": body, "more_body": False}
+            return {"type": "http.disconnect"}
+
+        await self.app(scope, replay_receive, send)

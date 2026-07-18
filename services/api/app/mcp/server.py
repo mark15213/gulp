@@ -55,12 +55,16 @@ def _error(exc: AgentJobUnavailable) -> dict[str, Any]:
 
 
 @mcp.tool()
-def list_jobs(ctx: Ctx, kind: str | None = None) -> list[dict[str, Any]]:
+def list_jobs(
+    ctx: Ctx, kind: str | None = None
+) -> list[dict[str, Any]] | dict[str, Any]:
     """List your pending Gulp jobs. Optional kind filter: "digest" | "cards".
     Jobs in state "building" are not claimable yet — retry them later."""
     db = deps.session_factory()
     try:
         return agent_jobs.list_jobs(db, _user(db, ctx), kind)
+    except AgentJobUnavailable as exc:
+        return _error(exc)
     finally:
         db.close()
 

@@ -28,10 +28,14 @@ def resolve_pat(db: Session, plaintext: str) -> User | None:
     Touches last_used_at so Settings can show token liveness."""
     if not plaintext.startswith(TOKEN_PREFIX):
         return None
+    # v1 tokens are all scope "agent" (the /mcp channel). Pin the scope here so a
+    # future non-agent scope can't reach /mcp by default — a new scope must add its
+    # own branch/guard rather than silently inheriting agent access.
     row = db.scalar(
         select(ApiToken).where(
             ApiToken.token_hash == hash_token(plaintext),
             ApiToken.revoked_at.is_(None),
+            ApiToken.scope == "agent",
         )
     )
     if row is None:
