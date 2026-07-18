@@ -444,7 +444,7 @@ The curated stream (`01 §F6`): the Daily digest and Weekly review. A digest is 
 | `last_error` | `text?` | |
 | `completed_at` | `timestamp?` | |
 
-- **Publishing needs zero new UI.** The existing ⤓ Export / Cards Export actions, alongside enqueueing the build, upsert an `AgentJob(building)` row (re-export resets an existing non-`done` row); the worker flips `building → pending` once the archive is stashed. The manual zip channel converges too: a successful manual `import_result` also flips the matching `AgentJob` to `done`.
+- **Publishing needs zero new UI.** The existing ⤓ Export / Cards Export actions, alongside enqueueing the build, upsert an `AgentJob(building)` row (re-export resets an existing non-`done` row); the worker flips `building → pending` once the archive is stashed. The manual channel converges too: a successful manual digest `import_result` **and** a manual cards import each flip the matching `AgentJob` to `done`.
 - At most one non-`done`/non-`failed` `AgentJob` per `(snapshot, kind)`.
 
 **`ApiToken`** — a personal access token (PAT) for non-browser clients:
@@ -465,7 +465,7 @@ The curated stream (`01 §F6`): the Daily digest and Weekly review. A digest is 
 
 | Entity · field | States | Transitions |
 |---|---|---|
-| **`AgentJob.state`** | `building · pending · leased · done · failed` | `building`→`pending` (archive stashed) · `building`→`failed` (build failed) · `pending`→`leased` (agent claims; an expired lease is claimable again) · `leased`/`pending`→`pending` (submit rejected by validation, `attempts+1`) · `leased`/`pending`→`done` (submit accepted — `done` marked synchronously — or a converging manual upload) · `done`→`pending` (rare: the async digest persist fails after an accepted submit, `attempts+1`) · `leased`→`failed` (`report_failure`; re-publishable from the web) |
+| **`AgentJob.state`** | `building · pending · leased · done · failed` | `building`→`pending` (archive stashed) · `building`→`failed` (build failed) · `pending`→`leased` (agent claims; an expired lease is claimable again) · `leased`/`pending`→`pending` (submit rejected by validation, `attempts+1`) · `leased`/`pending`→`done` (submit accepted — `done` marked synchronously — or a **converging manual upload**: a manual digest zip upload *or* a manual cards import completes the matching job) · `done`→`pending` (rare: the async digest persist fails after an accepted submit, `attempts+1`) · `leased`/`pending`→`failed` (`report_failure`; re-publishable from the web) |
 
 ---
 
@@ -528,6 +528,7 @@ Every `status`/`state` field, in one place. (`Source.status` is split by form, s
 | **`Card.status`** | `draft · accepted · rejected` | `draft`→`accepted` (enters scheduling) / `rejected` |
 | **`GulpSession.status`** | `building · active · complete · abandoned` | `building`→`active`→`complete`/`abandoned`; `abandoned`→`active` (resume) |
 | **`DigestItem.state`** | `unseen · read · gulped · dismissed` | `unseen`→`read`/`gulped`/`dismissed` |
+| **`AgentJob.state`** *(§4.12, 2026-07-16)* | `building · pending · leased · done · failed` | `building`→`pending` (archive stashed) / `building`→`failed` (build failed) · `pending`→`leased` (agent claims; an expired lease is claimable again) · `leased`/`pending`→`pending` (submit rejected by validation, `attempts+1`) · `leased`/`pending`→`done` (submit accepted — synchronously — or a converging manual upload: digest zip upload **or** cards manual import completes the matching job) · `done`→`pending` (rare: async digest persist fails after an accepted submit, `attempts+1`) · `leased`/`pending`→`failed` (`report_failure`; re-publishable from the web) |
 
 These realize the cross-cutting states in `01 §7` (Loading/Empty/Processing/Error/Offline are UI states over `processing`/`needs_attention`/`queued`).
 
