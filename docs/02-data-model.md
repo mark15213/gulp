@@ -436,14 +436,13 @@ The curated stream (`01 §F6`): the Daily digest and Weekly review. A digest is 
 
 | Field | Type | Notes |
 |---|---|---|
-| `owner` | `→User` | |
 | `snapshot` | `→Source` | the snapshot the job digests or cards-exports |
 | `kind` | `enum{digest·cards}` | |
 | `state` | `enum{building·pending·leased·done·failed}` | see state machine below |
 | `lease_expires_at` | `timestamp?` | nullable; default lease 30 min |
 | `attempts` | `int` | default 0 |
 | `last_error` | `text?` | |
-| `created_at` / `completed_at` | `timestamp` / `timestamp?` | |
+| `completed_at` | `timestamp?` | |
 
 - **Publishing needs zero new UI.** The existing ⤓ Export / Cards Export actions, alongside enqueueing the build, upsert an `AgentJob(building)` row (re-export resets an existing non-`done` row); the worker flips `building → pending` once the archive is stashed. The manual zip channel converges too: a successful manual `import_result` also flips the matching `AgentJob` to `done`.
 - At most one non-`done`/non-`failed` `AgentJob` per `(snapshot, kind)`.
@@ -452,7 +451,6 @@ The curated stream (`01 §F6`): the Daily digest and Weekly review. A digest is 
 
 | Field | Type | Notes |
 |---|---|---|
-| `owner` | `→User` | |
 | `name` | `string` | |
 | `token_hash` | `string` | sha256 of the full token; plaintext never stored |
 | `prefix` | `string` | first 8 chars, for display |
@@ -467,7 +465,7 @@ The curated stream (`01 §F6`): the Daily digest and Weekly review. A digest is 
 
 | Entity · field | States | Transitions |
 |---|---|---|
-| **`AgentJob.state`** | `building · pending · leased · done · failed` | `building`→`pending` (archive stashed) · `pending`→`leased` (agent claims; re-claimable once the lease expires) · `leased`→`pending` (submit fails validation, `attempts+1`, or async persist fails) · `leased`→`done` (submit accepted, or a converging manual upload) · `leased`/`pending`→`failed` (`report_failure`; re-publishable from the web) |
+| **`AgentJob.state`** | `building · pending · leased · done · failed` | `building`→`pending` (archive stashed) · `building`→`failed` (build failed) · `pending`→`leased` (agent claims; an expired lease is claimable again) · `leased`/`pending`→`pending` (submit rejected by validation, `attempts+1`) · `leased`/`pending`→`done` (submit accepted — `done` marked synchronously — or a converging manual upload) · `done`→`pending` (rare: the async digest persist fails after an accepted submit, `attempts+1`) · `leased`→`failed` (`report_failure`; re-publishable from the web) |
 
 ---
 
