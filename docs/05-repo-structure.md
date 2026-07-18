@@ -44,6 +44,8 @@ gulp/
 │   ├── core/                  # Shared pure logic (mastery-state views, dates, formatting…)
 │   └── config/                # Shared tsconfig / eslint / prettier presets
 │
+├── integrations/              # Per-agent client configs for the MCP job channel (Claude Code skill; Codex later)
+│
 ├── docs/                      # Product & engineering specs (00–05) + subsystems/ design docs
 ├── design/                    # Design assets (HTML previews, design philosophy, fonts)
 ├── infra/                     # docker-compose, IaC, deployment manifests
@@ -66,6 +68,8 @@ gulp/
 ```
 
 **Why this cut.** `apps` (who uses it) / `services` (who computes it) / `packages` (what's shared) is the standard partition for a mixed TS+Python monorepo. TS is managed as a pnpm + Turborepo workspace; the three Python services form a uv workspace; a root `justfile` covers both so there is one command surface, not two.
+
+**Why `integrations/` sits outside that partition.** It's neither a TS package nor a Python service — it's agent-side client config (MCP connection setup, skills) shipped with the repo so a local agent (Claude Code first, per `superpowers/specs/2026-07-16-mcp-agent-jobs-design.md`) can pick it up on connect.
 
 ---
 

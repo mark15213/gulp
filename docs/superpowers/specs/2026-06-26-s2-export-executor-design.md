@@ -136,8 +136,8 @@ Order is dependency-driven (data → primitives → builder/importer → jobs �
 
 ## 10. Open / deferred
 
-- **Batch** export (one archive, many jobs) — the format already isolates a job under its own folder, so batch is a `jobs/<id>/…` wrapper later.
-- **`custom` executor** (a user-authored CC skill `/gulp-digest`) — the ergonomic repeat-use path once the format is proven.
+- **Batch** export (one archive, many jobs) — the format already isolates a job under its own folder, so batch is a `jobs/<id>/…` wrapper later. → picked up by `2026-07-16-mcp-agent-jobs-design.md` (MCP channel)
+- **`custom` executor** (a user-authored CC skill `/gulp-digest`) — the ergonomic repeat-use path once the format is proven. → picked up by `2026-07-16-mcp-agent-jobs-design.md` (MCP channel)
 - **Durable / multi-host archive storage** (blob store) — replaces the local export dir when the blob layer lands.
 - **Synchronous deep-validation feedback** on upload (vs the v1 shallow-sync + async-deep split) — when `DigestResult`/schema are reachable from the API.
 - **Persisting the specific import-failure reason** (a `Source` column) so the UI can show it, rather than the v1 generic message.

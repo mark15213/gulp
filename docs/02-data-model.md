@@ -428,6 +428,49 @@ The curated stream (`01 §F6`): the Daily digest and Weekly review. A digest is 
 
 ---
 
+### 4.12 `AgentJob` + `ApiToken` (2026-07-16)
+
+> Operational, not spine — like `GulpSession`/`ReviewEvent` (§4.10) these support a flow rather than appearing in `01 §4.2`. They back the **MCP agent-job channel**: a local agent (Claude Code first) lists, claims, and submits the same digest/cards jobs the manual export/import flow already produces, over a PAT-authenticated `/mcp` endpoint (`superpowers/specs/2026-07-16-mcp-agent-jobs-design.md` §2).
+
+**`AgentJob`** — the queue's single truth (what "publish" means):
+
+| Field | Type | Notes |
+|---|---|---|
+| `owner` | `→User` | |
+| `snapshot` | `→Source` | the snapshot the job digests or cards-exports |
+| `kind` | `enum{digest·cards}` | |
+| `state` | `enum{building·pending·leased·done·failed}` | see state machine below |
+| `lease_expires_at` | `timestamp?` | nullable; default lease 30 min |
+| `attempts` | `int` | default 0 |
+| `last_error` | `text?` | |
+| `created_at` / `completed_at` | `timestamp` / `timestamp?` | |
+
+- **Publishing needs zero new UI.** The existing ⤓ Export / Cards Export actions, alongside enqueueing the build, upsert an `AgentJob(building)` row (re-export resets an existing non-`done` row); the worker flips `building → pending` once the archive is stashed. The manual zip channel converges too: a successful manual `import_result` also flips the matching `AgentJob` to `done`.
+- At most one non-`done`/non-`failed` `AgentJob` per `(snapshot, kind)`.
+
+**`ApiToken`** — a personal access token (PAT) for non-browser clients:
+
+| Field | Type | Notes |
+|---|---|---|
+| `owner` | `→User` | |
+| `name` | `string` | |
+| `token_hash` | `string` | sha256 of the full token; plaintext never stored |
+| `prefix` | `string` | first 8 chars, for display |
+| `scope` | `enum{agent}` | only value in v1 |
+| `last_used_at` | `timestamp?` | |
+| `revoked_at` | `timestamp?` | |
+
+- Token format `gulp_pat_<32 urlsafe-random bytes>`; plaintext shown **once** at creation, managed from Settings → API tokens.
+- In v1 PATs are accepted only by the `/mcp` mount — REST stays cookie-only.
+
+**State machine (`AgentJob.state`):**
+
+| Entity · field | States | Transitions |
+|---|---|---|
+| **`AgentJob.state`** | `building · pending · leased · done · failed` | `building`→`pending` (archive stashed) · `pending`→`leased` (agent claims; re-claimable once the lease expires) · `leased`→`pending` (submit fails validation, `attempts+1`, or async persist fails) · `leased`→`done` (submit accepted, or a converging manual upload) · `leased`/`pending`→`failed` (`report_failure`; re-publishable from the web) |
+
+---
+
 ## 5. Cross-cutting value objects
 
 These are owned **inline** by their parents (not independently addressable) and appear on multiple entities.

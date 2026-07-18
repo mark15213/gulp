@@ -126,6 +126,7 @@ The dependency graph (§3) yields one natural build order. Validation stays **pe
 S0  Foundation                         (floor — first, no deps)              ✓ shipped
 S1  Capture & Inbox                    (needs S0)                            ✓ shipped
 S2  Processing & Pack                  (needs S1) ← the engine               ✓ shipped
+    ↳ export executor (2026-06-26) + MCP agent-jobs channel (2026-07-16) shipped as S2 extensions
 S3  Library, KB & Review               (needs S2)                            ◐ single-gate slice shipped; KB/Concepts remain
 S4  Gulp Mode + Scheduling             (needs S2's cards)                  ✓ shipped — closes the core loop (session + resurfacing)
     ↳ next: circle back to finish S3's KB / Concept design

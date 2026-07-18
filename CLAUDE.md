@@ -16,6 +16,7 @@ Personal learning system: forward anything → AI knowledge pack → daily "Gulp
 - `packages/ui` — shared design system (implements `docs/03`)
 - `packages/core` — shared framework-free TS logic
 - `packages/config` — shared tsconfig / eslint / prettier presets
+- `integrations/` — per-agent client configs for the MCP job channel (CC skill; Codex later)
 
 ## Commands — use the `justfile`, don't improvise
 

@@ -144,6 +144,8 @@ Each flow: **trigger → steps → key screens → states → edge cases**, with
 4. User reads the report, edits blocks in place, and chats about the article in a collapsible side panel — hovering a block offers **"add to chat"** to pull it (or a paragraph) into the conversation (the pack is a living document). *(Reader is an adaptive three-zone layout — nav + chat each collapse, reading column reflows; spec 2026-07-10.)*
 5. Cards arrive as `draft` (generated on demand from the pack, or imported as `cards.json`); the user **accepts/rejects per card** — accepted Cards enter scheduling at §F7.
 
+**Agent export (amended 2026-07-16 — see [`superpowers/specs/2026-07-16-mcp-agent-jobs-design.md`](superpowers/specs/2026-07-16-mcp-agent-jobs-design.md)):** the same **⤓ Export job** (digest) and **Export for Claude Code** (cards) actions on the Snapshot detail now also publish the job to an agent queue — a connected agent (Claude Code first) can list, claim, and submit it over `/mcp` instead of the manual zip round-trip; the manual download/upload flow still works unchanged. **Settings → API tokens** manages the personal access tokens (PATs) that authenticate that channel. No other UI change.
+
 **Review model (amended 2026-07-02 — single gate; see [`superpowers/specs/2026-07-02-single-gate-lifecycle-design.md`](superpowers/specs/2026-07-02-single-gate-lifecycle-design.md)):**
 - **Reading is the review.** The snapshot-level gate (`awaiting review` → "Add to library", batch confirm, auto-approve) is **parked** — under manual trigger there is no unvetted inflow to gate.
 - **The only gate is per-card accept/reject**, because it guards what enters practice/scheduling (§F4/§F7).
