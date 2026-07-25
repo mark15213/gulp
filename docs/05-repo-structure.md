@@ -29,9 +29,9 @@ The structure hangs off these. They are settled; the rest of the doc is their co
 
 ```
 gulp/
-├── apps/                      # End-user applications (TypeScript)
-│   ├── web/                   # Next.js (App Router) — web client
-│   └── mobile/                # Expo / React Native — mobile client
+├── apps/                      # End-user clients (grouped by role, not by language)
+│   ├── web/                   # Next.js (App Router) — web client (TypeScript)
+│   └── ios/                   # Xcode project — native SwiftUI client (Swift)
 │
 ├── services/                  # Server-side (Python)
 │   ├── api/                   # FastAPI — HTTP API (conventional layering)
@@ -82,13 +82,13 @@ apps/web/
 ├── lib/                       # api-client calls, client state
 └── package.json
 
-apps/mobile/
-├── app/                       # Expo Router
-├── components/
-├── lib/
-└── package.json
+apps/ios/
+├── Gulp/                      # App target — DesignSystem, Net, and one folder per screen
+├── GulpShare/                 # Share-extension target (same App Group as the app)
+├── Packages/GulpAPI/          # Generated Swift client — the contract, same openapi.json
+└── Gulp.xcodeproj
 
-packages/ui/                   # Design-system primitives shared by web + mobile (color, type, components)
+packages/ui/                   # Design tokens + web primitives (iOS transcribes the tokens; SwiftUI can't consume CSS)
 packages/api-client/           # Single contract surface: types + request methods, generated from the API's OpenAPI
 packages/core/                 # Framework-free shared logic (e.g. derived mastery views, formatting)
 packages/config/               # Shared eslint / prettier / tsconfig presets the apps extend
@@ -171,7 +171,7 @@ Turborepo is TS-centric and cannot manage Python dependencies, so a root `justfi
 ```just
 setup:  corepack enable && pnpm install && uv sync     # bring the whole repo up
 up:     docker compose -f infra/docker-compose.yml up -d   # Postgres, Redis queue
-dev:    # run web / mobile / api / worker in parallel
+dev:    # run web / api / worker in parallel (iOS runs from Xcode — `just ios`)
 test:   pnpm turbo run test && uv run pytest
 lint:   pnpm turbo run lint && uv run ruff check . && uv run mypy .
 ```
@@ -190,7 +190,8 @@ Claude Code auto-loads `CLAUDE.md` at session start and loads the nearest one as
 
 - Root `CLAUDE.md`: repo map + the `just` commands + global rules (language split, layering, contract flow, commit conventions). It **points to `docs/`, never copies it.** Short and imperative.
 - Per-subproject `CLAUDE.md`, loaded on demand as the AI works there:
-  - `apps/web/CLAUDE.md`, `apps/mobile/CLAUDE.md` — component / state / `api-client` conventions.
+  - `apps/web/CLAUDE.md` — component / state / `api-client` conventions.
+  - `apps/ios/CLAUDE.md` — SwiftUI conventions, where the design tokens come from, the generated-client rule.
   - `services/api/CLAUDE.md` — layer responsibilities (routers stay thin, business logic lives in the service layer), how migrations are generated.
   - `services/worker/CLAUDE.md` — pipeline stages, where prompts live, how the eval harness runs.
 - Principle: `CLAUDE.md` says *how / where / which command*; product specs stay in `docs/`. No duplication, no drift.
@@ -213,7 +214,7 @@ Conventions become machine-checkable, so a run tells you whether code conforms:
 
 The full skeleton above is stood up once, but only the parts a current subsystem needs are filled — matching the just-in-time principle of `04 §2.4` and the build order of `04 §5`.
 
-- **Now (`S0` Foundation):** root tooling (`justfile`, pnpm + uv workspaces, lint/format/CI, root + subproject `CLAUDE.md`); `services/shared` (db, settings) + `services/api/core` (auth); an empty navigable shell in `apps/web` (**web-first**; `apps/mobile` stays a reserved placeholder, deferred per `04 §5`); `packages/api-client`, `packages/config`, `packages/ui` seeded.
+- **Now (`S0` Foundation):** root tooling (`justfile`, pnpm + uv workspaces, lint/format/CI, root + subproject `CLAUDE.md`); `services/shared` (db, settings) + `services/api/core` (auth); an empty navigable shell in `apps/web` (**web-first**; the mobile shell deferred per `04 §5`); `packages/api-client`, `packages/config`, `packages/ui` seeded.
 - **Later, per subsystem:** `services/worker/pipeline` (with `S2`), each resource `router` and `service` (with the subsystem that owns it), `infra` topology as deployment needs grow. Empty directories hold the slot until then.
 
 The skeleton declares the *intended* shape so neighbors agree on boundaries (`04 §6`); the fill follows the dependency-ordered build plan, not all at once.

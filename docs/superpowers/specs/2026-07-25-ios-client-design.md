@@ -39,8 +39,8 @@
 
 `packages/ui` contains a `tokens.css` and an index — there is no cross-platform
 component library to preserve, so "keep parity with web, don't fork the design
-system" (`apps/mobile/CLAUDE.md`) reduces in practice to sharing ~40 token
-values, which any stack can do. That removes the main argument for Expo. What
+system" (the instruction the deleted `apps/mobile/CLAUDE.md` carried) reduces in
+practice to sharing ~40 token values, which any stack can do. That removes the main argument for Expo. What
 remains is a client whose two jobs are a share extension and a five-minute
 daily ritual — native territory. The contract discipline of rule 2 survives
 intact: Swift types are generated from the same `openapi.json` that produces
@@ -304,11 +304,14 @@ pack is the screen, the original is an arrow, the cards are a count.
    with `HTTPCookieStorage.sharedCookieStorage(forGroupContainerIdentifier:)`
    also gives the share extension the login for free, which a Keychain PAT would
    not without extra plumbing. See the plan, Task 2.
-3. **What happens to `apps/mobile`.** The Expo placeholder is superseded. Either
-   it is replaced by an `apps/ios` Xcode project, or the repo keeps TS-only
-   under `apps/` and Swift lands elsewhere. `05-repo-structure.md §7` and the
-   root `CLAUDE.md` both describe mobile as Expo and will need updating with
-   whichever is chosen.
+3. ~~**What happens to `apps/mobile`.**~~ **Resolved 2026-07-25.** The Xcode
+   project lives at `apps/ios` — `apps/` groups clients by role, not by
+   language, and pnpm skips workspace members without a `package.json`. The
+   Expo placeholder is deleted. `just` grew `ios`, `ios-test` and
+   `gen-client-swift`, the last folded into `gen-client` so the two generated
+   clients cannot drift; it no-ops until the Swift package exists. Root
+   `CLAUDE.md` rule 1 now reads *three* languages, and `05-repo-structure.md`
+   §2/§5.3/§6.1/§7 are updated. Applied in the plan's Task 0.
 
 ## 8. Where this lands
 

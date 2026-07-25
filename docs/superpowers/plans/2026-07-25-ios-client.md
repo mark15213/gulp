@@ -19,9 +19,9 @@
 - Keep `just lint` green after every task.
 - Commits end with `Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>`.
 
-## Blocking prerequisite — the repo-shape decision
+## Repo shape — settled 2026-07-25
 
-Task 0 cannot start until the owner settles §7.3 of the spec. **This plan assumes the recommended answer** and must be revised if a different one is chosen:
+Spec §7.3 is closed; Task 0 below is **done**. The answers everything else assumes:
 
 | Question | Assumed answer |
 |---|---|
@@ -32,15 +32,15 @@ Task 0 cannot start until the owner settles §7.3 of the spec. **This plan assum
 
 ---
 
-### Task 0: Repo shape
+### Task 0: Repo shape ✅ done 2026-07-25
 
 **Files:** `pnpm-workspace.yaml`, `justfile`, `CLAUDE.md`, `docs/05-repo-structure.md`, `apps/mobile/` (delete), `apps/ios/CLAUDE.md` (new)
 
-- [ ] **Step 1:** Delete `apps/mobile/` and confirm `pnpm install` still resolves (the workspace glob `apps/*` tolerates a member with no `package.json`).
-- [ ] **Step 2:** Add recipes — `ios` (open the workspace), `ios-test` (`xcodebuild test` on a simulator destination), and extend `gen-client` with the Swift generation step.
-- [ ] **Step 3:** Update root `CLAUDE.md`: the layout list says `apps/mobile — Expo / React Native (TypeScript)`; replace with `apps/ios — native SwiftUI client`. Rule 1 says "two languages, one command surface" — amend to three, naming Swift and pointing at the new recipes.
-- [ ] **Step 4:** Update `docs/05-repo-structure.md` §7, which still calls `apps/mobile` a reserved placeholder.
-- [ ] **Step 5:** Write `apps/ios/CLAUDE.md` — conventions, the token source, the "backend only through the generated package" rule.
+- [x] **Step 1:** Delete `apps/mobile/` and confirm `pnpm install` still resolves (the workspace glob `apps/*` tolerates a member with no `package.json`).
+- [x] **Step 2:** Add recipes — `ios` (open the workspace), `ios-test` (`xcodebuild test` on a simulator destination), and extend `gen-client` with the Swift generation step.
+- [x] **Step 3:** Update root `CLAUDE.md`: the layout list says `apps/mobile — Expo / React Native (TypeScript)`; replace with `apps/ios — native SwiftUI client`. Rule 1 says "two languages, one command surface" — amend to three, naming Swift and pointing at the new recipes.
+- [x] **Step 4:** Update `docs/05-repo-structure.md` §7, which still calls `apps/mobile` a reserved placeholder.
+- [x] **Step 5:** Write `apps/ios/CLAUDE.md` — conventions, the token source, the "backend only through the generated package" rule.
 
 **Verify:** `just setup && just lint` green; no reference to `@gulp/mobile` survives (`grep -rn "gulp/mobile" --exclude-dir=node_modules`).
 

@@ -18,7 +18,7 @@ up:
 down:
     docker compose -f infra/docker-compose.yml down
 
-# Run the web-first dev stack: web + api + worker (mobile deferred — use `just mobile`)
+# Run the dev stack: web + api + worker (the iOS client runs from Xcode — `just ios`)
 dev:
     #!/usr/bin/env bash
     set -euo pipefail
@@ -31,8 +31,11 @@ dev:
 # Individual processes
 web:
     pnpm --filter @gulp/web dev
-mobile:
-    pnpm --filter @gulp/mobile start
+ios:
+    open apps/ios/Gulp.xcodeproj
+ios-test:
+    xcodebuild test -project apps/ios/Gulp.xcodeproj -scheme Gulp \
+      -destination 'platform=iOS Simulator,name=iPhone 16'
 api:
     uv run --package gulp-api uvicorn app.main:app --reload
 worker:
@@ -58,10 +61,24 @@ test:
     uv run pytest services/shared services/api
     cd services/worker && uv run --package gulp-worker pytest
 
-# Regenerate the TS api-client from the API's OpenAPI schema
+# Regenerate every client from the API's OpenAPI schema. The schema is the
+# contract (docs/05 D2), so all generated clients are refreshed together —
+# never regenerate one and leave the others behind.
 gen-client:
     uv run --package gulp-api python -m app.export_openapi > packages/api-client/openapi.json
     pnpm --filter @gulp/api-client generate
+    just gen-client-swift
+
+# Swift half of gen-client. No-ops until the iOS package exists so a repo
+# without a Swift toolchain can still run `just gen-client`.
+gen-client-swift:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [ ! -d apps/ios/Packages/GulpAPI ]; then
+      echo "skip: apps/ios/Packages/GulpAPI not scaffolded yet"
+      exit 0
+    fi
+    cd apps/ios/Packages/GulpAPI && swift build
 
 # Alembic migrations (run from services/api/ so alembic.ini is picked up)
 migrate message:
