@@ -30,9 +30,9 @@ Gulp has two first-class clients with deliberately different jobs (interaction s
 
 These read identically on both surfaces — they are the product's shared identity:
 
-1. **Brand anchor — Gulp Blue** (§3.1). One blue, everywhere.
+1. **Brand anchor — Gulp Blue** (§3.1). One blue, everywhere. *(amended 2026-07-25 — one blue **role**, two register values; see [`superpowers/specs/2026-07-25-ios-client-design.md`](superpowers/specs/2026-07-25-ios-client-design.md) §5.2.)*
 2. **Mastery-state color language** (§3.3). The five states are the product's core data language; a user moving between phone and laptop must never re-learn them.
-3. **Type roles & tabular numerals** (§4). The same three families in the same roles; counts/intervals/streaks always set in mono.
+3. **Type roles & tabular numerals** (§4). The same three families in the same roles; counts/intervals/streaks always set in mono. *(amended 2026-07-25 — mobile runs on two families; Instrument Serif is cut there, ibid. §5.1.)*
 4. **The Card as the atomic unit** and its shape language (§5.4). The data model *is* Cards; the UI's base element matches.
 5. **The 4px spacing base and icon family** (§5.1, §2.6).
 6. **Voice in microcopy** (§2.7) — plain, never clever-at-the-expense-of-clear.
@@ -60,6 +60,8 @@ One blue carries the brand across both surfaces. `--blue-600 #2563EB` is the pri
 - **Web:** blue is *functional* — primary buttons, selection, focus, links, the `Due` accent. Everything else is slate. The accent earns attention by scarcity.
 - **Mobile:** blue is *brand* — larger fills, the active tab, the capture button, headers; gentle blue→blue tints and (sparingly) gradients are allowed at hero moments.
 
+> **Amended 2026-07-25 (mobile only) — see [`superpowers/specs/2026-07-25-ios-client-design.md`](superpowers/specs/2026-07-25-ios-client-design.md) §5.2.** The rule above ("how much blue, not which blue") is reversed for the iOS client. On a warm-sand ground the entire neutral family sits at hue 42–60 while `--blue-600` is `hsl(221, 83%, 53%)` — near-complementary, saturated and light, so it reads as a sticker rather than part of the page. On mobile the **primary action is ink** (`--text-1`) and **blue is reserved for the `Due` state alone**, where it is the one thing on a screen worth acting on. This follows the pattern §3.2 already uses for neutrals: one semantic token, two register value maps. Web is unchanged.
+
 ### 2.2 Mastery-state language
 
 The five states from interaction spec §F7, rendered identically everywhere (full tokens in §3.3). Day-to-day UI shows three states + two side-states; the fine-grained ladder lives only on Concept/Card detail and stats.
@@ -85,6 +87,8 @@ Three families, fixed roles, shared across surfaces (concrete stacks and scale i
 | **Instrument Serif** | the voice — expressive hero/display lines | mobile hero moments, occasional web marketing headers |
 
 Geist Mono on data is a deliberate spine thread: the "how many due / how many days / how long a streak" numbers look the same on phone and laptop, and the monospaced figures reinforce the product's "tracked, measured mastery" thesis.
+
+> **Amended 2026-07-25 (mobile only) — see [`superpowers/specs/2026-07-25-ios-client-design.md`](superpowers/specs/2026-07-25-ios-client-design.md) §5.1.** Instrument Serif is **cut from the iOS client**. Headlines go to Inter and the hero moments are carried by large tabular Geist Mono figures instead — which is what the paragraph above already argues for, since the product's claim is *measured* mastery. Mobile therefore runs two families, not three. Web still lists the serif; §10's open question about whether it earns its place there is now the only place it survives.
 
 ### 2.4 The Card & shape language
 
@@ -233,7 +237,7 @@ Web is denser; mobile is larger with bigger jumps. Sizes are `px / line-height`,
 
 - **Default body:** web `Body M` 14px (dense workbench); mobile `Body M` 16px (comfortable reading).
 - **Hierarchy is type-led.** Prefer size/weight/space over rules and boxes to separate content.
-- **Instrument Serif** is rationed: the onboarding aha line, a session-summary headline, an expressive empty state. One serif line per screen, maximum.
+- **Instrument Serif** is rationed: the onboarding aha line, a session-summary headline, an expressive empty state. One serif line per screen, maximum. *(amended 2026-07-25 — none of these are set in serif on iOS; the Display row above is unused there, [`superpowers/specs/2026-07-25-ios-client-design.md`](superpowers/specs/2026-07-25-ios-client-design.md) §5.1.)*
 
 ### 4.3 Numerals & mono
 
@@ -313,7 +317,7 @@ Web is denser; mobile is larger with bigger jumps. Sizes are `px / line-height`,
 ### 6.2 Mobile register — characterful & rewarding (C)
 
 - **Feel:** Arc — sophisticated with warmth and reward. Confident, friendly, a little expressive; *not* a cartoon mascot product. Personality comes from type (Instrument Serif moments), the blue brand, amber celebration, and motion.
-- **Color:** amplified blue brand (active tab, capture button, headers, hero fills); amber/glow celebration at progress moments; warm-neutral surfaces.
+- **Color:** amplified blue brand (active tab, capture button, headers, hero fills); amber/glow celebration at progress moments; warm-neutral surfaces. *(amended 2026-07-25 — inverted: ink carries the primary action and blue is reserved for `Due`; amber appears once, on the streak. [`superpowers/specs/2026-07-25-ios-client-design.md`](superpowers/specs/2026-07-25-ios-client-design.md) §5.2.)*
 - **Density:** comfortable single column, large tap targets (≥44px), big readable type (16px base).
 - **Type:** bigger jumps; Instrument Serif for the onboarding aha, session-summary headline, and expressive empty states.
 - **Interaction:** thumb-first; haptics on grade; voice input for "say it in your own words"; bottom sheets.
@@ -341,6 +345,7 @@ The product's most-repeated component (interaction spec §2.3).
 - **Anatomy:** pill, tinted background + on-tint text + optional 8px dot; label text always present (`New` / `Learning` / `Known` / `Due` / `At risk`).
 - **`Due`** may render as a count badge ("`3 due`") in mono.
 - Identical tokens on both surfaces (§3.3). Never color-only.
+- *(amended 2026-07-25 — on iOS the chip is a hairline pill with a coloured dot rather than a tinted fill; colour + label still carries the state, so §9 holds, but the anatomy differs by register. [`superpowers/specs/2026-07-25-ios-client-design.md`](superpowers/specs/2026-07-25-ios-client-design.md) §5.3.)*
 
 ### 7.3 Filter chips (web Library)
 
@@ -358,7 +363,7 @@ The product's most-repeated component (interaction spec §2.3).
 | **Danger** | `--danger` text/fill | destructive (Discard) |
 
 - One primary per screen (§1.2.2). Heights: web 32/36, mobile 48 (thumb).
-- **Mobile hero buttons** (`⊕ Capture`, "Start Gulp") may use `--reward-gradient` and a soft shadow.
+- **Mobile hero buttons** (`⊕ Capture`, "Start Gulp") may use `--reward-gradient` and a soft shadow. *(amended 2026-07-25 — no gradients on iOS: the primary button is flat ink with a neutral shadow. [`superpowers/specs/2026-07-25-ios-client-design.md`](superpowers/specs/2026-07-25-ios-client-design.md) §5.2.)*
 
 ### 7.5 Capture confirm sheet (interaction spec §F1)
 
@@ -369,7 +374,7 @@ The product's most-repeated component (interaction spec §2.3).
 ### 7.6 Snapshot detail & knowledge pack (interaction spec §F2)
 
 - **Web (deep curation):** the **pack reader** — the pack rendered as editable, per-block content (add / edit / reorder blocks, **add a block to the article chat** from its hover control); a **draft-cards review strip** along the bottom (`draft → accepted / rejected`). *(Reader is an adaptive three-zone layout (spec 2026-07-10): a collapsible left nav and a collapsible right chat panel, with the reading column reflowing to a comfortable measure; the source opens via an `↗` origin icon — there is no "Original" tab.)* *(For a paper this is the `PaperPack` sectioned report; other `pack_type`s render their own `render()` output — `02 §4.4`. There is no facet keep/dismiss layer.)*
-- **Mobile (quick look):** stacked **segmented control** `Read · Pack · Cards`; full curation stays on web.
+- **Mobile (quick look):** stacked **segmented control** `Read · Pack · Cards`; full curation stays on web. *(amended 2026-07-25 — the control is cut: the pack **is** the screen, the original opens via the same `↗` origin icon the web reader uses, and the card count sits in the bottom bar. [`superpowers/specs/2026-07-25-ios-client-design.md`](superpowers/specs/2026-07-25-ios-client-design.md) §5.4 / §2.6.)*
 - Card review (`accept` / `reject`) uses subtle check / strike affordances, not destructive color.
 
 ### 7.7 Gulp prompt & reveal — the hero (interaction spec §F4)
@@ -466,7 +471,7 @@ Visual treatment for the states every list/object screen must define (interactio
 
 - Should mobile's warm neutral ramp (§3.2) be this subtle, or lean further from web's cool slate for more distinct character?
 - Is one functional blue accent enough for web's `Due` + primary + selection + links, or do `Due` and "primary action" need to be visually separated to avoid overload on dense screens?
-- Does the Instrument Serif "voice" earn its place on web at all, or should web be Inter-only?
+- Does the Instrument Serif "voice" earn its place on web at all, or should web be Inter-only? *(2026-07-25: answered **no for mobile** — the serif is cut from the iOS client, which was its main home. Web remains open, but the serif now has almost no surface left.)*
 - How expressive should mobile celebration go before it reads as gamified rather than rewarding?
 
 ---
