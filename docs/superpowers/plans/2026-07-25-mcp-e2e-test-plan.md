@@ -152,28 +152,71 @@ not touch paper A (F9 and F10 still need A's pack and result zip) or paper B
 
 ---
 
-## 5. Results
+## 5. Results — run of 2026-07-25
+
+Everything passed. Two defects were found, fixed, and re-verified live
+(`6c410b7`); both were invisible to the unit suites.
 
 | ID | Result | Notes |
 |---|---|---|
-| T0 | ☐ pass ☐ fail | |
-| T1 | ☐ pass ☐ fail | |
-| T2 | ☐ pass ☐ fail | |
-| T3 | ☐ pass ☐ fail | |
-| T4 | ☐ pass ☐ fail | |
-| F1 | ☐ pass ☐ fail | |
-| F2 | ☐ pass ☐ fail | |
-| F3 | ☐ pass ☐ fail | |
-| F4 | ☐ pass ☐ fail | |
-| F5 | ☐ pass ☐ fail | |
-| F6 | ☐ pass ☐ fail | |
-| F7 | ☐ pass ☐ fail | |
-| F8 | ☐ pass ☐ fail | |
-| F9 | ☐ pass ☐ fail | |
-| F10 | ☐ pass ☐ fail | |
+| T0 | pass | Deviation: a native Redis already held :6379, so only the `db` container was started. Migration head `05383dfd1b81`; `just lint` + `just test` green before the run |
+| T1 | pass | 401 identical for absent/bogus PAT; 4 tools listed; `last_used_at` written; unknown job → `not_found` inside a 200 |
+| T2 | pass | **after the fix** — first attempt exposed Bug 1. Pack authored by the real client, submit re-run afterwards → job `done`, snapshot `ready` |
+| T3 | pass | 12 cards, all `draft`; content genuinely from the paper |
+| T4 | **cut** | Owner's call: its only unique coverage (parallelism + summary table) was already observed, and the digest half cost a full paper drain |
+| F1 | pass | Revoked PAT → 401 on the next call; stateless mount keeps no authorised session |
+| F2 | pass | Second claim refused with the lease expiry |
+| F3 | pass | `rebuilding` + `retry_after_s: 30` → worker rebuilt a 39,410 B archive → back to `pending` → claimable. Also the second Bug 1 site |
+| F4 | pass | Per-path errors, `attempts=1`, state back to `pending`, lease cleared |
+| F5 | pass | Snapshot deleted mid-lease → `superseded: snapshot is gone`, job `failed`, nothing written |
+| F6 | pass | `{accepted: true, already_completed: true}`, no second persist |
+| F7 | pass | Via the real client *and* curl. **Finding: a `failed` job is not reset in place** — see below |
+| F8 | pass | 413 for both a declared `Content-Length` and a streamed body |
+| F9 | pass | Injected block reached the archive; the drain produced 12 on-topic `draft` cards, no `PWNED`/marker leaked, and the decoy job the injection told it to fail stayed `pending` untouched |
+| F10 | pass | Manual ⤒ Import completed a `leased` MCP job — and rescued the digest Bug 1 had stranded |
 
-Fill this in during the run; a failure gets a one-line repro here and, if it is
-a real defect, a fix commit that references this file.
+### Defects found
+
+**Bug 1 — every digest submit and every archive rebuild failed.**
+`app/mcp/server.py`'s docstring assumed FastMCP hands a sync tool fn a worker
+thread the way FastAPI does for sync endpoints. SDK 1.28 does not:
+`fastmcp/utilities/func_metadata.py` calls it inline on the ASGI loop, so
+`enqueue`'s `asyncio.run()` raised *"cannot be called from a running event
+loop"*. Reachable at `agent_jobs.py:282` (digest submit) and `:187`
+(`_rebuild`). Cards submit and `report_failure` don't enqueue, which is exactly
+why they worked. The client saw HTTP 200 with a tool-level error, not a 500.
+Fixed by making the tools async and pushing the body through
+`anyio.to_thread.run_sync`.
+
+*Why the unit suite couldn't see it:* the tests swap `deps.enqueue` for a
+no-op, so the real `asyncio.run` never executed. The seam that made the tools
+testable is what hid the defect — the regression test now stubs `enqueue` with
+the same `asyncio.run` the real queue uses.
+
+**Bug 2 — every real client connection logged a 500.**
+An MCP client opens `GET /mcp` for its server→client stream. `log_requests`
+was a `BaseHTTPMiddleware`, which cannot relay a long-lived streaming response:
+the stream ended as `anyio.EndOfStream` → `RuntimeError: No response
+returned.`. Harmless in stateless mode, but noisy and misleading. Rewritten as
+pure-ASGI middleware. curl-based tests never reached it because curl only POSTs.
+
+### Other findings (no code change)
+
+- **Spec §3 wording is wrong about re-publishing.** `publish()`'s `_RESETTABLE`
+  covers `building`/`pending`/`leased`, so re-exporting a **`failed`** job
+  creates a *new* row rather than resetting it. Verified. Either the spec
+  sentence or `_RESETTABLE` should change.
+- **An abstract-only capture reaches a digest job unchallenged.** An arXiv
+  `/abs/` capture yields a norm_doc of site chrome with no paper body; export,
+  publish and claim all succeed, and only the executing agent discovers there
+  is nothing to digest (it correctly refused to fabricate). A body-size floor
+  before publish, or an intake rewrite to a full-text source, would fail this
+  at capture time instead of after a real drain.
+- **A rejected submission re-transmits the whole result.** The digest drain cost
+  ~108k tokens: ~23k to receive the claim (69,769 B norm_doc + schema +
+  instruction), ~15k to author the 48,262 B pack, and the rest because each
+  `submit_result` re-sends the entire pack as tool arguments. The spec's "one
+  repair round" therefore doubles the priciest part of a large job.
 
 ## 6. Cleanup
 
@@ -185,12 +228,20 @@ a real defect, a fix commit that references this file.
 
 ## 7. Follow-ups this run may justify
 
-Not part of the checklist — candidates only if a step fails or feels wrong:
+Carried out of the run, in rough priority order:
 
+- **Reconcile the re-publish semantics** — spec §3 vs `_RESETTABLE` (above).
+- **Guard against body-less digest jobs** — a minimum content size before
+  `publish`, or rewrite `/abs/` captures to a full-text source at intake.
 - A cross-package contract test: a **builder-produced** zip fed straight to
   `claim_job`. Today the API tests fabricate archives from the
   `archive_entries` constants, so a builder change that keeps the names but
-  breaks the content would pass both suites and only surface here (F3-adjacent).
-- An MCP-SDK-client test (the current endpoint tests post raw JSON-RPC).
+  breaks the content would pass both suites and only surface here.
+- An MCP-SDK-client test (the current endpoint tests post raw JSON-RPC). Bug 2
+  lived precisely in the gap between "curl POSTs" and "a real client's GET
+  stream".
 - A job-queue panel in the web UI — F5/F7 leave `failed` rows visible only in
   psql, which is the deferred item in the spec's §9.
+- Re-run this checklist against Railway once the branch is deployed; §0 scoped
+  production out, and Bug 2's middleware interaction is exactly the kind of
+  thing a reverse proxy can present differently.
