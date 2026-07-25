@@ -65,3 +65,9 @@ temp/
 
 # brainstorm + sdd scratch
 .superpowers/
+
+# Xcode
+apps/ios/**/xcuserdata/
+apps/ios/**/*.xcworkspace/xcuserdata/
+apps/ios/build/
+DerivedData/
