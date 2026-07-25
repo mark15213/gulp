@@ -3,7 +3,7 @@
 import logging
 import time
 import uuid
-from collections.abc import AsyncIterator, Awaitable, Callable
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -12,8 +12,9 @@ from gulp_shared.llm.base import LLMAuthError, LLMNotConfiguredError, LLMRateLim
 from gulp_shared.logging import configure_logging, reset_request_id, set_request_id
 from gulp_shared.settings import settings
 from starlette.requests import Request
-from starlette.responses import JSONResponse, Response
+from starlette.responses import JSONResponse
 from starlette.routing import Route
+from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 from app.mcp.auth import PATAuthMiddleware
 from app.mcp.server import mcp as mcp_server
@@ -95,38 +96,66 @@ app.include_router(today.router, tags=["today"])
 app.include_router(tokens.router, tags=["tokens"])
 
 
-@app.middleware("http")
-async def log_requests(
-    request: Request,
-    call_next: Callable[[Request], Awaitable[Response]],
-) -> Response:
-    request_id = request.headers.get("x-request-id") or uuid.uuid4().hex
-    token = set_request_id(request_id)
-    started = time.perf_counter()
-    try:
-        response = await call_next(request)
-    except Exception:
-        duration_ms = (time.perf_counter() - started) * 1000
-        logger.exception(
-            "request failed method=%s path=%s duration_ms=%.1f",
-            request.method,
-            request.url.path,
-            duration_ms,
-        )
-        raise
-    else:
-        duration_ms = (time.perf_counter() - started) * 1000
-        response.headers["X-Request-ID"] = request_id
-        logger.info(
-            "request completed method=%s path=%s status=%d duration_ms=%.1f",
-            request.method,
-            request.url.path,
-            response.status_code,
-            duration_ms,
-        )
-        return response
-    finally:
-        reset_request_id(token)
+class RequestLogMiddleware:
+    """Request logging as *pure ASGI*, deliberately not `@app.middleware("http")`.
+
+    That decorator installs Starlette's BaseHTTPMiddleware, which relays the
+    response through memory streams — and cannot carry a long-lived streaming
+    response. The MCP client opens `GET /mcp` for its server→client stream
+    during the handshake; under BaseHTTPMiddleware that stream ended as
+    `anyio.EndOfStream` → `RuntimeError: No response returned.`, so every real
+    client connection logged a 500. Wrapping send/receive instead leaves the
+    stream untouched."""
+
+    def __init__(self, app: ASGIApp) -> None:
+        self.app = app
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if scope["type"] != "http":
+            await self.app(scope, receive, send)
+            return
+        headers = {k.decode().lower(): v.decode() for k, v in scope["headers"]}
+        request_id = headers.get("x-request-id") or uuid.uuid4().hex
+        token = set_request_id(request_id)
+        started = time.perf_counter()
+        status = 0
+
+        async def send_with_request_id(message: Message) -> None:
+            nonlocal status
+            if message["type"] == "http.response.start":
+                status = message["status"]
+                message["headers"] = [
+                    *message["headers"],
+                    (b"x-request-id", request_id.encode()),
+                ]
+            await send(message)
+
+        method, path = scope["method"], scope["path"]
+        try:
+            await self.app(scope, receive, send_with_request_id)
+        except Exception:
+            duration_ms = (time.perf_counter() - started) * 1000
+            logger.exception(
+                "request failed method=%s path=%s duration_ms=%.1f",
+                method,
+                path,
+                duration_ms,
+            )
+            raise
+        else:
+            duration_ms = (time.perf_counter() - started) * 1000
+            logger.info(
+                "request completed method=%s path=%s status=%d duration_ms=%.1f",
+                method,
+                path,
+                status,
+                duration_ms,
+            )
+        finally:
+            reset_request_id(token)
+
+
+app.add_middleware(RequestLogMiddleware)
 
 
 @app.get("/health")

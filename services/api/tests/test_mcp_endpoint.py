@@ -1,3 +1,5 @@
+import asyncio
+
 import pytest
 from app.deps import get_db
 from app.main import app
@@ -106,6 +108,53 @@ def test_unknown_path_still_404(mcp_client, pat):  # type: ignore[no-untyped-def
     # the root mount must not shadow normal 404 semantics for non-/mcp paths
     r = mcp_client.get("/definitely-not-a-route")
     assert r.status_code == 404
+
+
+def test_enqueueing_tool_runs_off_the_event_loop(mcp_client, pat, db, monkeypatch):  # type: ignore[no-untyped-def]
+    """The real `enqueue` (app/core/queue.py) drives arq through asyncio.run(),
+    which raises inside a running event loop. FastMCP calls a *sync* tool fn
+    inline on the ASGI loop, so the tool body must be pushed off it — this is
+    the live-e2e failure (every digest submit + every archive rebuild) that the
+    no-op enqueue double in the other tests hides. The stub below mirrors the
+    real enqueue's one relevant property: it calls asyncio.run."""
+
+    def enqueue_like_arq(*args: object) -> None:
+        async def _go() -> None:
+            return None
+
+        asyncio.run(_go())
+
+    monkeypatch.setattr(mcp_deps, "enqueue", enqueue_like_arq)
+    s = Source(owner_id=DEV_USER_ID, kind=SourceKind.snapshot, title="No Archive",
+               status=SnapshotStatus.exported, content_body="b")
+    db.add(s)
+    db.commit()
+    job = AgentJob(owner_id=DEV_USER_ID, snapshot_id=s.id,
+                   kind=AgentJobKind.digest, state=AgentJobState.pending)
+    db.add(job)
+    db.commit()
+    # No archive on disk → claim falls into _rebuild, which enqueues.
+    r = mcp_client.post(
+        "/mcp",
+        json=_rpc("tools/call", {"name": "claim_job", "arguments": {"job_id": str(job.id)}}),
+        headers={**HEADERS, "Authorization": f"Bearer {pat}"},
+    )
+    assert r.status_code == 200
+    assert "rebuilding" in r.text
+    assert "running event loop" not in r.text
+
+
+def test_get_stream_does_not_break_the_logging_middleware(mcp_client, pat):  # type: ignore[no-untyped-def]
+    """An MCP client opens `GET /mcp` for the server→client stream during its
+    handshake. Starlette's BaseHTTPMiddleware (which `log_requests` is) cannot
+    wrap that streaming response — it raises "No response returned." and turns
+    every real client connection into a logged 500. curl-based tests never see
+    it because curl only POSTs."""
+    r = mcp_client.get(
+        "/mcp",
+        headers={"Accept": "text/event-stream", "Authorization": f"Bearer {pat}"},
+    )
+    assert r.status_code < 500
 
 
 def test_tool_returns_structured_error_envelope(mcp_client, pat):  # type: ignore[no-untyped-def]

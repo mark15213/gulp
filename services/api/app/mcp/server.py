@@ -1,15 +1,16 @@
 """The MCP endpoint (spec 2026-07-16 §3): four self-describing job tools,
-thin over app.services.agent_jobs. Tools are sync on purpose — FastMCP runs
-them in a worker thread, which keeps the asyncio.run inside enqueue legal
-(same reason the REST import endpoint is sync)."""
+thin over app.services.agent_jobs. Every tool body runs in a worker thread —
+see _offload for why that is load-bearing, not a style choice."""
 
 import uuid
-from typing import TYPE_CHECKING, Any
+from collections.abc import Callable
+from functools import partial
+from typing import TYPE_CHECKING, Any, cast
 
+import anyio
 from gulp_shared.models.user import User
 from mcp.server.fastmcp import Context, FastMCP
 from mcp.server.transport_security import TransportSecuritySettings
-from sqlalchemy.orm import Session
 
 from app.mcp import deps
 from app.services import agent_jobs
@@ -40,13 +41,6 @@ mcp = FastMCP(
 )
 
 
-def _user(db: Session, ctx: Ctx) -> User:
-    user_id: uuid.UUID = ctx.request_context.request.state.gulp_user_id  # type: ignore[union-attr]
-    user = db.get(User, user_id)
-    assert user is not None  # the PAT middleware just resolved it
-    return user
-
-
 def _error(exc: AgentJobUnavailable) -> dict[str, Any]:
     err: dict[str, Any] = {"code": exc.code, "message": exc.message}
     if exc.retry_after_s is not None:
@@ -54,55 +48,75 @@ def _error(exc: AgentJobUnavailable) -> dict[str, Any]:
     return {"error": err}
 
 
+def _call(fn: Callable[..., Any], user_id: uuid.UUID, *args: Any) -> Any:
+    """The whole tool body, off the event loop: its own Session, the user the
+    PAT resolved to, and the service call — with a protocol rejection mapped
+    onto the structured error envelope."""
+    db = deps.session_factory()
+    try:
+        user = db.get(User, user_id)
+        assert user is not None  # the PAT middleware just resolved it
+        return fn(db, user, *args)
+    except AgentJobUnavailable as exc:
+        return _error(exc)
+    finally:
+        db.close()
+
+
+async def _offload(ctx: Ctx, fn: Callable[..., Any], *args: Any) -> Any:
+    """Run the tool body in a worker thread. Load-bearing: FastMCP (SDK 1.28)
+    calls a *sync* tool fn inline on the running ASGI loop
+    (fastmcp/utilities/func_metadata.py: `return fn(**kwargs)`), so a body that
+    reaches `enqueue` — which drives arq through asyncio.run() — dies with
+    "asyncio.run() cannot be called from a running event loop". That breaks
+    every digest submit and every archive rebuild. FastAPI hands sync endpoints
+    a threadpool for exactly this reason (see routers/export.py's import note);
+    FastMCP does not, so we do it ourselves.
+
+    The user id is read here, on the loop, rather than inside the thread: the
+    request context is a contextvar, and this keeps the thread free of any
+    assumption about how it propagates."""
+    user_id: uuid.UUID = ctx.request_context.request.state.gulp_user_id  # type: ignore[union-attr]
+    return await anyio.to_thread.run_sync(partial(_call, fn, user_id, *args))
+
+
 @mcp.tool()
-def list_jobs(
+async def list_jobs(
     ctx: Ctx, kind: str | None = None
 ) -> list[dict[str, Any]] | dict[str, Any]:
     """List your pending Gulp jobs. Optional kind filter: "digest" | "cards".
     Jobs in state "building" are not claimable yet — retry them later."""
-    db = deps.session_factory()
-    try:
-        return agent_jobs.list_jobs(db, _user(db, ctx), kind)
-    except AgentJobUnavailable as exc:
-        return _error(exc)
-    finally:
-        db.close()
+    return cast(
+        "list[dict[str, Any]] | dict[str, Any]",
+        await _offload(ctx, agent_jobs.list_jobs, kind),
+    )
 
 
 @mcp.tool()
-def claim_job(ctx: Ctx, job_id: str) -> dict[str, Any]:
+async def claim_job(ctx: Ctx, job_id: str) -> dict[str, Any]:
     """Atomically claim a pending job. Returns the full self-describing task:
     instruction (follow it exactly), input (the data), output_schema (your
     result MUST validate against it), lease_expires_at."""
-    db = deps.session_factory()
-    try:
-        return agent_jobs.claim_job(db, _user(db, ctx), job_id, deps.enqueue)
-    except AgentJobUnavailable as exc:
-        return _error(exc)
-    finally:
-        db.close()
+    return cast(
+        "dict[str, Any]",
+        await _offload(ctx, agent_jobs.claim_job, job_id, deps.enqueue),
+    )
 
 
 @mcp.tool()
-def submit_result(ctx: Ctx, job_id: str, result: dict[str, Any]) -> dict[str, Any]:
+async def submit_result(ctx: Ctx, job_id: str, result: dict[str, Any]) -> dict[str, Any]:
     """Submit a finished job's result JSON. Returns {accepted: true} or
     {accepted: false, errors: [...]} — fix the errors and submit again."""
-    db = deps.session_factory()
-    try:
-        return agent_jobs.submit_result(db, _user(db, ctx), job_id, result, deps.enqueue)
-    except AgentJobUnavailable as exc:
-        return _error(exc)
-    finally:
-        db.close()
+    return cast(
+        "dict[str, Any]",
+        await _offload(ctx, agent_jobs.submit_result, job_id, result, deps.enqueue),
+    )
 
 
 @mcp.tool()
-def report_failure(ctx: Ctx, job_id: str, reason: str) -> dict[str, Any]:
+async def report_failure(ctx: Ctx, job_id: str, reason: str) -> dict[str, Any]:
     """Give up on a job you cannot complete; the reason is shown to the user."""
-    db = deps.session_factory()
-    try:
-        return agent_jobs.report_failure(db, _user(db, ctx), job_id, reason)
-    except AgentJobUnavailable as exc:
-        return _error(exc)
-    finally:
-        db.close()
+    return cast(
+        "dict[str, Any]",
+        await _offload(ctx, agent_jobs.report_failure, job_id, reason),
+    )
