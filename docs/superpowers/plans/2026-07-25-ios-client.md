@@ -46,17 +46,17 @@ Spec §7.3 is closed; Task 0 below is **done**. The answers everything else assu
 
 ---
 
-### Task 1: Xcode project and the design system
+### Task 1: Xcode project and the design system ✅ done 2026-08-01
 
 **Files:** `apps/ios/Gulp.xcodeproj`, `apps/ios/Gulp/DesignSystem/*.swift`, `apps/ios/Gulp/Resources/Fonts/*`
 
-- [ ] **Step 1:** Create the app target (`Gulp`, iOS 17+) and an App Group (`group.app.gulp.shared`) — the share extension needs it in Task 9, and adding it later means re-provisioning.
-- [ ] **Step 2:** `Tokens.swift` — the mobile column of `03 §3.2` as `Color` extensions, plus radii (12/16/20), the card shadow, and the 4 pt spacing scale. **Ink is the primary action colour; blue exists only as `Color.due`.**
-- [ ] **Step 3:** Bundle Geist Mono from `design/fonts/`; register Inter (vendor the variable font — the repo has no copy yet). Expose `Font.data`, `Font.label`, `Font.body`, `Font.titleL/M/S` per `03 §4.2`'s mobile column. Every numeral view uses `.monospacedDigit()`.
-- [ ] **Step 4:** `TickMarks.swift` — the signature device. One view, three uses: Today's due gauge (grouped new/review), the session progress rail, Library's due column. It takes a count and a style; it is never re-implemented per screen.
-- [ ] **Step 5:** `StateChip.swift` — hairline pill, optional coloured dot, label always present (`03 §7.2` as amended).
+- [x] **Step 1:** Create the app target (`Gulp`, iOS 17+) and an App Group (`group.app.gulp.shared`) — the share extension needs it in Task 9, and adding it later means re-provisioning.
+- [x] **Step 2:** `Tokens.swift` — the mobile column of `03 §3.2` as `Color` extensions, plus radii (12/16/20), the card shadow, and the 4 pt spacing scale. **Ink is the primary action colour; blue exists only as `Color.due`.**
+- [x] **Step 3:** Bundle Geist Mono from `design/fonts/`; register Inter (vendor the variable font — the repo has no copy yet). Expose `Font.data`, `Font.label`, `Font.body`, `Font.titleL/M/S` per `03 §4.2`'s mobile column. Every numeral view uses `.monospacedDigit()`.
+- [x] **Step 4:** `TickMarks.swift` — the signature device. One view, three uses: Today's due gauge (grouped new/review), the session progress rail, Library's due column. It takes a count and a style; it is never re-implemented per screen.
+- [x] **Step 5:** `StateChip.swift` — hairline pill, optional coloured dot, label always present (`03 §7.2` as amended).
 
-**Verify:** a preview screen renders every token, both type families, and all three tick styles. Snapshot-test it.
+**Verify:** ✅ `just ios-test` green (7 tests, 3 suites). Built, installed and launched on an iPhone 17 simulator; the preview screen renders every token and all three tick styles, and Geist Mono is confirmed loading from the bundle. Snapshot testing deferred — it needs a dependency and the assertions cover what silently drifts.
 
 ---
 

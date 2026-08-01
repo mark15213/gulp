@@ -87,25 +87,34 @@ struct TickMarks: View {
     }
 }
 
-/// Today's hero gauge: every mark is a card due now; the gap and the labels
-/// underneath — not the tone — are what separate new from review.
+/// Today's hero gauge.
+///
+/// Tone follows the same rule as the rail: **hairline means you haven't met
+/// this one yet, ink means you have.** New cards are hairline because you have
+/// never seen them; reviews are ink because you have. Keeping one meaning for
+/// fill across all three uses is what stops the mark from becoming decoration.
 struct DueGauge: View {
     let new: Int
     let reviews: Int
 
     var body: some View {
         HStack(alignment: .bottom, spacing: Space.x4) {
-            group(count: new, label: "New")
-            group(count: reviews, label: "Reviews")
+            group(count: new, label: "New", met: false)
+            group(count: reviews, label: "Reviews", met: true)
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("\(new) new, \(reviews) reviews")
     }
 
-    private func group(count: Int, label: String) -> some View {
+    private func group(count: Int, label: String, met: Bool) -> some View {
         VStack(alignment: .leading, spacing: 9) {
-            TickMarks(filled: count, style: .gauge, counting: label.lowercased())
-                .accessibilityHidden(true)
+            TickMarks(
+                filled: met ? count : 0,
+                empty: met ? 0 : count,
+                style: .gauge,
+                counting: label.lowercased()
+            )
+            .accessibilityHidden(true)
             HStack(spacing: 4) {
                 Text("\(count)").gulpData(11)
                 Text(label).gulpLabel()

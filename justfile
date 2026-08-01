@@ -33,9 +33,9 @@ web:
     pnpm --filter @gulp/web dev
 ios:
     open apps/ios/Gulp.xcodeproj
-ios-test:
+ios-test device="iPhone 17":
     xcodebuild test -project apps/ios/Gulp.xcodeproj -scheme Gulp \
-      -destination 'platform=iOS Simulator,name=iPhone 16'
+      -destination 'platform=iOS Simulator,name={{device}}' | tail -40
 api:
     uv run --package gulp-api uvicorn app.main:app --reload
 worker:

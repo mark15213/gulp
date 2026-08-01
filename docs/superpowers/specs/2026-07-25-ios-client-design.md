@@ -60,10 +60,16 @@ The daily home. Answers "what now" and nothing else.
 | Recently forwarded | 3 rows: title, status chip, and — when `unprocessed` — a `Start` button | `recent[]` |
 
 **The tick marks are the app's unit of work.** Twelve due cards render as
-twelve marks (pale = new, solid = review), each group labelled underneath. The
-same mark returns as the session progress rail (§2.2) and closes filled on the
-summary. This is the design's one signature device and it encodes data rather
-than decorating it.
+twelve marks, each group labelled underneath. The same mark returns as the
+session progress rail (§2.2) and closes filled on the summary. This is the
+design's one signature device and it encodes data rather than decorating it.
+
+Fill carries one meaning everywhere it appears: **hairline means you have not
+met this card yet, ink means you have.** So the gauge draws new cards hairline
+and reviews ink, and the rail draws remaining cards hairline and answered ones
+ink — the same rule, not two conventions that happen to look alike. Library is
+the one place fill is coloured rather than ink, because there it is carrying the
+`Due` state from the shared palette (§2.4).
 
 **What is *not* here:** the mastery tally. It moved to `You` — `01 §2.4` scopes
 Today to "what should I do right now", and `03 §7.9`'s Today inventory never
