@@ -7,9 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1000000000000000000001D0 /* GulpAPI in Frameworks */ = {isa = PBXBuildFile; productRef = 1000000000000000000001C0 /* GulpAPI */; };
 		1000000000000000000002A0 /* GulpShare.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 100000000000000000000280 /* GulpShare.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		1000000000000000000002B0 /* GulpAPI in Frameworks */ = {isa = PBXBuildFile; productRef = 1000000000000000000002C0 /* GulpAPI */; };
-		1000000000000000000001D0 /* GulpAPI in Frameworks */ = {isa = PBXBuildFile; productRef = 1000000000000000000001C0 /* GulpAPI */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -29,10 +29,24 @@
 		};
 /* End PBXContainerItemProxy section */
 
+/* Begin PBXCopyFilesBuildPhase section */
+		1000000000000000000002E0 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				1000000000000000000002A0 /* GulpShare.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
 		100000000000000000000070 /* Gulp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Gulp.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		100000000000000000000280 /* GulpShare.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = GulpShare.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		100000000000000000000080 /* GulpTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = GulpTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		100000000000000000000280 /* GulpShare.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = GulpShare.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -47,7 +61,6 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
-				GulpShare.entitlements,
 			);
 			target = 100000000000000000000260 /* GulpShare */;
 		};
@@ -195,8 +208,8 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				100000000000000000000250 /* GulpShare */,
 				100000000000000000000240 /* Shared */,
+				100000000000000000000250 /* GulpShare */,
 			);
 			name = GulpShare;
 			packageProductDependencies = (
@@ -272,20 +285,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
-
-/* Begin PBXCopyFilesBuildPhase section */
-		1000000000000000000002E0 /* Embed Foundation Extensions */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "";
-			dstSubfolderSpec = 13;
-			files = (
-				1000000000000000000002A0 /* GulpShare.appex in Embed Foundation Extensions */,
-			);
-			name = "Embed Foundation Extensions";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		100000000000000000000090 /* Sources */ = {

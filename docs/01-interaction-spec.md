@@ -365,11 +365,13 @@ Every list and object screen defines these explicitly:
 
 **Decided (was open):** review of AI-drafted packs/Cards is **required by default**, **batchable**, and **skippable via auto-approve** (global + per-Feed override). Review has two shapes — lightweight batch-confirm (consumption, on mobile in `Today`) and deep curation (management, web only). See §F2.
 
+**Decided 2026-08-01 (was open):** *"Web `Inbox`: keep it as a pinned sidebar entry, or fold it into Library as a 'new / unprocessed' filter?"* — **answered in the other direction.** `Feeds` folds into `Inbox`; Inbox keeps its sidebar entry as the single intake surface, and the Library stays a clean shelf of `ready`. A "packs I haven't read yet" queue belongs behind a **Library** mastery filter (`New` on the ladder, §F7), never as an Inbox section — that would rebuild the second unread queue the merge removed. See [`superpowers/specs/2026-08-01-feeds-inbox-triage-design.md`](superpowers/specs/2026-08-01-feeds-inbox-triage-design.md).
+
 **Open questions:**
 - Default Gulp session length and whether it auto-adapts to available time.
 - Digest cadence/volume defaults per user.
 - Whether a `Snapshot` always stores its full content body or keeps only the reference/link (storage cost vs. link-rot protection).
-- Web `Inbox`: keep it as a pinned sidebar entry, or fold it into Library as a "new / unprocessed" filter?
+- Whether high feed volume makes the per-item ▶ Start a chore — if so the follow-up is **genre-based auto-start** (article/note already run a zero-LLM pipeline; only papers truly need the click), deliberately out of the 2026-08-01 slice.
 
 ---
 

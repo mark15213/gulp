@@ -129,32 +129,47 @@ The library is built from typed objects (interaction spec §4.2) and the unit of
 
 Light theme only (v1). Tokens are semantic where possible so a dark theme is a later swap (§10).
 
-### 3.1 Brand — Gulp Blue
+> **Corrected 2026-08-01.** This section documented a cool-slate + "Gulp Blue" scheme the product **never shipped**. `packages/ui/src/tokens.css` has carried a warm-paper + banana/ink palette since the brand mark landed, and the legacy `--blue-*` names were repointed rather than removed. The values below are transcribed from that file, which is the source of truth for values. The mobile column is **unbuilt**.
+
+### 3.1 Brand — banana & ink
+
+A bitten-banana, Warhol-pop mark. The governing rule: **yellow is never text on paper.** It highlights, fills, marks and hovers; ink and warm paper carry all the reading.
 
 | Token | Hex | Use |
 |---|---|---|
-| `--blue-50` | `#EFF5FF` | tints: selected row, info banner bg, `Due` chip bg |
-| `--blue-100` | `#DBE8FE` | hover tint, subtle fills |
-| `--blue-500` | `#3B82F6` | secondary/hover on dark fills, mobile gradient stop |
-| `--blue-600` | `#2563EB` | **primary** — buttons, active nav, links, focus, `Due` accent |
-| `--blue-700` | `#1D4ED8` | pressed / active state |
+| `--banana` | `#F5CE2A` | the mark; highlight fill, chip fill, marker, badge, hover |
+| `--banana-deep` | `#D9A800` | banana where an edge is needed on a light fill; unread pip |
+| `--banana-wash` | `rgba(245,206,42,.5)` | text-highlight wash |
+| `--ink` | `#16130B` | **primary** — text, borders, active-nav marker, filled buttons |
+| `--ink-hi` | `#2C2718` | primary hover (a warm lift off pure ink) |
+| `--ink-lo` | `#0B0905` | primary pressed |
 
-### 3.2 Neutrals
+**Pop accents** — the mark's Ben-Day halftone colors, rationed:
 
-Text ink is shared so prose reads identically; **surfaces and borders carry the only register difference** — web runs cool (slate), mobile runs a hair warmer (sand) for approachability. Everything stays light.
+| Token | Hex | Use |
+|---|---|---|
+| `--pop-blue` | `#1E6FDB` | **act** — the primary call to action (Forward · ▶ Start · Send) |
+| `--pop-blue-hi` / `--pop-blue-lo` | `#3A86F0` / `#1657B0` | hover / pressed |
+| `--pop-red` | `#E23A2D` | sparing pops; destructive and `Needs attention` |
 
-| Role | Token | Web (cool) | Mobile (warm) |
+> **Legacy `--blue-*` are aliases, not blue.** `--blue-50/100/500` resolve to banana tints (background only); `--blue-600/700` resolve to `--ink`, so every pre-brand usage stays contrast-safe. Don't write new code against them — say `--ink`, `--banana` or `--pop-blue` explicitly.
+
+### 3.2 Neutrals — warm paper
+
+Warm off-white rather than stark white, so cards sit *in* the paper instead of floating as cold boxes on it.
+
+| Role | Token | Web (shipped) | Mobile |
 |---|---|---|---|
-| App background | `--bg` | `#F8FAFC` | `#FAFAF7` |
-| Surface / card | `--surface` | `#FFFFFF` | `#FFFFFF` |
-| Subtle fill / hover | `--fill` | `#F1F5F9` | `#F4F3EE` |
-| Border / hairline | `--border` | `#E2E8F0` | `#E9E6DD` |
-| Strong border / disabled | `--border-strong` | `#CBD5E1` | `#D8D3C7` |
-| Placeholder / `New` state | `--muted` | `#94A3B8` | `#A8A395` |
-| Secondary text | `--text-2` | `#64748B` | `#6B665A` |
-| Primary text / ink | `--text-1` | `#0F172A` | `#1C1B18` |
+| App background | `--bg` | `#FBF7EA` | *unbuilt* |
+| Surface / card | `--surface` | `#FFFDF6` | *unbuilt* |
+| Subtle fill / hover | `--fill` | `#F4EFDD` | *unbuilt* |
+| Border / hairline | `--border` | `#E7DFC8` | *unbuilt* |
+| Strong border / disabled | `--border-strong` | `#D8CCA8` | *unbuilt* |
+| Placeholder / `New` state | `--muted` | `#A99F86` | *unbuilt* |
+| Secondary text | `--text-2` | `#6E6552` | *unbuilt* |
+| Primary text / ink | `--text-1` | `#16130B` | *unbuilt* |
 
-> Implementation note: ship these as one set of semantic tokens (`--bg`, `--surface`, `--text-1`…) with two value maps (`web`, `mobile`). Components reference the semantic name only.
+> Implementation note: components reference the semantic name only (`--bg`, `--surface`, `--text-1`…). The mobile register was originally specified as a *warm sand* variant of a *cool* web palette; now that web is itself warm, that contrast no longer exists — the mobile map must be **re-derived** from the banana brand when the client starts, not transcribed from the old table.
 
 ### 3.3 Mastery-state palette (shared — do not localize per surface)
 
@@ -177,11 +192,12 @@ The full ladder (`Unread → Read → Summarized → Can recall → Can distingu
 | `--success` | `#10B981` | confirmations (== Known) |
 | `--warning` | `#F59E0B` | caution (== Learning) |
 | `--danger` | `#EF4444` | destructive / `Needs attention` (== At risk) |
-| `--info` | `#2563EB` | informational (== brand) |
-| `--focus-ring` | `rgba(37,99,235,.45)` | 2px ring + 2px offset, both surfaces |
-| `--overlay-scrim` | `rgba(15,23,42,.40)` | sheets, modals, `⌘K` |
+| `--info` | `#2563EB` | informational |
+| `--focus-ring` | `rgba(22,19,11,.5)` | 2px ring + 2px offset, both surfaces — **ink**, not brand |
+| `--overlay-scrim` | `rgba(22,19,11,.40)` | sheets, modals, `⌘K` |
+| `--accent` | `#16130B` | fallback for components reading `var(--accent, …)` — resolves to ink so text and borders stay legible; reach for `--banana` explicitly when you want the pop |
 
-Semantic colors deliberately reuse the mastery palette so the whole product speaks one color vocabulary.
+Semantic colors deliberately reuse the mastery palette so the whole product speaks one color vocabulary. Note the split introduced by the banana brand: **ink is the primary, `--pop-blue` is "act", banana is emphasis** — three distinct jobs that used to be one blue.
 
 ### 3.5 Mobile expressive accents
 

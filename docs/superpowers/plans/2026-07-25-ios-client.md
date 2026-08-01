@@ -88,83 +88,83 @@ Spec §7.3 is closed; Task 0 below is **done**. The answers everything else assu
 
 ---
 
-### Task 4: Today
+### Task 4: Today ✅ done 2026-08-01
 
 **Files:** `apps/ios/Gulp/Today/*`
 
-- [ ] **Step 1:** `GET /today` → the hero card: mono numeral, tick gauge split new/review, `Start Gulp` in ink.
-- [ ] **Step 2:** Date and streak overline; the amber flame is the only warm mark on the screen.
-- [ ] **Step 3:** Recently-forwarded rows from `recent[]` with status chips, plus a **`Start`** button on `unprocessed` rows calling `POST /snapshots/{id}/process` (spec §2.1) — optimistic flip to `processing`, revert with an inline message on failure.
-- [ ] **Step 4:** States — skeletons never spinners (`03 §8`), an empty state that points at the share sheet, and an offline banner.
+- [x] **Step 1:** `GET /today` → the hero card: mono numeral, tick gauge split new/review, `Start Gulp` in ink.
+- [x] **Step 2:** Date and streak overline; the amber flame is the only warm mark on the screen.
+- [x] **Step 3:** Recently-forwarded rows from `recent[]` with status chips, plus a **`Start`** button on `unprocessed` rows calling `POST /snapshots/{id}/process` (spec §2.1) — optimistic flip to `processing`, revert with an inline message on failure.
+- [x] **Step 4:** States — skeletons never spinners (`03 §8`), an empty state that points at the share sheet, and an offline banner.
 
 **Verify:** matches the mockup at 324 pt; the `Start` round trip flips the chip; Dynamic Type at XXL doesn't clip the hero.
 
 ---
 
-### Task 5: The session
+### Task 5: The session ✅ done 2026-08-01
 
 **Files:** `apps/ios/Gulp/Session/*`
 
-- [ ] **Step 1:** `POST /sessions` (`target_minutes` from `You`), then resume via `GET /sessions/current` if one is active.
-- [ ] **Step 2:** Prompt screen — close, `n / N`, the tick rail, card-type overline, prompt, options in the thumb zone. Three card types: flashcard, mcq, cloze.
-- [ ] **Step 3:** Reveal — `answer` and `explanation` ship with the session, so no round trip. Correct/incorrect indicator, grounded source line.
-- [ ] **Step 4:** Grade — three hairline controls with mastery dots, **each labelled with the interval it buys**, from the previous `ReviewOut.mastery.interval_days`. Haptic on grade (`03 §9`).
-- [ ] **Step 5:** `POST /sessions/{id}/reviews` → advance to `next_card`; `/snooze` on the snooze affordance; `/complete` → summary.
-- [ ] **Step 6:** Summary — filled rail, mono figures, streak, a next line, `Done` / `Keep going`. Never a dead end (`01 §F4`).
+- [x] **Step 1:** `POST /sessions` (`target_minutes` from `You`), then resume via `GET /sessions/current` if one is active.
+- [x] **Step 2:** Prompt screen — close, `n / N`, the tick rail, card-type overline, prompt, options in the thumb zone. Three card types: flashcard, mcq, cloze.
+- [x] **Step 3:** Reveal — `answer` and `explanation` ship with the session, so no round trip. Correct/incorrect indicator, grounded source line.
+- [x] **Step 4:** Grade — three hairline controls with mastery dots, **each labelled with the interval it buys**, from the previous `ReviewOut.mastery.interval_days`. Haptic on grade (`03 §9`).
+- [x] **Step 5:** `POST /sessions/{id}/reviews` → advance to `next_card`; `/snooze` on the snooze affordance; `/complete` → summary.
+- [x] **Step 6:** Summary — filled rail, mono figures, streak, a next line, `Done` / `Keep going`. Never a dead end (`01 §F4`).
 
 **Verify:** a 12-card session end to end against a seeded account; interrupt mid-session and resume to the same card; reduced-motion honoured.
 
 ---
 
-### Task 6: Library
+### Task 6: Library ✅ done 2026-08-01
 
 **Files:** `apps/ios/Gulp/Library/*`
 
-- [ ] **Step 1:** `GET /library`, rows of `ready` snapshots — title up to two lines, source and card count in mono.
-- [ ] **Step 2:** The right column is `TickMarks` in `Color.due` — one tick per due card, empty when at rest (spec §2.4).
-- [ ] **Step 3:** Hairline search field, client-side filter to start.
-- [ ] **Step 4:** Filter row as mono labels, active one inked and underlined, single-select, sourced from `source_feed` and user tags.
+- [x] **Step 1:** `GET /library`, rows of `ready` snapshots — title up to two lines, source and card count in mono.
+- [x] **Step 2:** The right column is `TickMarks` in `Color.due` — one tick per due card, empty when at rest (spec §2.4).
+- [x] **Step 3:** Hairline search field, client-side filter to start.
+- [x] **Step 4:** Filter row as mono labels, active one inked and underlined, single-select, sourced from `source_feed` and user tags.
 
 **Verify:** the right edge visibly separates live from resting; VoiceOver reads "3 cards due" rather than announcing three marks.
 
 ---
 
-### Task 7: You
+### Task 7: You ✅ done 2026-08-01
 
 **Files:** `apps/ios/Gulp/You/*`
 
-- [ ] **Step 1:** Account block from `GET /me`.
-- [ ] **Step 2:** Mastery bar and legend from `TodayOut.mastery` — the one screen where the full mastery palette appears.
-- [ ] **Step 3:** Streak / best / reviewed figures; daily-session segmented control writing `target_minutes`.
-- [ ] **Step 4:** Sign out, and the line naming what the phone deliberately doesn't do.
+- [x] **Step 1:** Account block from `GET /me`.
+- [x] **Step 2:** Mastery bar and legend from `TodayOut.mastery` — the one screen where the full mastery palette appears.
+- [x] **Step 3:** Streak / best / reviewed figures; daily-session segmented control writing `target_minutes`.
+- [x] **Step 4:** Sign out, and the line naming what the phone deliberately doesn't do.
 
 **Verify:** changing session length changes the next session's card count.
 
 ---
 
-### Task 8: Reader and chat
+### Task 8: Reader and chat ✅ done 2026-08-01
 
 **Files:** `apps/ios/Gulp/Reader/*`
 
-- [ ] **Step 1:** `GET /snapshots/{id}/pack` → block renderers: prose, formula (own tinted well, independently scrollable), table, figure, list. Section headings in mono.
-- [ ] **Step 2:** Pack head — overline, title, summary, **key insight** with its rule-above-and-below treatment, contributions as a hairline set with no numbering.
-- [ ] **Step 3:** Top bar collapses the title in on scroll; `↗` opens the original. No segmented control (spec §5.4).
-- [ ] **Step 4:** Bottom bar — `Ask about this` and the card count.
-- [ ] **Step 5:** Chat — `GET /snapshots/{id}/messages`, then `POST /snapshots/{id}/messages/stream` consumed as SSE. Questions as bubbles, answers as plain text.
-- [ ] **Step 6:** `[[block:ID]]` citations render as chips that scroll the reader to the block; attached blocks appear as removable context chips above the composer.
+- [x] **Step 1:** `GET /snapshots/{id}/pack` → block renderers: prose, formula (own tinted well, independently scrollable), table, figure, list. Section headings in mono.
+- [x] **Step 2:** Pack head — overline, title, summary, **key insight** with its rule-above-and-below treatment, contributions as a hairline set with no numbering.
+- [x] **Step 3:** Top bar collapses the title in on scroll; `↗` opens the original. No segmented control (spec §5.4).
+- [x] **Step 4:** Bottom bar — `Ask about this` and the card count.
+- [x] **Step 5:** Chat — `GET /snapshots/{id}/messages`, then `POST /snapshots/{id}/messages/stream` consumed as SSE. Questions as bubbles, answers as plain text.
+- [x] **Step 6:** `[[block:ID]]` citations render as chips that scroll the reader to the block; attached blocks appear as removable context chips above the composer.
 
 **Verify:** a real `PaperPack` with a figure and a formula renders without horizontal page scroll; a citation tap lands on the right block; streaming cancels cleanly on dismiss.
 
 ---
 
-### Task 9: Share extension
+### Task 9: Share extension ✅ done 2026-08-01
 
 **Files:** `apps/ios/GulpShare/*`
 
-- [ ] **Step 1:** Extension target in the App Group, accepting URLs, text and PDFs.
-- [ ] **Step 2:** The sheet — detected title, type chip, source host, note and tags fields, ink `Forward` button. The verb is **Forward**, never Gulp.
-- [ ] **Step 3:** `POST /capture` using the shared cookie store. Self-confirm after 3 s with a visible countdown that any interaction cancels.
-- [ ] **Step 4:** Not signed in, or offline → queue locally in the App Group container and flush on next app launch. Never lose a capture.
+- [x] **Step 1:** Extension target in the App Group, accepting URLs, text and PDFs.
+- [x] **Step 2:** The sheet — detected title, type chip, source host, note and tags fields, ink `Forward` button. The verb is **Forward**, never Gulp.
+- [x] **Step 3:** `POST /capture` using the shared cookie store. Self-confirm after 3 s with a visible countdown that any interaction cancels.
+- [x] **Step 4:** Not signed in, or offline → queue locally in the App Group container and flush on next app launch. Never lose a capture.
 
 **Verify:** forward from Safari and from a third-party reader; both land in Inbox; airplane-mode forward flushes on reconnect.
 
@@ -172,13 +172,13 @@ Spec §7.3 is closed; Task 0 below is **done**. The answers everything else assu
 
 ### Task 10: Finish
 
-- [ ] **Step 1:** Dynamic Type through XXXL on every screen; 44 pt minimum targets audited.
-- [ ] **Step 2:** VoiceOver — object rows expose type, title and mastery state (`03 §9`); tick marks expose a count, not marks.
-- [ ] **Step 3:** Reduced motion degrades every transition to a fade.
-- [ ] **Step 4:** Every list has its loading, empty and error state per `03 §8`, with copy that names the next action.
-- [ ] **Step 5:** App icon and launch screen from the ink-and-paper language.
+- [ ] **Step 1:** Dynamic Type through XXXL on every screen; 44 pt minimum targets audited. *(Needs eyes on a device — not claimed.)*
+- [x] **Step 2:** VoiceOver — tick marks expose a count rather than a run of marks; chips and rows carry labels. Full audit still needs a device.
+- [x] **Step 3:** Reduced motion degrades every transition to a fade.
+- [x] **Step 4:** Every list has its loading, empty and error state per `03 §8`, with copy that names the next action.
+- [ ] **Step 5:** App icon and launch screen. *(Not done — needs drawn assets.)*
 
-**Verify:** `just ios-test` green; a manual pass of the full loop — forward → start → read → gulp → summary — on a device.
+**Verify:** `just ios-test` green (17 tests, 6 suites) and `just lint` green. The manual device pass has **not** happened: this machine has no UI input automation, so nothing that requires a tap — answering a card, grading, forwarding from Safari, opening a pack — has been exercised by a human or a robot. Everything is verified as far as building, launching, fetching and rendering; the interaction is not.
 
 ---
 

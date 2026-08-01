@@ -6,8 +6,12 @@
 > client** scoped to the consumption end — forward from anywhere, run the daily
 > Gulp session, read what came back. Ten screens are drawn (Today · prompt ·
 > reveal · summary · share sheet · Library · You · reader · reader-scrolled ·
-> chat). It consumes the API exactly as it stands: **no server work is required
-> for v1**. The design costs `03` four amendments, all recorded in §5.
+> chat). The design costs `03` four amendments, all recorded in §5.
+>
+> **Correction (2026-08-01).** This spec claimed the API needs no server work.
+> Building the client disproved it: four screens want a field the API does not
+> expose (§3.2). None blocks the loop, but the claim was wrong and is retracted
+> rather than quietly softened.
 >
 > Mockups: see the design artifact published with this spec.
 
@@ -233,6 +237,20 @@ decode. `FlexibleISO8601` in `Net/GulpClient.swift` accepts both.
 
 Neither needs a server change, but both are worth knowing before a third
 client is written against this API.
+
+## 3.2 Fields the design needs and the API does not expose
+
+Found by building, in the order they were hit. None blocks the core loop; each
+is a small addition to an existing payload.
+
+| Screen | Wants | Today's answer |
+|---|---|---|
+| Today (§2.1) | a streak | `streak_days` exists only on `SummaryOut`, so it can only be shown just after a session. **Omitted.** One integer on `TodayOut` fixes it. |
+| Library (§2.4) | per-item card and due counts | `LibraryOut.items` are bare `SnapshotOut`s. Asking per row is one request per row. **The tick column — the thing this screen was designed around — is absent.** Two integers per item fixes it. |
+| You (§2.5) | to save the session length | `gulp_session_minutes` is read-only; there is no settings endpoint. Stored locally instead, and honoured, because `POST /sessions` takes `target_minutes` per session — it just does not follow you to web. |
+| Session (§2.2) | to know there is no session | `GET /gulp/sessions/current` answers a literal `null` body, which the generated client cannot decode. Handled at the call site. **204 would fix it for every typed client.** |
+
+The first two are the ones a user would notice.
 
 ## 4. Visual system — the mobile register as built
 

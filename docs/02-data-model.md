@@ -331,7 +331,9 @@ The streaming form of `Source` — a followed feed, RSSHub/Folo-compatible. Fiel
 | `feed_etag` / `feed_http_modified` | `string?` | conditional GET (HTTP 304) |
 | `consecutive_failures` | `int?` | ≥5 → poll backs off to daily |
 
-**Health is derived, not stored:** `muted` → `muted`; `last_fetch_error != null` → `error`; else `active`. `unread_count` is derived from `FeedEntry.read_at`. `Source.status` is constant `ready` for subscription rows.
+> **Amended 2026-08-01** (spec [`superpowers/specs/2026-08-01-feeds-inbox-triage-design.md`](superpowers/specs/2026-08-01-feeds-inbox-triage-design.md)): `FeedEntry` gains `skipped_at`, making **triage state derived** (below). The subscription's derived count becomes **`pending_count`** — entries neither forwarded nor skipped — and `read_at` narrows to a cosmetic "seen" flag. Promotion no longer starts processing: the Snapshot lands `unprocessed` and waits for an explicit ▶ Start (`01 §F1` amendment).
+
+**Health is derived, not stored:** `muted` → `muted`; `last_fetch_error != null` → `error`; else `active`. `pending_count` is derived from `FeedEntry` (`skipped_at is null and promoted_source is null`). `Source.status` is constant `ready` for subscription rows.
 
 **`FeedEntry`** — lightweight, prunable feed items (unpromoted entries older than 90 days are swept weekly):
 
@@ -340,11 +342,14 @@ The streaming form of `Source` — a followed feed, RSSHub/Folo-compatible. Fiel
 | `subscription` | `→Source` | cascade-deleted with the subscription |
 | `guid` | `string` | feed-provided id, else hash(link+title); **unique per subscription** (dedup) |
 | `title` / `url` / `author` / `published_at` | | list display |
-| `content_html` | `text?` | feed-provided content — powers the Feeds reading pane |
-| `read_at` | `timestamp?` | null = unread |
+| `content_html` | `text?` | feed-provided content — powers the Inbox decision-preview pane |
+| `read_at` | `timestamp?` | **"seen"** — set when the entry is opened; drives row dimming only, feeds no count or filter |
+| `skipped_at` | `timestamp?` | explicit dismissal ("not interested"); reversible |
 | `promoted_source` | `→Source?` | set on gulp; doubles as the "already gulped" record |
 
-> Promotion ("gulp") creates a `Source(kind=snapshot, captured_via=feed)` through the normal capture path and enqueues processing; the Snapshot points **back** at the Subscription via `Snapshot.emitted_by` (§4.3) — a `Source → Source` reference, not a separate join.
+**Triage state is derived, not stored** (same discipline as subscription health): `promoted_source != null` → `forwarded`; else `skipped_at != null` → `skipped`; else `pending`. The Inbox `New` section is exactly the `pending` set.
+
+> Promotion ("gulp") creates a `Source(kind=snapshot, captured_via=feed, status=unprocessed)` through the normal capture path; the Snapshot points **back** at the Subscription via `Snapshot.emitted_by` (§4.3) — a `Source → Source` reference, not a separate join. Only metadata resolution is enqueued at this point, never the digest.
 
 ---
 
@@ -523,6 +528,7 @@ Every `status`/`state` field, in one place. (`Source.status` is split by form, s
 | **`Snapshot.status`** | `queued · unprocessed · processing · ready · exported · needs_attention` *(amended 2026-07-02 — single gate)* | capture lands `unprocessed`; processing is **manually triggered** (S2 §2.4): `unprocessed`→`processing`→`ready` (**= in library**); `unprocessed`→`exported`→`ready` (external job + import); `processing`→`needs_attention` (failed) → `processing` (retry); `queued` = offline buffer. The parked review states re-enter with unvetted inflow (auto-process / S7) |
 | **`Conversation.status`** | `active · saved · discarded` | `active`→`saved` (with sediment) · `active`→`discarded` (keeps thread) |
 | **`Subscription` health** *(derived, not stored — §4.8 amendment 2026-07-09)* | `active · muted · error` | `active`↔`muted` (muted flag) · `active`↔`error` (`last_fetch_error` set/cleared per fetch) |
+| **`FeedEntry` triage** *(derived, not stored — §4.8 amendment 2026-08-01)* | `pending · forwarded · skipped` | `pending`→`forwarded` (gulp sets `promoted_source`; terminal) · `pending`↔`skipped` (`skipped_at` set/cleared — Skip / Undo). `read_at` ("seen") is **orthogonal** and cosmetic |
 | **`KnowledgePack.status`** | `generating · ready` | `generating`→`ready` |
 | **`SedimentItem.state`** | `suggested · kept · dismissed` | `suggested`→`kept`/`dismissed` |
 | **`Card.status`** | `draft · accepted · rejected` | `draft`→`accepted` (enters scheduling) / `rejected` |
