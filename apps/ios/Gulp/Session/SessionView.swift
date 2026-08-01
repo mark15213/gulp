@@ -22,7 +22,7 @@ struct SessionView: View {
             guard model == nil else { return }
             let session = SessionModel(auth: auth)
             model = session
-            await session.start(targetMinutes: auth.user?.gulp_session_minutes)
+            await session.start(targetMinutes: app.sessionMinutes)
         }
     }
 

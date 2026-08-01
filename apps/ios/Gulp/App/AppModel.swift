@@ -19,6 +19,18 @@ final class AppModel {
     private(set) var today: Components.Schemas.TodayOut?
     private(set) var todayLoad: Load = .idle
 
+    private(set) var library: [Components.Schemas.SnapshotOut] = []
+    private(set) var libraryLoad: Load = .idle
+
+    /// How long a session should be. There is no endpoint to persist this —
+    /// `UserPublic.gulp_session_minutes` is read-only over the API — but
+    /// `POST /sessions` takes `target_minutes` per session, so the preference
+    /// is honoured even though it does not sync to web.
+    var sessionMinutes: Int {
+        get { UserDefaults.standard.object(forKey: "sessionMinutes") as? Int ?? 5 }
+        set { UserDefaults.standard.set(newValue, forKey: "sessionMinutes") }
+    }
+
     /// A running session takes the whole screen — no tab bar, one thing at a
     /// time (`03 §7.7`). Task 5 fills it in.
     var sessionIsRunning = false
@@ -89,6 +101,25 @@ final class AppModel {
         else { return }
         today.recent[index].status = status
         self.today = today
+    }
+
+    func refreshLibrary() async {
+        if libraryLoad == .idle { libraryLoad = .loading }
+        do {
+            let output = try await client.get_library_library_get()
+            switch output {
+            case let .ok(response):
+                library = try response.body.json.items
+                libraryLoad = .loaded
+            case let .undocumented(statusCode, _):
+                try handle(statusCode: statusCode)
+                libraryLoad = .failed("Couldn't read your library (\(statusCode)).")
+            }
+        } catch {
+            let gulp = error.asGulpError
+            if case .unauthorized = gulp { auth?.sessionExpired() }
+            libraryLoad = library.isEmpty ? .failed(gulp.display) : .loaded
+        }
     }
 
     private func handle(statusCode: Int) throws {
