@@ -41,6 +41,12 @@
 	     build is ever distributed. -->
 	<key>NSAppTransportSecurity</key>
 	<dict>
+		<!-- A phone is not the Mac: `127.0.0.1` there is the phone itself, so a
+		     device build points at the Mac's LAN address instead, over plain
+		     HTTP. The address changes with the network, so it cannot be listed
+		     — this key covers local addresses as a class. Development only. -->
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
 		<key>NSExceptionDomains</key>
 		<dict>
 			<key>localhost</key>

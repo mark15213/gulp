@@ -8,14 +8,24 @@ import OpenAPIURLSession
 // hand-written response types.
 
 enum GulpEnvironment {
+    private static let baseURLKey = "GulpBaseURL"
+
     /// Overridable at launch so a device can point at a LAN address or a
     /// deployment without a rebuild: `-GulpBaseURL http://10.0.0.4:8000`.
+    ///
+    /// A launch argument lands in the *volatile* argument domain, which only
+    /// survives the launch Xcode itself performs. On a phone that is useless —
+    /// the next tap on the home screen would fall back to a loopback address
+    /// with nothing behind it. So the override is promoted into the persistent
+    /// domain the first time it is seen: set it once from Xcode, and the app
+    /// keeps talking to your Mac after that.
     static var baseURL: URL {
-        if let raw = UserDefaults.standard.string(forKey: "GulpBaseURL"),
-           let url = URL(string: raw) {
-            return url
+        let defaults = UserDefaults.standard
+        guard let raw = defaults.string(forKey: baseURLKey), let url = URL(string: raw) else {
+            return GulpAPI.defaultBaseURL
         }
-        return GulpAPI.defaultBaseURL
+        defaults.set(raw, forKey: baseURLKey)
+        return url
     }
 
     /// Shared with the extension so a login in the app is a login in the share

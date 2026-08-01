@@ -70,8 +70,12 @@ ios-uitest device="iPhone 17":
     xcodebuild test -project apps/ios/Gulp.xcodeproj -scheme Gulp \
       -destination 'platform=iOS Simulator,name={{device}}' \
       -only-testing:GulpUITests | tail -60
-api:
-    uv run --package gulp-api uvicorn app.main:app --reload
+# Loopback by default. A phone on the same wifi needs the API bound to the
+# LAN instead — `just api 0.0.0.0`, then point the app at your Mac's address
+# (`ipconfig getifaddr en0`). Loopback stays the default because 0.0.0.0 puts
+# an unauthenticated-by-default dev server on whatever network you are on.
+api host="127.0.0.1":
+    uv run --package gulp-api uvicorn app.main:app --reload --host {{host}}
 worker:
     cd services/worker && uv run --package gulp-worker python -m app.tasks
 
