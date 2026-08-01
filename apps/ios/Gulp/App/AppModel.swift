@@ -1,0 +1,69 @@
+import Foundation
+import GulpAPI
+import Observation
+
+/// The state the shell owns: what the server last told us, and whether a
+/// session is running. Screens **observe** this and never fetch in `body`
+/// (plan Task 3) — a view that starts its own request re-runs it every time
+/// SwiftUI re-evaluates, which is not a schedule anyone chose.
+@Observable
+@MainActor
+final class AppModel {
+    enum Load: Equatable {
+        case idle
+        case loading
+        case failed(String)
+        case loaded
+    }
+
+    private(set) var today: Components.Schemas.TodayOut?
+    private(set) var todayLoad: Load = .idle
+
+    /// A running session takes the whole screen — no tab bar, one thing at a
+    /// time (`03 §7.7`). Task 5 fills it in.
+    var sessionIsRunning = false
+
+    /// The snapshot being read, if any. Task 8 fills it in.
+    var readingSnapshotID: String?
+
+    private let client: Client
+    private weak var auth: Auth?
+
+    init(client: Client = GulpClientFactory.make()) {
+        self.client = client
+    }
+
+    /// The shell hands us auth so a 401 anywhere lands in one place instead of
+    /// every screen learning what a login form is.
+    func attach(auth: Auth) {
+        self.auth = auth
+    }
+
+    func refreshToday() async {
+        if todayLoad == .idle { todayLoad = .loading }
+        do {
+            let output = try await client.get_today_today_get()
+            switch output {
+            case let .ok(response):
+                today = try response.body.json
+                todayLoad = .loaded
+            case let .undocumented(statusCode, _):
+                try handle(statusCode: statusCode)
+                todayLoad = .failed("Couldn't load today (\(statusCode)).")
+            }
+        } catch {
+            let gulp = error.asGulpError
+            if case .unauthorized = gulp { auth?.sessionExpired() }
+            // Keep whatever we already had on screen; a failed refresh should
+            // not blank a screen that was fine a second ago.
+            todayLoad = today == nil ? .failed(gulp.display) : .loaded
+        }
+    }
+
+    private func handle(statusCode: Int) throws {
+        if statusCode == 401 {
+            auth?.sessionExpired()
+            throw GulpError.unauthorized
+        }
+    }
+}

@@ -18,8 +18,7 @@ struct RootView: View {
             case .signedOut:
                 SignInView()
             case .signedIn:
-                // Task 3 replaces this with the three-tab shell.
-                DesignSystemPreview()
+                MainTabs()
             }
         }
         .task {

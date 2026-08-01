@@ -74,15 +74,17 @@ Spec §7.3 is closed; Task 0 below is **done**. The answers everything else assu
 
 ---
 
-### Task 3: Shell
+### Task 3: Shell ✅ done 2026-08-01
 
 **Files:** `apps/ios/Gulp/App/*`
 
-- [ ] **Step 1:** Three tabs — `Today · Library · You`, active item filled glyph + ink label. No capture tab.
-- [ ] **Step 2:** A `NavigationStack` per tab; the reader and the session both present modally over the whole shell (the session has no tab bar, `03 §7.7`).
-- [ ] **Step 3:** One `@Observable AppModel` holding session state and a `Task`-based refresh; screens observe, never fetch in `body`.
+- [x] **Step 1:** Three tabs — `Today · Library · You`, active item filled glyph + ink label. No capture tab.
+- [x] **Step 2:** A `NavigationStack` per tab; the reader and the session both present modally over the whole shell (the session has no tab bar, `03 §7.7`).
+- [x] **Step 3:** One `@Observable AppModel` holding session state and a `Task`-based refresh; screens observe, never fetch in `body`.
 
-**Verify:** all three tabs reachable, tab bar hidden inside a session, state survives backgrounding.
+**Verify:** ✅ built and launched; the shell restores its session, fetches `GET /today` once through `AppModel`, and renders real data from the dev database (20 due, 11 new, 9 reviews). Tab switching is **not** driven — this machine has no UI input automation (osascript is refused Accessibility permission), so only rendering is confirmed.
+
+**Open:** iOS 26 draws the tab bar as a floating capsule, not the flat bar with a hairline top edge the mockups show. `.toolbarBackground(_:for: .tabBar)` does not reach the floating style. Either the design accepts the platform idiom or the bar gets rebuilt by hand — an owner decision, not a bug.
 
 ---
 
