@@ -86,7 +86,7 @@ For **organization**:
 
 Cross-cutting: every knowledge-bearing object carries a **mastery state** (§F7).
 
-> **Naming discipline:** "Source" is the umbrella only; **Subscription** is the streaming *form* of Source, while **Feeds** is the *surface* that manages Subscriptions — so Feeds is not a spine object (§4.1), just a place. The thing you usually point at is a **Snapshot**.
+> **Naming discipline:** "Source" is the umbrella only; **Subscription** is the streaming *form* of Source. *(amended 2026-08-01: "Feeds" is no longer even a place — subscriptions are managed from the **Inbox** source rail, and their unread items are Inbox's `New` section. The word survives only in `feed_entries` / `feed_url` and in speech.)* The thing you usually point at is a **Snapshot**.
 
 ### 4.3 Navigation
 
@@ -97,7 +97,7 @@ Navigation is organized by **intent**, not by object type. The forms of Source a
 - `⊕ Capture` is the center action (sheet, not a tab); it produces a **Snapshot**.
 - **Mobile is the consumption end** — capture, Gulp, conversation. There is no Inbox/triage tab; bulk triage and library/pack management live on web (below). So capture is never a black hole, `Today` carries a read-only **"recently captured / processing"** peek of what just landed.
 - `Today` also surfaces the daily essentials: a persistent "**N due**" badge and the **Daily digest**. *(The "N new to confirm" batch-review card is parked with the snapshot gate — §F2 amendment.)*
-- Concepts, Conversations, and Knowledge bases are **filters inside Library**; feed management lives in `You/Settings`. Power is present, not in your face.
+- Concepts, Conversations, and Knowledge bases are **filters inside Library**; subscriptions are not managed on the phone at all — they live in the web Inbox's source rail (§4.3), and the phone stays the consumption end. Power is present, not in your face.
 
 **Web — left sidebar (the power workspace):**
 `Today · Inbox · Library · Settings` *(amended 2026-08-01: **Feeds folds into Inbox** — see [`superpowers/specs/2026-08-01-feeds-inbox-triage-design.md`](superpowers/specs/2026-08-01-feeds-inbox-triage-design.md). Knowledge bases parked — tags cover grouping; Today stays the first tab)*
@@ -153,7 +153,7 @@ Each flow: **trigger → steps → key screens → states → edge cases**, with
 **Review model (amended 2026-07-02 — single gate; see [`superpowers/specs/2026-07-02-single-gate-lifecycle-design.md`](superpowers/specs/2026-07-02-single-gate-lifecycle-design.md)):**
 - **Reading is the review.** The snapshot-level gate (`awaiting review` → "Add to library", batch confirm, auto-approve) is **parked** — under manual trigger there is no unvetted inflow to gate.
 - **The only gate is per-card accept/reject**, because it guards what enters practice/scheduling (§F4/§F7).
-- **The gate re-enters** if `auto_process` or Feeds (§F6) create packs the user never asked for: one status value + one Inbox filter + a confirm surface (both views are derived queries).
+- **The gate re-enters** only if something starts creating packs the user never asked for — `auto_process`, or a per-subscription auto-forward rule: one status value + one Inbox filter + a confirm surface (both views are derived queries). *(amended 2026-08-01: subscriptions no longer qualify — Forward takes an item in but never digests it, so every pack is still one the user asked for.)*
 
 **Reaching the reader (amended 2026-08-01 — [spec §4.6](superpowers/specs/2026-08-01-feeds-inbox-triage-design.md)):** the Snapshot detail page is **status-complete** — it shows ▶ Start when `unprocessed`, a skeleton while processing, the failure banner on `needs_attention`, and the pack + chat when `ready`. So **clicking any Inbox row's title opens it, in any section, at any status**: start it there and watch the pack fill in, then read and discuss without returning to the list. Row buttons are the shortcut for *staying* in the list. **Reading and chat never happen on the intake surface** — Inbox's preview pane answers keep-or-digest in about ten seconds and nothing more. A snapshot started from `Kept` stays visible as `Ready · Read →` until the user leaves the surface, so the belt finishes on screen instead of the item vanishing into the Library.
 
@@ -233,7 +233,7 @@ Each flow: **trigger → steps → key screens → states → edge cases**, with
 
 ---
 
-### F6 — Feeds (subscriptions) & digests
+### F6 — Subscriptions & digests
 **Goal:** turn followed feeds into a personalized, digestible stream — not an infinite inbox.
 
 > **Amended 2026-07-09** (spec [`superpowers/specs/2026-07-09-subscription-system-design.md`](superpowers/specs/2026-07-09-subscription-system-design.md)): the **subscription half is built** — RSSHub/Folo-compatible feeds (`rsshub://` + plain RSS), a web `Feeds` surface (subscriptions · entries · reader) and a `Discover` catalog. Two deviations from the steps below: new items land as lightweight **FeedEntries** (step 2's auto-created Snapshots were rejected — library stays clean) and only an explicit **Gulp** promotes one into the pipeline; `auto_approve` stays parked with the snapshot gate. Steps 3–4's **digest remains deferred**, as is OPML import.
@@ -252,7 +252,7 @@ Each flow: **trigger → steps → key screens → states → edge cases**, with
 
 **Mobile vs web:** digest is mobile-primary (lives in `Today` as a daily card stack); feed management and triage are web-primary (the Inbox surface — the phone stays consumption-only).
 
-**Edge cases:** noisy feed → per-subscription filters and a "too much from here" control; feed fetch error → surfaced on Feeds, never blocks the digest.
+**Edge cases:** noisy feed → per-subscription filters, `Skip all`, and a "too much from here" mute; feed fetch error → surfaced as a red health dot on the Inbox source rail, never blocks another subscription or any other section.
 
 ---
 

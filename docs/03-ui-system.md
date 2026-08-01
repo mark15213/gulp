@@ -53,12 +53,14 @@ The rules every screen obeys; when a visual decision is ambiguous, resolve towar
 
 ## 2. The shared spine
 
-### 2.1 Brand anchor — Gulp Blue
+### 2.1 Brand anchor — banana & ink
 
-One blue carries the brand across both surfaces. `--blue-600 #2563EB` is the primary. The difference between registers is **how much** blue, not **which** blue:
+The mark is a bitten banana, rendered Warhol-pop. Three jobs, three colors: **ink is the primary, banana is emphasis, `--pop-blue` is "act"** (§3.1). The difference between registers is how loud the banana gets, not which colors exist:
 
-- **Web:** blue is *functional* — primary buttons, selection, focus, links, the `Due` accent. Everything else is slate. The accent earns attention by scarcity.
-- **Mobile:** blue is *brand* — larger fills, the active tab, the capture button, headers; gentle blue→blue tints and (sparingly) gradients are allowed at hero moments.
+- **Web:** ink is *functional* — text, hairlines, selection markers, filled primaries. Banana appears only as **fill**: the actionable badge, a highlight, an unread pip, a hover. `--pop-blue` is rationed to the one call to action per screen. Everything else is warm paper; the accent earns attention by scarcity.
+- **Mobile:** banana is *brand* — the capture button, the active tab, hero fills — on the same warm-paper ground.
+
+> **Corrected 2026-08-01.** This section previously read *"Brand anchor — Gulp Blue"* and made `--blue-600 #2563EB` the primary. **That scheme never shipped** — see §3.1 for what `packages/ui/src/tokens.css` actually carries. Note that the iOS amendment below had already moved mobile's primary to ink, for precisely the reason the web palette later followed: a saturated blue on a warm ground reads as a sticker stuck onto the page rather than part of it.
 
 > **Amended 2026-07-25 (mobile only) — see [`superpowers/specs/2026-07-25-ios-client-design.md`](superpowers/specs/2026-07-25-ios-client-design.md) §5.2.** The rule above ("how much blue, not which blue") is reversed for the iOS client. On a warm-sand ground the entire neutral family sits at hue 42–60 while `--blue-600` is `hsl(221, 83%, 53%)` — near-complementary, saturated and light, so it reads as a sticker rather than part of the page. On mobile the **primary action is ink** (`--text-1`) and **blue is reserved for the `Due` state alone**, where it is the one thing on a screen worth acting on. This follows the pattern §3.2 already uses for neutrals: one semantic token, two register value maps. Web is unchanged.
 
@@ -201,6 +203,8 @@ Semantic colors deliberately reuse the mastery palette so the whole product spea
 
 ### 3.5 Mobile expressive accents
 
+> **Unbuilt, and superseded in part (2026-08-01).** These were specified against a cool-blue brand, where amber read as the complementary warmth. The banana brand now *is* warm yellow, so `--celebrate-amber` would compete with it rather than complement it. Re-derive this set with the mobile palette (§3.2) before building the mobile register; none of it ships today.
+
 Used **only** at genuine moments of progress (interaction spec §F4 session summary, grade, streak) and **never** on web or on working surfaces:
 
 | Token | Hex | Use |
@@ -213,10 +217,11 @@ Rule: amber is **complementary** to the blue brand — it gives mobile its warmt
 
 ### 3.6 Contrast budget
 
-- Body text (`--text-1` on `--surface`/`--bg`): ≥ 7:1 (AAA).
-- `--blue-600` on white and white on `--blue-600`: ≥ 4.5:1 (AA) — safe for buttons, links, UI text.
+- Body text (`--text-1` ink on `--surface`/`--bg` paper): ≥ 7:1 (AAA) — the warm paper costs nothing here.
+- `--ink` on paper and paper on `--ink`: AAA both ways; ink is the safe default for any text or border.
+- `--pop-blue` on `--surface` and white on `--pop-blue`: ≥ 4.5:1 (AA) — safe for buttons, links, UI text.
 - State chips use the on-tint text tokens (§3.3) for ≥ 4.5:1.
-- Amber and other low-contrast accents: decorative / fills only, always paired with a text label.
+- **`--banana` never carries text and is never text** (§3.1). It is a fill, a marker or a highlight, always with ink on top or beside it. The same applies to any other low-contrast accent.
 
 ---
 
@@ -231,6 +236,9 @@ English / Latin only in v1 (CJK deferred, §10).
 | **Inter** | `Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif` | 400 / 500 / 600 / 700 |
 | **Geist Mono** | `'Geist Mono', ui-monospace, 'SF Mono', Menlo, monospace` | 400 / 500 / 700 |
 | **Instrument Serif** | `'Instrument Serif', Georgia, 'Times New Roman', serif` | 400 + italic |
+| **Reading serif** *(added 2026-08-01 — shipped as `--font-reading`)* | `'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, 'Times New Roman', serif` | 400 / 600 |
+
+> `--font-reading` is a **classic book serif for reading surfaces** — the pack's report title, headings and key insight — and is deliberately *not* the high-contrast display face (`--font-serif` / Instrument Serif). System fonts, no webfont. It was added to `tokens.css` with the immersive reader and is documented here after the fact.
 
 Geist Mono and Instrument Serif already ship in `design/fonts/`; reuse them. (Inter replaces the poster's Young Serif/Work Sans pairing — the "Sediment" poster system is marketing-only and is not adopted here.)
 
@@ -285,7 +293,7 @@ Web is denser; mobile is larger with bigger jumps. Sizes are `px / line-height`,
 ### 5.2 Web layout — the workbench
 
 - **Three-pane where useful** (interaction spec §4.3): list ▸ reader ▸ pack/chat panel.
-- **Left sidebar:** 240px (`Today · Inbox · Library · Feeds · Knowledge bases · Search · Settings`), collapsible to a 56px icon rail.
+- **Left sidebar:** 240px (`Today · Inbox · Library · Search · Settings`), collapsible to a 56px icon rail. *(amended 2026-08-01: `Feeds` is gone — it folded into Inbox, whose own left rail carries the subscriptions; Knowledge bases stay parked.)*
 - **Reader / content column:** comfortable measure, max ~720px.
 - **Right panel:** 360–420px for knowledge pack or conversation; dismissible.
 - **`⌘K` command bar:** centered overlay (560px) on `--overlay-scrim`; handles search + capture + jump-to.
@@ -328,7 +336,7 @@ Web is denser; mobile is larger with bigger jumps. Sizes are `px / line-height`,
 - **Type:** 14px base, tight headings, generous use of the Mono `Label` for column headers and metadata.
 - **Interaction:** keyboard-first — `⌘K`, `1–4` to answer in Gulp, `space` reveal, `enter` next, arrow navigation, type-to-filter.
 - **Motion:** fast and functional (120–180ms); panels slide, selections highlight; no celebration.
-- **Inbox/Library/Feeds** are the home of deep curation (interaction spec §F2): reader + pack side-by-side, split/merge Concepts, re-file into KBs.
+- **Inbox** is the home of triage (§7.11) and **Library/Snapshot detail** of deep curation (interaction spec §F2): reader + pack side-by-side, split/merge Concepts, re-file into KBs. Keep the two jobs apart — the intake surface decides, the reader reads.
 
 ### 6.2 Mobile register — characterful & rewarding (C)
 
@@ -373,7 +381,8 @@ The product's most-repeated component (interaction spec §2.3).
 
 | Variant | Look | Use |
 |---|---|---|
-| **Primary** | `--blue-600` fill, white text | the one key action (Start Gulp, Accept, Confirm) |
+| **Primary** | `--ink` fill, paper text | the one key action on a working surface (Confirm, Accept) |
+| **Act** *(2026-08-01)* | `--pop-blue` fill, white text | the call to action that moves an item along (Forward, ▶ Start, Send) — at most one per section |
 | **Secondary** | `--surface` + `--border`, `--text-1` | alternatives (Open original, Skip) |
 | **Ghost** | text only, `--text-2` | low-emphasis (Dismiss, Snooze) |
 | **Danger** | `--danger` text/fill | destructive (Discard) |
@@ -422,16 +431,26 @@ The product's signature screen; **one thing per screen, full-bleed, no competing
 - **Web:** one article-scoped chat panel beside the reader; attached blocks show as removable **context chips** above the composer. **Mobile:** full-screen chat with a collapsible "context" peek.
 - **Sediment review sheet (identical both surfaces):** proposed new points, corrected misconceptions, candidate Cards, Concepts touched, "questions to review" — each `suggested → kept / dismissed`. Discard keeps the thread, creates nothing (no silent loss, §8).
 
-### 7.11 Feeds & digest (interaction spec §F6)
+### 7.11 Inbox — the intake surface (interaction spec §F1 · §F6)
 
-- **Feeds list (web-primary):** per-subscription row — health (`active` / `muted` / `error`), unread count (mono), mute, **auto-approve toggle**.
-- **Daily digest (mobile-primary):** ranked, reasoned cards ("why it's worth your time, how it connects"); per-item actions read / gulp / dismiss / send-to-Gulp; states `unseen / read / gulped / dismissed`.
-- **Weekly review:** themes, concept evolution, "saved but not yet mastered," "at-risk" list — uses the full mastery ladder track (§3.3).
+*Rewritten 2026-08-01 — [`superpowers/specs/2026-08-01-feeds-inbox-triage-design.md`](superpowers/specs/2026-08-01-feeds-inbox-triage-design.md). Feeds is no longer a screen; it is this surface's first section and its left rail.*
+
+Three panes at ≥1280 (§5.2): **sources · stage sections · decision preview**.
+
+- **Source rail (200px):** `All`, one row per subscription, then `Captured`. Each row — health dot (`--banana-deep` active · `--border-strong` muted · `--pop-red` error), title, and a **mono `pending_count`** in `--text-2`. Mute, unsubscribe and refresh on hover; `+ Add feed · Discover` pinned at the foot. Selecting a source filters **every** section; `Captured` hides `New`.
+- **Stage sections**, in order, each collapsible with persisted state: **New** (undecided entries) · **Kept** (yours, awaiting digestion) · **Needs you** (`needs_attention` · `exported`) · **In flight** (`queued` · `processing`, read-only). Sticky mono `label` headers with a tabular count and a one-line question ("keep or skip?", "digest how?").
+- **Rows** carry state in **weight, opacity and the leading pip** — not in six background colors. `pending` full-contrast + `--banana-deep` pip; `seen` regular weight, `--text-2`, muted pip; `skipped` 42% opacity with a struck title and an `Undo`; `In flight` 62% opacity, no actions. Actions appear on hover/focus: the primary one takes `--pop-blue`, the rest are hairline ghost buttons; the only `--pop-red` on the surface is `Needs attention`.
+- **The title is a link** to the Snapshot reader in every section, at any status (§7.6) — hover reveals a hairline underline. Row buttons are the shortcut for staying in the list.
+- **Decision preview (360px):** for an entry, the feed's `content_html` + `Open original ↗`; for a snapshot, a mono key/value block (source · origin · genre · status), the note, and the failure reason when there is one. **Never a reader** — reading and chat live in §7.6.
+- **The belt's last frame:** a snapshot started in this session turns full-contrast in place when it lands, with a `ready` banana chip and a single `Read →`. Session-scoped; it never accumulates.
+- **Badge (§7.14):** mono count of `Kept + Needs you` on a `--banana` pill — what waits on *you*, never work in flight.
+
+**Daily digest & weekly review** *(deferred, `01 §F6`)* — ranked reasoned cards in mobile `Today`; themes, concept evolution and the "at-risk" list on the full mastery track (§3.3).
 
 ### 7.12 Navigation
 
-- **Mobile:** bottom tab bar (§5.3); active item = filled glyph + blue label; `⊕ Capture` raised, blue.
-- **Web:** left sidebar (§5.2); active item = `--blue-50` fill + blue text + 2px left blue marker; `⌘K` always available.
+- **Mobile:** bottom tab bar (§5.3); active item = filled glyph + ink label; `⊕ Capture` raised, `--pop-blue`.
+- **Web:** left sidebar (§5.2 — `Today · Inbox · Library`); active item = `--fill` background + ink text + a 2px left **ink** marker; `⌘K` always available. Only `Inbox` carries a count, and it is the actionable one (§7.11).
 
 ### 7.13 Inputs, forms & toggles
 
