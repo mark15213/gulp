@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1000000000000000000002A0 /* GulpShare.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 100000000000000000000280 /* GulpShare.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		1000000000000000000002B0 /* GulpAPI in Frameworks */ = {isa = PBXBuildFile; productRef = 1000000000000000000002C0 /* GulpAPI */; };
 		1000000000000000000001D0 /* GulpAPI in Frameworks */ = {isa = PBXBuildFile; productRef = 1000000000000000000001C0 /* GulpAPI */; };
 /* End PBXBuildFile section */
 
@@ -18,10 +20,18 @@
 			remoteGlobalIDString = 100000000000000000000010;
 			remoteInfo = Gulp;
 		};
+		100000000000000000000340 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 100000000000000000000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 100000000000000000000260;
+			remoteInfo = GulpShare;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
 		100000000000000000000070 /* Gulp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Gulp.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		100000000000000000000280 /* GulpShare.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = GulpShare.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		100000000000000000000080 /* GulpTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = GulpTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -32,6 +42,14 @@
 				Info.plist,
 			);
 			target = 100000000000000000000010 /* Gulp */;
+		};
+		1000000000000000000002D0 /* Exceptions for "GulpShare" folder in "GulpShare" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+				GulpShare.entitlements,
+			);
+			target = 100000000000000000000260 /* GulpShare */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
@@ -47,6 +65,19 @@
 		100000000000000000000060 /* GulpTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = GulpTests;
+			sourceTree = "<group>";
+		};
+		100000000000000000000240 /* Shared */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = Shared;
+			sourceTree = "<group>";
+		};
+		100000000000000000000250 /* GulpShare */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				1000000000000000000002D0 /* Exceptions for "GulpShare" folder in "GulpShare" target */,
+			);
+			path = GulpShare;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -67,6 +98,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		100000000000000000000320 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1000000000000000000002B0 /* GulpAPI in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -74,6 +113,8 @@
 			isa = PBXGroup;
 			children = (
 				100000000000000000000050 /* Gulp */,
+				100000000000000000000240 /* Shared */,
+				100000000000000000000250 /* GulpShare */,
 				100000000000000000000060 /* GulpTests */,
 				100000000000000000000040 /* Products */,
 			);
@@ -83,6 +124,7 @@
 			isa = PBXGroup;
 			children = (
 				100000000000000000000070 /* Gulp.app */,
+				100000000000000000000280 /* GulpShare.appex */,
 				100000000000000000000080 /* GulpTests.xctest */,
 			);
 			name = Products;
@@ -98,13 +140,16 @@
 				100000000000000000000090 /* Sources */,
 				1000000000000000000000A0 /* Frameworks */,
 				1000000000000000000000B0 /* Resources */,
+				1000000000000000000002E0 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				1000000000000000000002F0 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				100000000000000000000050 /* Gulp */,
+				100000000000000000000240 /* Shared */,
 			);
 			name = Gulp;
 			packageProductDependencies = (
@@ -136,6 +181,30 @@
 			productName = GulpTests;
 			productReference = 100000000000000000000080 /* GulpTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		100000000000000000000260 /* GulpShare */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 100000000000000000000300 /* Build configuration list for PBXNativeTarget "GulpShare" */;
+			buildPhases = (
+				100000000000000000000310 /* Sources */,
+				100000000000000000000320 /* Frameworks */,
+				100000000000000000000330 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				100000000000000000000250 /* GulpShare */,
+				100000000000000000000240 /* Shared */,
+			);
+			name = GulpShare;
+			packageProductDependencies = (
+				1000000000000000000002C0 /* GulpAPI */,
+			);
+			productName = GulpShare;
+			productReference = 100000000000000000000280 /* GulpShare.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -174,6 +243,7 @@
 			projectRoot = "";
 			targets = (
 				100000000000000000000010 /* Gulp */,
+				100000000000000000000260 /* GulpShare */,
 				100000000000000000000020 /* GulpTests */,
 			);
 		};
@@ -194,7 +264,28 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		100000000000000000000330 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		1000000000000000000002E0 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				1000000000000000000002A0 /* GulpShare.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		100000000000000000000090 /* Sources */ = {
@@ -211,6 +302,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		100000000000000000000310 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -218,6 +316,11 @@
 			isa = PBXTargetDependency;
 			target = 100000000000000000000010 /* Gulp */;
 			targetProxy = 100000000000000000000190 /* PBXContainerItemProxy */;
+		};
+		1000000000000000000002F0 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 100000000000000000000260 /* GulpShare */;
+			targetProxy = 100000000000000000000340 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -336,6 +439,50 @@
 			};
 			name = Release;
 		};
+		100000000000000000000350 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = GulpShare/GulpShare.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = GulpShare/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 0.1;
+				PRODUCT_BUNDLE_IDENTIFIER = app.gulp.ios.share;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		100000000000000000000360 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = GulpShare/GulpShare.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = GulpShare/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 0.1;
+				PRODUCT_BUNDLE_IDENTIFIER = app.gulp.ios.share;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -366,6 +513,15 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
+		100000000000000000000300 /* Build configuration list for PBXNativeTarget "GulpShare" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				100000000000000000000350 /* Debug */,
+				100000000000000000000360 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
@@ -377,6 +533,10 @@
 
 /* Begin XCSwiftPackageProductDependency section */
 		1000000000000000000001C0 /* GulpAPI */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = GulpAPI;
+		};
+		1000000000000000000002C0 /* GulpAPI */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = GulpAPI;
 		};

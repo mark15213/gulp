@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- The same group as the app. This is the whole mechanism: the login
+	     cookie lives in the group's shared store, so forwarding works without
+	     the extension ever seeing a credential. -->
+	<key>com.apple.security.application-groups</key>
+	<array>
+		<string>group.app.gulp.shared</string>
+	</array>
+</dict>
+</plist>

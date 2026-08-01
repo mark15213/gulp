@@ -58,6 +58,11 @@ flooded by a noisy feed" — is about data and is preserved intact.
 4. **Feeds triage becomes explicit.** A `FeedEntry` is `pending` ·
    `forwarded` · `skipped`. `read` narrows to "seen" and drives row dimming
    only — opening an entry no longer removes it from the queue.
+5. **The row title is the way into the reader, and the belt finishes on
+   screen.** Clicking any row's title opens `/snapshots/{id}` at whatever
+   status it holds; a snapshot started from **Kept** stays on the surface as
+   `Ready · Read →` when it lands, instead of vanishing into the Library
+   (§4.6).
 
 ## 1. The journey, restated
 
@@ -69,7 +74,12 @@ flooded by a noisy feed" — is about data and is preserved intact.
 
 Ad-hoc capture (`⌘K`, share sheet, iOS Forward) skips stage 1 and lands
 directly in **Kept** — the two paths converge on one state (`unprocessed`)
-with one next action.
+with one next action. Pressing `⌘K` *is* the answer to stage 1's question, so
+there is no separate section for self-captured items; they sit among the
+feed-forwards they are indistinguishable from, and the **Captured** source
+bucket (§4.1) is the one-click "what did I send myself from my phone?" view.
+Splitting **Kept** by origin would re-cut the surface by *source* immediately
+after merging it by *stage* — the rail owns source, the sections own stage.
 
 **Forward moves a row down one section.** A pending entry leaves **New** (it
 is no longer pending) and its snapshot appears in **Kept**. No row is rendered
@@ -164,7 +174,7 @@ stage-1 rows).
 | **New** | `GET /feed-entries?pending_only` | pending feed entries | Forward · Skip |
 | **Kept** | `GET /inbox` → `unprocessed` | snapshots awaiting digest | ▶ Start · ⤓ Export job · delete; multi-select + sticky **`Start N`** |
 | **Needs you** | `GET /inbox` → `needs_attention`, `exported` | failures and export-awaiting-upload | retry · open original · ⤓ upload result |
-| **In flight** | `GET /inbox` → `queued`, `processing` | work the machine owns | none (read-only, muted) |
+| **In flight** | `GET /inbox` → `queued`, `processing` | work the machine owns | none (read-only, muted) — except the session-scoped `Ready · Read →` last frame, §4.6 |
 
 **No new contract shape is required** — two existing endpoints, four rendered
 groups. Sections are collapsible and their collapsed state persists locally,
@@ -214,6 +224,44 @@ left pane.
 Today's `CapturePeek` is unchanged in scope; it now reads as "waiting to be
 digested" rather than "processing", from the same query.
 
+### 4.6 Handing off to the reader
+
+Deep reading and the article conversation live where they already do —
+`/snapshots/{id}` (`ReaderLayout` · `PackReport` · `ChatPanel`, spec
+2026-07-10: collapsible chat, `[[block:ID]]` citations, per-block *add to
+chat*). This surface must never grow a second reader.
+
+**The row title is the link.** Clicking any row's title — in any section, at
+any status — opens the reader. That works because the reader page is already
+status-complete: `unprocessed` shows Start, `queued`/`processing` shows the
+skeleton plus `ProcessingPoller`, `needs_attention` shows the banner, `ready`
+shows the pack. So "open it and watch the pack fill in, then start reading and
+chatting" is one continuous path that never returns to the list. The buttons
+on a row are the shortcut for *staying* in the list — what you want when
+processing ten at once.
+
+**The belt finishes on screen.** A snapshot the user started in this session
+stays in **In flight** when it reaches `ready`: the row turns full-contrast,
+its chip reads `ready`, and its single action is **`Read →`**. Without this
+the item the user just asked for silently disappears and has to be hunted for
+in the Library.
+
+- **Session-scoped**, deliberately. The client remembers only the ids it
+  started on this mount; a reload drops them and the items live in the Library
+  like anything else. It never becomes a fifth backlog.
+- **It costs one poll.** While the started-id set is non-empty the client
+  polls `GET /snapshots/{id}` for those ids (the existing endpoint, the same
+  approach `ProcessingPoller` already takes) and stops when each reaches a
+  terminal status. This is the one thing this spec *adds* after deleting the
+  Feeds poll loop (§4.4), and the distinction is the point: **the surface that
+  owns a state polls it; no surface mirrors another's.**
+
+**"Packs I haven't read yet" is a Library concern, not a fifth section.** An
+unread-pack queue in Inbox would rebuild the second unread queue this spec
+exists to remove, and would return the Library to being a graveyard. A pack
+the user hasn't read is `New` on the mastery ladder (`01 §F7`), so it belongs
+behind a Library filter chip when mastery chips ship with S5.
+
 ## 5. Explicitly unchanged
 
 - The single-gate lifecycle (`ready` = in the Library) and per-card
@@ -222,8 +270,11 @@ digested" rather than "processing", from the same query.
   creates an owned Source.
 - Internal naming: the promotion service stays `gulp_entry`, the endpoint
   stays `/feed-entries/{id}/gulp`; the user-facing verb stays **Forward**.
-- Library, tags, the snapshot reader, the agent-job export channel,
-  subscription health, the fetch pipeline, Discover's catalog search.
+- Library, tags, the agent-job export channel, subscription health, the fetch
+  pipeline, Discover's catalog search.
+- **The reader and its chat** (`/snapshots/{id}`) — untouched by this spec.
+  Only the ways *in* to it are stated (§4.6); nothing about the pack, the
+  block editing, or the conversation changes.
 
 ## 6. Testing
 
@@ -235,7 +286,10 @@ digested" rather than "processing", from the same query.
 - **web** (vitest, classic JSX transform — JSX files need `import React`):
   section assignment by status, row actions per triage state, keyboard
   handlers, source filter driving all sections (including Captured hiding
-  New), collapsed-section persistence, badge reads `actionable_count`.
+  New), collapsed-section persistence, badge reads `actionable_count`, row
+  titles link to `/snapshots/{id}` in every section, and the §4.6 last frame —
+  a started id flips to `Ready · Read →` in place, is not counted by the
+  badge, and is forgotten on remount.
 - **worker**: untouched.
 
 ## 7. Doc amendments (fold-back)
@@ -245,6 +299,9 @@ digested" rather than "processing", from the same query.
 - `01 §F6` — replace "only an explicit **Gulp** promotes one into the
   pipeline" with the two-stage model; Feeds is no longer a surface, it is the
   `New` section and the source pane of Inbox.
+- `01 §F2` — note that the Snapshot detail reader is reachable from any Inbox
+  row at any status (§4.6), and that reading + chat never happen on the intake
+  surface.
 - `01 §4.3` — web nav becomes `Today · Inbox · Library · Settings`; Inbox
   described as the whole intake surface with an actionable badge.
 - `01 §6` — screen inventory: merge the `Feeds` row into `Inbox`.
@@ -266,5 +323,9 @@ digested" rather than "processing", from the same query.
 - A processing budget/quota: with decision 1 nothing runs unattended, so the
   valve is the Start click.
 - Undo-forward from the New section — delete the snapshot from Kept instead.
+- **An unread-packs queue in the Inbox** (§4.6) — it belongs behind a Library
+  mastery filter, and building it here would undo the merge.
+- A separate section for self-captured items (§1) — the **Captured** source
+  bucket covers finding them.
 - iOS: the client is unbuilt and stays consumption-only; it inherits this
   model when it reaches Forward (spec 2026-07-25 §4).

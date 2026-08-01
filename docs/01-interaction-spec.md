@@ -100,8 +100,10 @@ Navigation is organized by **intent**, not by object type. The forms of Source a
 - Concepts, Conversations, and Knowledge bases are **filters inside Library**; feed management lives in `You/Settings`. Power is present, not in your face.
 
 **Web — left sidebar (the power workspace):**
-`Today · Inbox · Library · Settings` *(amended 2026-07-02: Feeds returns with S7; Knowledge bases parked — tags cover grouping; Today stays the first tab)*
-- **Inbox is the to-do set** (not yet processed); **Library is the shelf** (`ready`). Both are derived queries — nothing moves between them by user action.
+`Today · Inbox · Library · Settings` *(amended 2026-08-01: **Feeds folds into Inbox** — see [`superpowers/specs/2026-08-01-feeds-inbox-triage-design.md`](superpowers/specs/2026-08-01-feeds-inbox-triage-design.md). Knowledge bases parked — tags cover grouping; Today stays the first tab)*
+- **Inbox is the whole intake surface**, organized **by stage, not by time**: `New` (undecided feed entries) → `Kept` (yours, awaiting digestion) → `Needs you` (failures / awaiting upload) → `In flight` (the machine's). **Library is the shelf** (`ready`). Every section is a derived query — nothing moves between them by user action, only by decision.
+- Subscriptions live in Inbox's left **source rail** (add · mute · unsubscribe · Discover), which doubles as the filter for every section; a `Captured` bucket isolates ad-hoc intake.
+- The sidebar **badge counts only what waits on you** (`Kept` + `Needs you`) — never work in flight, never undecided feed entries.
 - `Library` opens with **filter chips** — v1: by tag and type; form/mastery/`due` chips arrive with their subsystems.
 - A global `⌘K` command bar handles search + capture + jump-to.
 - The workspace is three-pane where useful: list ▸ reader ▸ knowledge-pack/chat panel.
@@ -121,14 +123,16 @@ Each flow: **trigger → steps → key screens → states → edge cases**, with
 1. User invokes capture from anywhere.
 2. Gulp shows a **Capture confirm** (lightweight): detected title/type, target knowledge base (default: Inbox), optional one-line note, optional tags.
 3. User confirms (or it auto-confirms after a short timeout for true one-gesture capture).
-4. A **Snapshot** appears immediately in **Inbox** with status `Unprocessed` (captured, not yet digested).
+4. A **Snapshot** appears immediately in **Inbox ▸ Kept** with status `Unprocessed` (captured, not yet digested).
 5. The user **triggers** pack generation — **▶ Start** (run the pipeline) or **⤓ Upload** (import a result produced externally); it runs async (§F2) and flips to `Ready` on completion (S2 design §2.4). *(An `auto_process` setting can auto-start on capture — deferred.)*
 
-**Key screens:** Capture confirm sheet · Inbox list.
+> **Amended 2026-08-01** (spec [`superpowers/specs/2026-08-01-feeds-inbox-triage-design.md`](superpowers/specs/2026-08-01-feeds-inbox-triage-design.md)): **the manual trigger is universal.** Both intake paths — ad-hoc capture and promotion from a feed — land a Snapshot in `Unprocessed`; neither starts processing on its own. Forwarding means *take it in*, never *digest it*, so nothing spends AI without a deliberate ▶ Start. Ad-hoc capture simply skips the keep-or-skip stage: pressing `⌘K` **is** that decision, so it lands straight in `Kept`.
+
+**Key screens:** Capture confirm sheet · Inbox (`Kept` section).
 
 **States:** `Queued (offline)` → `Unprocessed` → `Processing` → `Ready` (**= in the library**; single gate, §F2) · `Needs attention` (extraction failed, §10.2). *(`Exported` is the branch where the pack was produced externally and awaits upload.)*
 
-**Mobile vs web:** mobile = OS share sheet → confirm sheet, then a "saved" toast and the item appears in `Today`'s recent-captures peek (no Inbox tab on mobile); web = `⌘K → paste`, lands in the `Inbox` surface. Both write the same Inbox state.
+**Mobile vs web:** mobile = OS share sheet → confirm sheet, then a "saved" toast and the item appears in `Today`'s recent-captures peek (no Inbox tab on mobile); web = `⌘K → paste`, lands in `Inbox ▸ Kept` and is isolable via the rail's `Captured` bucket. Both write the same Inbox state.
 
 **Edge cases:** duplicate URL → offer "open existing" instead of re-capturing; paywalled/blocked page → capture whatever selection/text is available; unsupported file type → store as a Snapshot with no pack and flag it.
 
@@ -150,6 +154,8 @@ Each flow: **trigger → steps → key screens → states → edge cases**, with
 - **Reading is the review.** The snapshot-level gate (`awaiting review` → "Add to library", batch confirm, auto-approve) is **parked** — under manual trigger there is no unvetted inflow to gate.
 - **The only gate is per-card accept/reject**, because it guards what enters practice/scheduling (§F4/§F7).
 - **The gate re-enters** if `auto_process` or Feeds (§F6) create packs the user never asked for: one status value + one Inbox filter + a confirm surface (both views are derived queries).
+
+**Reaching the reader (amended 2026-08-01 — [spec §4.6](superpowers/specs/2026-08-01-feeds-inbox-triage-design.md)):** the Snapshot detail page is **status-complete** — it shows ▶ Start when `unprocessed`, a skeleton while processing, the failure banner on `needs_attention`, and the pack + chat when `ready`. So **clicking any Inbox row's title opens it, in any section, at any status**: start it there and watch the pack fill in, then read and discuss without returning to the list. Row buttons are the shortcut for *staying* in the list. **Reading and chat never happen on the intake surface** — Inbox's preview pane answers keep-or-digest in about ten seconds and nothing more. A snapshot started from `Kept` stays visible as `Ready · Read →` until the user leaves the surface, so the belt finishes on screen instead of the item vanishing into the Library.
 
 **Key screens:** Snapshot detail (reader · cards; web — the source opens via an origin-link icon, not an "Original" tab) · per-card accept/reject in the Cards view.
 
@@ -232,17 +238,19 @@ Each flow: **trigger → steps → key screens → states → edge cases**, with
 
 > **Amended 2026-07-09** (spec [`superpowers/specs/2026-07-09-subscription-system-design.md`](superpowers/specs/2026-07-09-subscription-system-design.md)): the **subscription half is built** — RSSHub/Folo-compatible feeds (`rsshub://` + plain RSS), a web `Feeds` surface (subscriptions · entries · reader) and a `Discover` catalog. Two deviations from the steps below: new items land as lightweight **FeedEntries** (step 2's auto-created Snapshots were rejected — library stays clean) and only an explicit **Gulp** promotes one into the pipeline; `auto_approve` stays parked with the snapshot gate. Steps 3–4's **digest remains deferred**, as is OPML import.
 
+> **Amended 2026-08-01** (spec [`superpowers/specs/2026-08-01-feeds-inbox-triage-design.md`](superpowers/specs/2026-08-01-feeds-inbox-triage-design.md)): **Feeds is no longer a surface** — it is the `New` section and the source rail of **Inbox** (§4.3). Two further corrections: promotion (**Forward**) no longer starts processing, it only takes the item in (§F1 amendment); and feed triage becomes **explicit** — an entry is `pending` · `forwarded` · `skipped`, with Forward and Skip available inline on the row (`j k f s u` from the keyboard). "Read" narrows to *seen* and drives dimming only, so the queue is what you haven't **decided**, not what you haven't clicked. `/feeds` redirects to `/inbox`.
+
 **Steps:**
 1. Add a **Subscription** (RSS / newsletter address / channel) or import OPML.
 2. New items auto-create **Snapshots** (lightweight, unprocessed) under that subscription.
 3. Gulp assembles a **Daily digest** (and a **Weekly review**): "what's worth your time, why, and how it connects to what you already know," not a raw feed dump.
 4. From the digest, the user can: read, gulp (full pack), dismiss, or send straight into a Gulp session. A per-Subscription **auto-approve** (§F2) lets trusted feeds skip the review gate, while ad-hoc captures still require review.
 
-**Key screens:** Feeds list (per-subscription health, unread count, mute, **auto-approve toggle**) · Daily digest (ranked, reasoned cards) · Weekly review (themes, concept evolution, "saved but not yet mastered").
+**Key screens:** Inbox source rail (per-subscription health, pending count, mute; `Add` · `Discover`) · Inbox `New` section · Daily digest (ranked, reasoned cards) *(deferred)* · Weekly review (themes, concept evolution, "saved but not yet mastered") *(deferred)*.
 
-**States:** subscription = `active`/`muted`/`error`; digest item = `unseen`/`read`/`gulped`/`dismissed`.
+**States:** subscription = `active`/`muted`/`error` (derived); **feed entry = `pending`/`forwarded`/`skipped`** (derived; `seen` is orthogonal and cosmetic); digest item = `unseen`/`read`/`gulped`/`dismissed` *(deferred with the digest)*.
 
-**Mobile vs web:** digest is mobile-primary (lives in `Today` as a daily card stack); feed management is web-primary (the `Feeds` surface).
+**Mobile vs web:** digest is mobile-primary (lives in `Today` as a daily card stack); feed management and triage are web-primary (the Inbox surface — the phone stays consumption-only).
 
 **Edge cases:** noisy feed → per-subscription filters and a "too much from here" control; feed fetch error → surfaced on Feeds, never blocks the digest.
 
@@ -295,7 +303,7 @@ Each flow: **trigger → steps → key screens → states → edge cases**, with
 |---|---|---|---|
 | Today | both | "what to do now" (+ mobile batch-confirm of new captures) | Start Gulp / Approve new |
 | Capture confirm | both | one-gesture save | Confirm |
-| Inbox | web-led | triage recent captures (mobile triages via `Today`) | Open / approve |
+| Inbox | web-led | the whole intake surface — keep or skip, then digest or not (mobile peeks via `Today`) | Forward / Skip · ▶ Start |
 | Snapshot detail | both | read + curate pack (deep curation web-only) | Read / accept cards |
 | Library list | both | find & filter | Open object |
 | Concept page | both | understand + test | Test me |
@@ -303,7 +311,7 @@ Each flow: **trigger → steps → key screens → states → edge cases**, with
 | Session summary | both | close the loop | Continue / done |
 | Conversation | both | interrogate + sediment | Save what I learned |
 | Daily digest | both | curated stream (in Today on mobile) | Read / gulp |
-| Feeds | web-led | manage subscriptions | Add / mute |
+| ~~Feeds~~ | — | *folded into Inbox 2026-08-01 — subscriptions live in its source rail* | — |
 | Weekly review | both | see evolution | Gulp at-risk |
 | Settings / You | both | preferences, notifications | — |
 
