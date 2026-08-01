@@ -25,10 +25,14 @@
 		<key>UIApplicationSupportsMultipleScenes</key>
 		<true/>
 	</dict>
+	<!-- Paper, not the system default. The app has no dark mode — every screen
+	     is `Ink.paper` — so an empty colour name meant launching to black on a
+	     dark phone and flashing to paper. One colour, no appearance variants,
+	     and the launch is continuous with the icon and with Today. -->
 	<key>UILaunchScreen</key>
 	<dict>
 		<key>UIColorName</key>
-		<string></string>
+		<string>LaunchBackground</string>
 	</dict>
 	<!-- Development only: `just dev` serves the API over plain HTTP on the
 	     host, and App Transport Security blocks that by default. The exception

@@ -177,7 +177,7 @@ Spec §7.3 is closed; Task 0 below is **done**. The answers everything else assu
 - [x] **Step 2:** VoiceOver — tick marks expose a count rather than a run of marks; chips and rows carry labels. Full audit still needs a device.
 - [x] **Step 3:** Reduced motion degrades every transition to a fade.
 - [x] **Step 4:** Every list has its loading, empty and error state per `03 §8`, with copy that names the next action.
-- [ ] **Step 5:** App icon and launch screen. *(Not done — needs drawn assets.)*
+- [x] **Step 5:** App icon and launch screen. The icon is the product logo (`icon.png`, the pop-art banana) on `Ink.paper`, built by `just ios-icon` — a script, not an exported binary, so a new logo is one command. The launch screen is the same paper: it was an empty `UIColorName`, which meant launching to black on a dark phone and flashing to paper, because this app has no dark mode. Icon, launch and Today are now one continuous surface. *(`just ios-icon ink` swaps the background if the paper reads too pale on a light wallpaper.)*
 - [x] **Step 6:** `GulpUITests` — the taps. A UI-test target driving the shipped app against a live API: `just ios-uitest`.
 
 **Verify:** ✅ `just lint`, `just ios-test-live` (29 tests, 9 suites) and `just ios-uitest` (11 tests) all green.

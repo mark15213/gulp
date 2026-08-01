@@ -38,6 +38,12 @@ ios:
 # never ran is worse than no test. Both live suites have to be named — they
 # share a file but are separate types, and for a while only the first was
 # listed here, which quietly made this recipe depend on a running API.
+# Rebuild the app icon from the repo's logo (`icon.png`). Committed as a
+# script rather than as a binary somebody once exported: `just ios-icon ink`
+# switches the background, and re-running picks up a new logo.
+ios-icon background="paper":
+    python3 apps/ios/Tools/make_app_icon.py {{background}}
+
 ios-test device="iPhone 17":
     xcodebuild test -project apps/ios/Gulp.xcodeproj -scheme Gulp \
       -destination 'platform=iOS Simulator,name={{device}}' \
