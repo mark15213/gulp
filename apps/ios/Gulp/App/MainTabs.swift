@@ -40,26 +40,7 @@ struct MainTabs: View {
         // over the whole shell makes that structural, rather than something
         // each screen has to remember to do.
         .fullScreenCover(isPresented: $model.sessionIsRunning) {
-            SessionPlaceholder()
+            SessionView()
         }
-    }
-}
-
-/// Task 5 replaces this. It exists now so the shell's "a session covers
-/// everything" behaviour is real and checkable before the session is.
-private struct SessionPlaceholder: View {
-    @Environment(AppModel.self) private var model
-
-    var body: some View {
-        VStack(spacing: Space.x4) {
-            Text("Session").gulpLabel()
-            Text("Task 5 lands here.")
-                .font(GulpFont.body)
-                .foregroundStyle(Ink.secondary)
-            SecondaryButton(title: "Close") { model.sessionIsRunning = false }
-                .padding(.horizontal, Space.x10)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Ink.paper)
     }
 }

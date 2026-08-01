@@ -93,3 +93,33 @@ struct AuthIntegrationTests {
         #expect(name != nil || name == nil)
     }
 }
+
+@Suite("Session against a live API", .serialized)
+@MainActor
+struct SessionIntegrationTests {
+    /// Starts a session and closes it again **without grading**: a grade
+    /// rewrites scheduling state in the owner's dev database, and a test has
+    /// no business doing that. So this covers build → resume → complete, and
+    /// leaves the card path to a human running the app.
+    @Test func buildsASessionCarryingItsAnswers() async throws {
+        let baseURL = try #require(LiveAPI.baseURL, "GULP_TEST_API not set — run `just ios-test-live`")
+        GulpClientFactory.clearCookies()
+
+        let auth = Auth(client: GulpClientFactory.make(baseURL: baseURL))
+        try await auth.signIn(email: LiveAPI.email, password: LiveAPI.password)
+
+        let session = SessionModel(client: GulpClientFactory.make(baseURL: baseURL), auth: auth)
+        await session.start(targetMinutes: 5)
+
+        #expect(session.phase == .prompt || session.phase == .complete)
+        if session.phase == .prompt {
+            #expect(session.total > 0)
+            let card = try #require(session.card)
+            #expect(!card.prompt.isEmpty)
+            // The reveal screen reads these locally rather than fetching
+            // mid-session (spec §2.2); if the contract loses them again, the
+            // session silently becomes unanswerable.
+            #expect(card.answer != nil || card.explanation != nil)
+        }
+    }
+}
