@@ -60,11 +60,16 @@ struct TickMarks: View {
         }
     }
 
+    /// The gauge tightens as the count grows so a heavy day still reads as
+    /// one row of marks rather than wrapping. One tick is always one card —
+    /// the spacing gives, never the count.
     private var gap: CGFloat {
         switch style {
-        case .gauge: 7
-        case .rail: 5
-        case .due: 4
+        case .gauge:
+            let total = filled + empty
+            return total <= 8 ? 7 : (total <= 14 ? 5 : 3.5)
+        case .rail: return 5
+        case .due: return 4
         }
     }
 
@@ -107,7 +112,7 @@ struct DueGauge: View {
     }
 
     private func group(count: Int, label: String, met: Bool) -> some View {
-        VStack(alignment: .leading, spacing: 9) {
+        VStack(alignment: .leading, spacing: 8) {
             TickMarks(
                 filled: met ? count : 0,
                 empty: met ? 0 : count,
@@ -119,6 +124,7 @@ struct DueGauge: View {
                 Text("\(count)").gulpData(11)
                 Text(label).gulpLabel()
             }
+            .fixedSize()
         }
     }
 }

@@ -60,6 +60,37 @@ final class AppModel {
         }
     }
 
+    /// Fire the pack pipeline for something forwarded on the move. One tap
+    /// that starts an existing pipeline is not curation (spec §2.1), and it
+    /// needs no server work — the endpoint already exists.
+    func startProcessing(_ snapshotID: String) async {
+        // Optimistic: the row flips to `processing` immediately, because the
+        // request is a hand-off and waiting on it teaches the wrong thing
+        // about what the button did.
+        setStatus(.processing, for: snapshotID)
+        do {
+            _ = try await client.process_snapshot_endpoint_snapshots__snapshot_id__process_post(
+                path: .init(snapshot_id: snapshotID)
+            )
+            await refreshToday()
+        } catch {
+            let gulp = error.asGulpError
+            if case .unauthorized = gulp { auth?.sessionExpired() }
+            setStatus(.unprocessed, for: snapshotID)
+            todayLoad = .failed(gulp.display)
+        }
+    }
+
+    private func setStatus(
+        _ status: Components.Schemas.SnapshotStatus,
+        for snapshotID: String
+    ) {
+        guard var today, let index = today.recent.firstIndex(where: { $0.id == snapshotID })
+        else { return }
+        today.recent[index].status = status
+        self.today = today
+    }
+
     private func handle(statusCode: Int) throws {
         if statusCode == 401 {
             auth?.sessionExpired()
