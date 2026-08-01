@@ -24,6 +24,15 @@
   background: var(--fill);
 }
 
+/* Ad-hoc intake sits below the feeds, separated by its own rule. */
+.captured {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  border-top: 1px solid var(--border);
+  border-bottom: 0;
+}
+
 .allRow:focus-visible,
 .title:focus-visible,
 .action:focus-visible,

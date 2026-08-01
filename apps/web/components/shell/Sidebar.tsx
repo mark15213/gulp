@@ -8,7 +8,7 @@ import { SettingsLink } from "./SettingsLink";
 import styles from "./Sidebar.module.css";
 
 export async function Sidebar() {
-  const { count } = await getInbox();
+  const { actionable_count: count } = await getInbox();
   return (
     <aside className={styles.sidebar}>
       <div className={styles.brand}>

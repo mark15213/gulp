@@ -4,20 +4,14 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { getInbox } from "@gulp/api-client";
-import {
-  IconToday,
-  IconInbox,
-  IconLibrary,
-  IconFeeds,
-} from "@/components/ui/icons";
+import { IconToday, IconInbox, IconLibrary } from "@/components/ui/icons";
 import styles from "./Sidebar.module.css";
 
-// Single-gate nav (spec 2026-07-02): Today first, then the conveyor belt
-// (Inbox = to-do), the shelf (Library = ready), and the stream (Feeds —
-// spec 2026-07-09). Knowledge bases are parked (tags cover grouping).
+// Today first, then the belt (Inbox = the whole intake surface) and the shelf
+// (Library = ready). Feeds folded into Inbox — spec 2026-08-01. Knowledge
+// bases are parked (tags cover grouping).
 const NAV = [
   { label: "Today", href: "/", icon: IconToday },
-  { label: "Feeds", href: "/feeds", icon: IconFeeds },
   { label: "Inbox", href: "/inbox", icon: IconInbox },
   { label: "Library", href: "/library", icon: IconLibrary },
 ] as const;
@@ -43,9 +37,12 @@ export function SidebarNav({ inboxCount }: { inboxCount: number }) {
   // changes, or router.refresh() supplies a new server count.
   useEffect(() => {
     let active = true;
+    // The badge counts what waits on *you* — never queued/processing work
+    // (spec 2026-08-01 §4.5).
     getInbox()
-      .then(({ count }) => {
-        if (active) setLatest({ pathname, seed: inboxCount, count });
+      .then(({ actionable_count }) => {
+        if (active)
+          setLatest({ pathname, seed: inboxCount, count: actionable_count });
       })
       .catch(() => {
         // A failed background refresh should not hide a valid server count.

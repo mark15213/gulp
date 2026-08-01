@@ -8,8 +8,8 @@ from datetime import UTC, datetime
 from gulp_shared.domain.feeds import normalize_feed_url
 from gulp_shared.models import FeedEntry, SnapshotStatus, Source, SourceKind
 from gulp_shared.models.source import CapturedVia
-from sqlalchemy import delete, func, select, update
-from sqlalchemy.orm import Session, aliased
+from sqlalchemy import ColumnElement, delete, func, select, update
+from sqlalchemy.orm import Session
 
 from app.schemas.capture import CaptureRequest
 from app.schemas.feeds import (
@@ -20,7 +20,6 @@ from app.schemas.feeds import (
     SubscriptionPatch,
 )
 from app.services.capture import create_snapshot
-from app.services.processing import start_processing
 
 
 def create_subscription(
@@ -70,25 +69,34 @@ def get_subscription(db: Session, owner_id: uuid.UUID, sub_id: uuid.UUID) -> Sou
     return sub if ok else None
 
 
-def unread_counts(db: Session, sub_ids: list[uuid.UUID]) -> dict[uuid.UUID, int]:
+def _pending() -> tuple[ColumnElement[bool], ...]:
+    """The undecided set: neither forwarded nor skipped (spec 2026-08-01 §2).
+    `read_at` deliberately plays no part — seen is not decided."""
+    return (
+        FeedEntry.promoted_source_id.is_(None),
+        FeedEntry.skipped_at.is_(None),
+    )
+
+
+def pending_counts(db: Session, sub_ids: list[uuid.UUID]) -> dict[uuid.UUID, int]:
     if not sub_ids:
         return {}
     rows = db.execute(
         select(FeedEntry.subscription_id, func.count())
-        .where(FeedEntry.subscription_id.in_(sub_ids), FeedEntry.read_at.is_(None))
+        .where(FeedEntry.subscription_id.in_(sub_ids), *_pending())
         .group_by(FeedEntry.subscription_id)
     ).all()
     return {sub_id: count for sub_id, count in rows}
 
 
-def to_subscription_out(sub: Source, unread: int) -> SubscriptionOut:
+def to_subscription_out(sub: Source, pending: int) -> SubscriptionOut:
     return SubscriptionOut(
         id=sub.id,
         title=sub.title,
         feed_url=sub.feed_url or "",
         health=health_of(sub),
         muted=bool(sub.muted),
-        unread_count=unread,
+        pending_count=pending,
         last_fetch_at=sub.last_fetch_at,
         last_fetch_error=sub.last_fetch_error,
         created_at=sub.created_at,
@@ -107,8 +115,8 @@ def list_subscriptions(db: Session, owner_id: uuid.UUID) -> list[SubscriptionOut
             .order_by(Source.created_at.desc())
         )
     )
-    unread = unread_counts(db, [s.id for s in subs])
-    return [to_subscription_out(s, unread.get(s.id, 0)) for s in subs]
+    pending = pending_counts(db, [s.id for s in subs])
+    return [to_subscription_out(s, pending.get(s.id, 0)) for s in subs]
 
 
 def update_subscription(db: Session, sub: Source, patch: SubscriptionPatch) -> Source:
@@ -129,9 +137,7 @@ def delete_subscription(db: Session, sub: Source) -> None:
     db.commit()
 
 
-def to_entry_out(
-    entry: FeedEntry, subscription_title: str, promoted_status: SnapshotStatus | None
-) -> FeedEntryOut:
+def to_entry_out(entry: FeedEntry, subscription_title: str) -> FeedEntryOut:
     return FeedEntryOut(
         id=entry.id,
         subscription_id=entry.subscription_id,
@@ -142,8 +148,8 @@ def to_entry_out(
         published_at=entry.published_at,
         content_html=entry.content_html,
         read=entry.read_at is not None,
+        skipped=entry.skipped_at is not None,
         promoted_source_id=entry.promoted_source_id,
-        promoted_status=promoted_status,
         created_at=entry.created_at,
     )
 
@@ -152,28 +158,30 @@ def list_entries(
     db: Session,
     owner_id: uuid.UUID,
     subscription_id: uuid.UUID | None = None,
-    unread_only: bool = False,
+    pending_only: bool = True,
     limit: int = 50,
     offset: int = 0,
-) -> tuple[list[tuple[FeedEntry, str, SnapshotStatus | None]], int]:
-    promoted = aliased(Source)  # the snapshot this entry was forwarded into, if any
+) -> tuple[list[tuple[FeedEntry, str]], int]:
+    """The Inbox `New` section (pending_only) or the review view (all).
+
+    No longer joins the promoted snapshot: a forwarded entry's status belongs
+    to the Inbox sections that own it, not to a mirror here (spec §4.4)."""
     q = (
-        select(FeedEntry, Source.title, promoted.status)
+        select(FeedEntry, Source.title)
         .join(Source, FeedEntry.subscription_id == Source.id)
-        .outerjoin(promoted, FeedEntry.promoted_source_id == promoted.id)
         .where(Source.owner_id == owner_id, Source.deleted_at.is_(None))
     )
     if subscription_id is not None:
         q = q.where(FeedEntry.subscription_id == subscription_id)
-    if unread_only:
-        q = q.where(FeedEntry.read_at.is_(None))
+    if pending_only:
+        q = q.where(*_pending())
     count = db.scalar(select(func.count()).select_from(q.subquery())) or 0
     rows = db.execute(
         q.order_by(FeedEntry.published_at.desc().nullslast(), FeedEntry.created_at.desc())
         .limit(limit)
         .offset(offset)
     ).all()
-    return [(e, title, status) for e, title, status in rows], count
+    return [(e, title) for e, title in rows], count
 
 
 def get_entry(db: Session, owner_id: uuid.UUID, entry_id: uuid.UUID) -> FeedEntry | None:
@@ -191,11 +199,25 @@ def set_read(db: Session, entry: FeedEntry, read: bool) -> FeedEntry:
     return entry
 
 
-def mark_all_read(db: Session, sub: Source) -> None:
+def set_skipped(db: Session, entry: FeedEntry, skipped: bool) -> FeedEntry:
+    """Explicit dismissal, reversible. Skipping also marks the entry seen —
+    you looked at it long enough to reject it."""
+    entry.skipped_at = datetime.now(UTC) if skipped else None
+    if skipped and entry.read_at is None:
+        entry.read_at = entry.skipped_at
+    db.commit()
+    db.refresh(entry)
+    return entry
+
+
+def skip_all(db: Session, sub: Source) -> None:
+    """Bulk-dismiss the subscription's undecided entries. Forwarded entries are
+    already decided and are left alone."""
+    now = datetime.now(UTC)
     db.execute(
         update(FeedEntry)
-        .where(FeedEntry.subscription_id == sub.id, FeedEntry.read_at.is_(None))
-        .values(read_at=datetime.now(UTC))
+        .where(FeedEntry.subscription_id == sub.id, *_pending())
+        .values(skipped_at=now, read_at=func.coalesce(FeedEntry.read_at, now))
     )
     db.commit()
 
@@ -206,8 +228,13 @@ def gulp_entry(
     entry: FeedEntry,
     enqueue: Callable[..., None],
 ) -> tuple[uuid.UUID, bool, SnapshotStatus]:
-    """Promote an entry: snapshot via the capture path, then straight into
-    processing — the feed gulp is the explicit 'Start' (spec §2)."""
+    """Promote an entry into the snapshot pipeline.
+
+    Forward means *take it in*, never *digest it* (spec 2026-08-01 decision 1):
+    the snapshot lands `unprocessed` and waits for an explicit Start, exactly
+    like an ad-hoc capture. Only metadata resolution is enqueued — network-only
+    title work, no LLM — so the Kept row shows a real title rather than a host.
+    """
     if entry.promoted_source_id is not None:
         existing = db.get(Source, entry.promoted_source_id)
         if existing is not None and existing.deleted_at is None:
@@ -220,8 +247,8 @@ def gulp_entry(
         source.emitted_by = entry.subscription_id
         db.commit()
         enqueue("resolve_metadata", str(source.id))
-        start_processing(db, source, enqueue)
     entry.promoted_source_id = source.id
+    entry.skipped_at = None  # forwarding a skipped entry un-skips it
     if entry.read_at is None:
         entry.read_at = datetime.now(UTC)
     db.commit()

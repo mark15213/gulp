@@ -59,15 +59,17 @@ def test_create_subscription_rejects_garbage(client):
     assert client.post("/subscriptions", json={"feed_url": "nope"}).status_code == 422
 
 
-def test_list_subscriptions_health_and_unread(client, db):
+def test_list_subscriptions_health_and_pending(client, db):
     sub = _mk_sub(db)
     _mk_entry(db, sub)
+    # "seen" is not "decided" — a read entry is still pending (spec §2)
     _mk_entry(db, sub, read_at=datetime.now(UTC))
+    _mk_entry(db, sub, skipped_at=datetime.now(UTC))
     errored = _mk_sub(db, feed_url="https://bad.example/feed")
     errored.last_fetch_error = "boom"
     db.commit()
     items = {i["feed_url"]: i for i in client.get("/subscriptions").json()["items"]}
-    assert items["rsshub://sspai/index"]["unread_count"] == 1
+    assert items["rsshub://sspai/index"]["pending_count"] == 2
     assert items["rsshub://sspai/index"]["health"] == "active"
     assert items["https://bad.example/feed"]["health"] == "error"
 
@@ -82,18 +84,42 @@ def test_mute_and_delete(client, db):
     assert db.query(FeedEntry).count() == 0  # entries hard-deleted with the sub
 
 
-def test_entries_listing_and_read_toggle(client, db):
+def test_entries_listing_and_read_is_cosmetic(client, db):
     sub = _mk_sub(db)
     e = _mk_entry(db, sub)
     r = client.get(f"/subscriptions/{sub.id}/entries")
-    assert r.json()["count"] == 1 and r.json()["items"][0]["read"] is False
-    # not forwarded yet -> no promoted snapshot status
-    assert r.json()["items"][0]["promoted_status"] is None
+    body = r.json()
+    assert body["count"] == 1
+    assert body["items"][0]["read"] is False and body["items"][0]["skipped"] is False
+    # Opening an entry marks it seen but must NOT remove it from the queue.
     client.post(f"/feed-entries/{e.id}/read")
-    assert client.get("/feed-entries", params={"unread_only": True}).json()["count"] == 0
+    assert client.get("/feed-entries").json()["count"] == 1
 
 
-def test_gulp_promotes_and_is_idempotent(client, db):
+def test_skip_and_unskip_move_the_entry_out_of_pending(client, db):
+    sub = _mk_sub(db)
+    e = _mk_entry(db, sub)
+    assert client.post(f"/feed-entries/{e.id}/skip").status_code == 204
+    assert client.get("/feed-entries").json()["count"] == 0
+    listed = client.get("/feed-entries", params={"pending_only": False}).json()["items"][0]
+    assert listed["skipped"] is True and listed["read"] is True  # skipping implies seen
+    assert client.post(f"/feed-entries/{e.id}/unskip").status_code == 204
+    assert client.get("/feed-entries").json()["count"] == 1
+
+
+def test_skip_all_leaves_forwarded_entries_alone(client, db):
+    _capture_enqueue([])
+    sub = _mk_sub(db)
+    _mk_entry(db, sub, guid="a", url="https://example.com/a")
+    forwarded = _mk_entry(db, sub, guid="b", url="https://example.com/b")
+    client.post(f"/feed-entries/{forwarded.id}/gulp")
+    assert client.post(f"/subscriptions/{sub.id}/skip-all").status_code == 204
+    db.expire_all()
+    assert db.get(FeedEntry, forwarded.id).skipped_at is None
+    assert client.get("/feed-entries").json()["count"] == 0
+
+
+def test_gulp_takes_in_without_digesting(client, db):
     calls = []
     _capture_enqueue(calls)
     sub = _mk_sub(db)
@@ -101,16 +127,17 @@ def test_gulp_promotes_and_is_idempotent(client, db):
     r = client.post(f"/feed-entries/{e.id}/gulp")
     assert r.status_code == 200
     snap_id = r.json()["snapshot_id"]
-    # forwarding reports the snapshot's live status — never "ready" at promote time
-    assert r.json()["status"] in ("queued", "unprocessed", "processing")
+    # Forward means take it in, never digest it (spec 2026-08-01 decision 1).
+    assert r.json()["status"] == "unprocessed"
     snap = db.get(Source, uuid.UUID(snap_id))
     assert snap.kind == SourceKind.snapshot and snap.emitted_by == sub.id
     assert snap.captured_via.value == "feed"
-    assert ("process_snapshot", snap_id) in calls
-    # the entry now carries that live status for the reader
-    listed = client.get("/feed-entries").json()["items"][0]
+    assert ("process_snapshot", snap_id) not in calls
+    assert ("resolve_metadata", snap_id) in calls  # network-only, no LLM
+    # The entry leaves `pending`; its snapshot is one Inbox section below.
+    assert client.get("/feed-entries").json()["count"] == 0
+    listed = client.get("/feed-entries", params={"pending_only": False}).json()["items"][0]
     assert listed["promoted_source_id"] == snap_id
-    assert listed["promoted_status"] == r.json()["status"]
     # idempotent second gulp
     assert client.post(f"/feed-entries/{e.id}/gulp").json()["snapshot_id"] == snap_id
 

@@ -39,9 +39,9 @@ def create_subscription(
         raise HTTPException(status_code=422, detail=str(exc)) from exc
     if not duplicate:
         enqueue("fetch_feed", str(sub.id))
-    unread = svc.unread_counts(db, [sub.id]).get(sub.id, 0)
+    pending = svc.pending_counts(db, [sub.id]).get(sub.id, 0)
     return SubscriptionCreateResponse(
-        subscription=svc.to_subscription_out(sub, unread), duplicate=duplicate
+        subscription=svc.to_subscription_out(sub, pending), duplicate=duplicate
     )
 
 
@@ -68,8 +68,8 @@ def patch_subscription(
     user: User = Depends(get_current_user),
 ) -> SubscriptionOut:
     sub = svc.update_subscription(db, _sub_or_404(db, user, sub_id), patch)
-    unread = svc.unread_counts(db, [sub.id]).get(sub.id, 0)
-    return svc.to_subscription_out(sub, unread)
+    pending = svc.pending_counts(db, [sub.id]).get(sub.id, 0)
+    return svc.to_subscription_out(sub, pending)
 
 
 @router.delete("/subscriptions/{sub_id}", status_code=204)
@@ -92,39 +92,41 @@ def refresh_subscription(
     enqueue("fetch_feed", str(sub.id))
 
 
-@router.post("/subscriptions/{sub_id}/read-all", status_code=204)
-def read_all(
+@router.post("/subscriptions/{sub_id}/skip-all", status_code=204)
+def skip_all(
     sub_id: uuid.UUID,
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> None:
-    svc.mark_all_read(db, _sub_or_404(db, user, sub_id))
+    """Bulk-dismiss what's undecided. Dismissing is a decision, so this is not
+    'mark all read' (spec 2026-08-01 §4.4)."""
+    svc.skip_all(db, _sub_or_404(db, user, sub_id))
 
 
 @router.get("/subscriptions/{sub_id}/entries", response_model=FeedEntriesOut)
 def subscription_entries(
     sub_id: uuid.UUID,
-    unread_only: bool = False,
+    pending_only: bool = True,
     limit: int = 50,
     offset: int = 0,
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> FeedEntriesOut:
     _sub_or_404(db, user, sub_id)
-    rows, count = svc.list_entries(db, user.id, sub_id, unread_only, limit, offset)
-    return FeedEntriesOut(items=[svc.to_entry_out(e, t, st) for e, t, st in rows], count=count)
+    rows, count = svc.list_entries(db, user.id, sub_id, pending_only, limit, offset)
+    return FeedEntriesOut(items=[svc.to_entry_out(e, t) for e, t in rows], count=count)
 
 
 @router.get("/feed-entries", response_model=FeedEntriesOut)
 def all_entries(
-    unread_only: bool = False,
+    pending_only: bool = True,
     limit: int = 50,
     offset: int = 0,
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> FeedEntriesOut:
-    rows, count = svc.list_entries(db, user.id, None, unread_only, limit, offset)
-    return FeedEntriesOut(items=[svc.to_entry_out(e, t, st) for e, t, st in rows], count=count)
+    rows, count = svc.list_entries(db, user.id, None, pending_only, limit, offset)
+    return FeedEntriesOut(items=[svc.to_entry_out(e, t) for e, t in rows], count=count)
 
 
 def _entry_or_404(db: Session, user: User, entry_id: uuid.UUID) -> FeedEntry:
@@ -150,6 +152,24 @@ def mark_unread(
     user: User = Depends(get_current_user),
 ) -> None:
     svc.set_read(db, _entry_or_404(db, user, entry_id), False)
+
+
+@router.post("/feed-entries/{entry_id}/skip", status_code=204)
+def skip_entry(
+    entry_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> None:
+    svc.set_skipped(db, _entry_or_404(db, user, entry_id), True)
+
+
+@router.post("/feed-entries/{entry_id}/unskip", status_code=204)
+def unskip_entry(
+    entry_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> None:
+    svc.set_skipped(db, _entry_or_404(db, user, entry_id), False)
 
 
 @router.post("/feed-entries/{entry_id}/gulp", response_model=GulpEntryResponse)

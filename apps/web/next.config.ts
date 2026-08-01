@@ -27,6 +27,13 @@ const nextConfig: NextConfig = {
     // to the FastAPI service (Railway in prod).
     return [{ source: "/api/:path*", destination: `${apiBase}/:path*` }];
   },
+  // Feeds folded into Inbox (spec 2026-08-01); keep old links alive.
+  async redirects() {
+    return [
+      { source: "/feeds", destination: "/inbox", permanent: true },
+      { source: "/feeds/discover", destination: "/inbox/discover", permanent: true },
+    ];
+  },
 };
 
 export default nextConfig;

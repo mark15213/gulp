@@ -36,8 +36,19 @@ export async function capture(body: CaptureBody): Promise<CaptureResponse> {
   return data;
 }
 
-export async function getInbox(options?: ApiRequestOptions): Promise<InboxOut> {
+export async function getInbox(
+  params?: {
+    /** Scope to one subscription's forwarded snapshots. */
+    emittedBy?: string;
+    /** The `Captured` bucket: snapshots with no emitting subscription. */
+    adHocOnly?: boolean;
+  },
+  options?: ApiRequestOptions,
+): Promise<InboxOut> {
   const { data, error } = await client.GET("/inbox", {
+    params: {
+      query: { emitted_by: params?.emittedBy, ad_hoc_only: params?.adHocOnly },
+    },
     cache: "no-store",
     headers: options?.headers,
   });
@@ -151,6 +162,19 @@ export async function startProcessing(id: string): Promise<SnapshotOut> {
     params: { path: { snapshot_id: id } },
   });
   if (error || !data) throw new Error("start processing failed");
+  return data;
+}
+
+export type ProcessBatchOut =
+  paths["/snapshots/process-batch"]["post"]["responses"]["200"]["content"]["application/json"];
+
+/** Start many at once. Partial success is normal — one unstartable id comes
+ *  back in `skipped` rather than failing the call. */
+export async function processBatch(ids: string[]): Promise<ProcessBatchOut> {
+  const { data, error } = await client.POST("/snapshots/process-batch", {
+    body: { ids },
+  });
+  if (error || !data) throw new Error("batch start failed");
   return data;
 }
 
@@ -468,24 +492,27 @@ export async function refreshSubscription(id: string): Promise<void> {
   if (error) throw new Error("subscription refresh failed");
 }
 
-export async function readAllSubscription(id: string): Promise<void> {
-  const { error } = await client.POST("/subscriptions/{sub_id}/read-all", {
+/** Bulk-dismiss what's undecided. Dismissing is a decision — this is not
+ *  "mark all read" (spec 2026-08-01 §3.1). */
+export async function skipAllSubscription(id: string): Promise<void> {
+  const { error } = await client.POST("/subscriptions/{sub_id}/skip-all", {
     params: { path: { sub_id: id } },
   });
-  if (error) throw new Error("read-all failed");
+  if (error) throw new Error("skip-all failed");
 }
 
 export async function getFeedEntries(
   params?: {
     subscriptionId?: string;
-    unreadOnly?: boolean;
+    /** Undecided only — neither forwarded nor skipped. Defaults to true. */
+    pendingOnly?: boolean;
     limit?: number;
     offset?: number;
   },
   options?: ApiRequestOptions,
 ): Promise<FeedEntriesOut> {
   const query = {
-    unread_only: params?.unreadOnly,
+    pending_only: params?.pendingOnly,
     limit: params?.limit,
     offset: params?.offset,
   };
@@ -519,6 +546,16 @@ export async function setEntryRead(id: string, read: boolean): Promise<void> {
     params: { path: { entry_id: id } },
   });
   if (error) throw new Error("read toggle failed");
+}
+
+/** Explicit "not interested", reversible. Unlike `read`, this takes the entry
+ *  out of the pending queue. */
+export async function setEntrySkipped(id: string, skipped: boolean): Promise<void> {
+  const path = skipped ? "/feed-entries/{entry_id}/skip" : "/feed-entries/{entry_id}/unskip";
+  const { error } = await client.POST(path, {
+    params: { path: { entry_id: id } },
+  });
+  if (error) throw new Error("skip toggle failed");
 }
 
 export async function gulpEntry(

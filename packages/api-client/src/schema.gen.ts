@@ -334,7 +334,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/subscriptions/{sub_id}/read-all": {
+    "/subscriptions/{sub_id}/skip-all": {
         parameters: {
             query?: never;
             header?: never;
@@ -343,8 +343,12 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Read All */
-        post: operations["read_all_subscriptions__sub_id__read_all_post"];
+        /**
+         * Skip All
+         * @description Bulk-dismiss what's undecided. Dismissing is a decision, so this is not
+         *     'mark all read' (spec 2026-08-01 §4.4).
+         */
+        post: operations["skip_all_subscriptions__sub_id__skip_all_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -413,6 +417,40 @@ export interface paths {
         put?: never;
         /** Mark Unread */
         post: operations["mark_unread_feed_entries__entry_id__unread_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/feed-entries/{entry_id}/skip": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Skip Entry */
+        post: operations["skip_entry_feed_entries__entry_id__skip_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/feed-entries/{entry_id}/unskip": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Unskip Entry */
+        post: operations["unskip_entry_feed_entries__entry_id__unskip_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -795,6 +833,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/snapshots/process-batch": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Process Batch Endpoint */
+        post: operations["process_batch_endpoint_snapshots_process_batch_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/today": {
         parameters: {
             query?: never;
@@ -1120,9 +1175,10 @@ export interface components {
             content_html: string | null;
             /** Read */
             read: boolean;
+            /** Skipped */
+            skipped: boolean;
             /** Promoted Source Id */
             promoted_source_id: string | null;
-            promoted_status: components["schemas"]["SnapshotStatus"] | null;
             /**
              * Created At
              * Format: date-time
@@ -1235,6 +1291,8 @@ export interface components {
             items: components["schemas"]["SnapshotOut"][];
             /** Count */
             count: number;
+            /** Actionable Count */
+            actionable_count: number;
         };
         /** LLMSettingsOut */
         LLMSettingsOut: {
@@ -1424,6 +1482,31 @@ export interface components {
          * @enum {string}
          */
         PackType: "paper" | "article";
+        /** ProcessBatchIn */
+        ProcessBatchIn: {
+            /** Ids */
+            ids: string[];
+        };
+        /**
+         * ProcessBatchOut
+         * @description Partial success is normal — one 409 must not fail the batch.
+         */
+        ProcessBatchOut: {
+            /** Started */
+            started: string[];
+            /** Skipped */
+            skipped: components["schemas"]["ProcessSkipped"][];
+        };
+        /** ProcessSkipped */
+        ProcessSkipped: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Reason */
+            reason: string;
+        };
         /** ProseBlockOut */
         ProseBlockOut: {
             /**
@@ -1674,8 +1757,8 @@ export interface components {
             health: "active" | "muted" | "error";
             /** Muted */
             muted: boolean;
-            /** Unread Count */
-            unread_count: number;
+            /** Pending Count */
+            pending_count: number;
             /** Last Fetch At */
             last_fetch_at: string | null;
             /** Last Fetch Error */
@@ -2664,7 +2747,7 @@ export interface operations {
             };
         };
     };
-    read_all_subscriptions__sub_id__read_all_post: {
+    skip_all_subscriptions__sub_id__skip_all_post: {
         parameters: {
             query?: never;
             header?: never;
@@ -2696,7 +2779,7 @@ export interface operations {
     subscription_entries_subscriptions__sub_id__entries_get: {
         parameters: {
             query?: {
-                unread_only?: boolean;
+                pending_only?: boolean;
                 limit?: number;
                 offset?: number;
             };
@@ -2731,7 +2814,7 @@ export interface operations {
     all_entries_feed_entries_get: {
         parameters: {
             query?: {
-                unread_only?: boolean;
+                pending_only?: boolean;
                 limit?: number;
                 offset?: number;
             };
@@ -2791,6 +2874,64 @@ export interface operations {
         };
     };
     mark_unread_feed_entries__entry_id__unread_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entry_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    skip_entry_feed_entries__entry_id__skip_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entry_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    unskip_entry_feed_entries__entry_id__unskip_post: {
         parameters: {
             query?: never;
             header?: never;
@@ -3164,7 +3305,10 @@ export interface operations {
     };
     inbox_inbox_get: {
         parameters: {
-            query?: never;
+            query?: {
+                emitted_by?: string | null;
+                ad_hoc_only?: boolean;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -3178,6 +3322,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["InboxOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
@@ -3534,6 +3687,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SnapshotOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    process_batch_endpoint_snapshots_process_batch_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProcessBatchIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProcessBatchOut"];
                 };
             };
             /** @description Validation Error */

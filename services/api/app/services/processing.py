@@ -1,8 +1,10 @@
 """Start-processing business logic (S2 manual trigger, design §2.4)."""
 
+import uuid
 from collections.abc import Callable
 
 from gulp_shared.models.source import SnapshotStatus, Source
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 _STARTABLE = {
@@ -25,3 +27,37 @@ def start_processing(db: Session, source: Source, enqueue: Callable[..., None]) 
     source.status = SnapshotStatus.processing
     db.commit()
     enqueue("process_snapshot", str(source.id))
+
+
+def start_processing_batch(
+    db: Session,
+    owner_id: uuid.UUID,
+    ids: list[uuid.UUID],
+    enqueue: Callable[..., None],
+) -> tuple[list[uuid.UUID], list[tuple[uuid.UUID, str]]]:
+    """Start many at once (the Inbox `Start N` bar). One unstartable or unknown
+    id must not fail the rest — it comes back in `skipped` with a reason."""
+    found = {
+        s.id: s
+        for s in db.scalars(
+            select(Source).where(
+                Source.id.in_(ids),
+                Source.owner_id == owner_id,
+                Source.deleted_at.is_(None),
+            )
+        )
+    }
+    started: list[uuid.UUID] = []
+    skipped: list[tuple[uuid.UUID, str]] = []
+    for snapshot_id in ids:
+        source = found.get(snapshot_id)
+        if source is None:
+            skipped.append((snapshot_id, "snapshot not found"))
+            continue
+        try:
+            start_processing(db, source, enqueue)
+        except ValueError as exc:
+            skipped.append((snapshot_id, str(exc)))
+        else:
+            started.append(snapshot_id)
+    return started, skipped

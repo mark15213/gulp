@@ -141,11 +141,14 @@ public protocol APIProtocol: Sendable {
     /// - Remark: HTTP `POST /subscriptions/{sub_id}/refresh`.
     /// - Remark: Generated from `#/paths//subscriptions/{sub_id}/refresh/post(refresh_subscription_subscriptions__sub_id__refresh_post)`.
     func refresh_subscription_subscriptions__sub_id__refresh_post(_ input: Operations.refresh_subscription_subscriptions__sub_id__refresh_post.Input) async throws -> Operations.refresh_subscription_subscriptions__sub_id__refresh_post.Output
-    /// Read All
+    /// Skip All
     ///
-    /// - Remark: HTTP `POST /subscriptions/{sub_id}/read-all`.
-    /// - Remark: Generated from `#/paths//subscriptions/{sub_id}/read-all/post(read_all_subscriptions__sub_id__read_all_post)`.
-    func read_all_subscriptions__sub_id__read_all_post(_ input: Operations.read_all_subscriptions__sub_id__read_all_post.Input) async throws -> Operations.read_all_subscriptions__sub_id__read_all_post.Output
+    /// Bulk-dismiss what's undecided. Dismissing is a decision, so this is not
+    /// 'mark all read' (spec 2026-08-01 §4.4).
+    ///
+    /// - Remark: HTTP `POST /subscriptions/{sub_id}/skip-all`.
+    /// - Remark: Generated from `#/paths//subscriptions/{sub_id}/skip-all/post(skip_all_subscriptions__sub_id__skip_all_post)`.
+    func skip_all_subscriptions__sub_id__skip_all_post(_ input: Operations.skip_all_subscriptions__sub_id__skip_all_post.Input) async throws -> Operations.skip_all_subscriptions__sub_id__skip_all_post.Output
     /// Subscription Entries
     ///
     /// - Remark: HTTP `GET /subscriptions/{sub_id}/entries`.
@@ -166,6 +169,16 @@ public protocol APIProtocol: Sendable {
     /// - Remark: HTTP `POST /feed-entries/{entry_id}/unread`.
     /// - Remark: Generated from `#/paths//feed-entries/{entry_id}/unread/post(mark_unread_feed_entries__entry_id__unread_post)`.
     func mark_unread_feed_entries__entry_id__unread_post(_ input: Operations.mark_unread_feed_entries__entry_id__unread_post.Input) async throws -> Operations.mark_unread_feed_entries__entry_id__unread_post.Output
+    /// Skip Entry
+    ///
+    /// - Remark: HTTP `POST /feed-entries/{entry_id}/skip`.
+    /// - Remark: Generated from `#/paths//feed-entries/{entry_id}/skip/post(skip_entry_feed_entries__entry_id__skip_post)`.
+    func skip_entry_feed_entries__entry_id__skip_post(_ input: Operations.skip_entry_feed_entries__entry_id__skip_post.Input) async throws -> Operations.skip_entry_feed_entries__entry_id__skip_post.Output
+    /// Unskip Entry
+    ///
+    /// - Remark: HTTP `POST /feed-entries/{entry_id}/unskip`.
+    /// - Remark: Generated from `#/paths//feed-entries/{entry_id}/unskip/post(unskip_entry_feed_entries__entry_id__unskip_post)`.
+    func unskip_entry_feed_entries__entry_id__unskip_post(_ input: Operations.unskip_entry_feed_entries__entry_id__unskip_post.Input) async throws -> Operations.unskip_entry_feed_entries__entry_id__unskip_post.Output
     /// Gulp Entry
     ///
     /// - Remark: HTTP `POST /feed-entries/{entry_id}/gulp`.
@@ -286,6 +299,11 @@ public protocol APIProtocol: Sendable {
     /// - Remark: HTTP `POST /snapshots/{snapshot_id}/process`.
     /// - Remark: Generated from `#/paths//snapshots/{snapshot_id}/process/post(process_snapshot_endpoint_snapshots__snapshot_id__process_post)`.
     func process_snapshot_endpoint_snapshots__snapshot_id__process_post(_ input: Operations.process_snapshot_endpoint_snapshots__snapshot_id__process_post.Input) async throws -> Operations.process_snapshot_endpoint_snapshots__snapshot_id__process_post.Output
+    /// Process Batch Endpoint
+    ///
+    /// - Remark: HTTP `POST /snapshots/process-batch`.
+    /// - Remark: Generated from `#/paths//snapshots/process-batch/post(process_batch_endpoint_snapshots_process_batch_post)`.
+    func process_batch_endpoint_snapshots_process_batch_post(_ input: Operations.process_batch_endpoint_snapshots_process_batch_post.Input) async throws -> Operations.process_batch_endpoint_snapshots_process_batch_post.Output
     /// Get Today
     ///
     /// - Remark: HTTP `GET /today`.
@@ -649,15 +667,18 @@ extension APIProtocol {
             headers: headers
         ))
     }
-    /// Read All
+    /// Skip All
     ///
-    /// - Remark: HTTP `POST /subscriptions/{sub_id}/read-all`.
-    /// - Remark: Generated from `#/paths//subscriptions/{sub_id}/read-all/post(read_all_subscriptions__sub_id__read_all_post)`.
-    public func read_all_subscriptions__sub_id__read_all_post(
-        path: Operations.read_all_subscriptions__sub_id__read_all_post.Input.Path,
-        headers: Operations.read_all_subscriptions__sub_id__read_all_post.Input.Headers = .init()
-    ) async throws -> Operations.read_all_subscriptions__sub_id__read_all_post.Output {
-        try await read_all_subscriptions__sub_id__read_all_post(Operations.read_all_subscriptions__sub_id__read_all_post.Input(
+    /// Bulk-dismiss what's undecided. Dismissing is a decision, so this is not
+    /// 'mark all read' (spec 2026-08-01 §4.4).
+    ///
+    /// - Remark: HTTP `POST /subscriptions/{sub_id}/skip-all`.
+    /// - Remark: Generated from `#/paths//subscriptions/{sub_id}/skip-all/post(skip_all_subscriptions__sub_id__skip_all_post)`.
+    public func skip_all_subscriptions__sub_id__skip_all_post(
+        path: Operations.skip_all_subscriptions__sub_id__skip_all_post.Input.Path,
+        headers: Operations.skip_all_subscriptions__sub_id__skip_all_post.Input.Headers = .init()
+    ) async throws -> Operations.skip_all_subscriptions__sub_id__skip_all_post.Output {
+        try await skip_all_subscriptions__sub_id__skip_all_post(Operations.skip_all_subscriptions__sub_id__skip_all_post.Input(
             path: path,
             headers: headers
         ))
@@ -712,6 +733,32 @@ extension APIProtocol {
         headers: Operations.mark_unread_feed_entries__entry_id__unread_post.Input.Headers = .init()
     ) async throws -> Operations.mark_unread_feed_entries__entry_id__unread_post.Output {
         try await mark_unread_feed_entries__entry_id__unread_post(Operations.mark_unread_feed_entries__entry_id__unread_post.Input(
+            path: path,
+            headers: headers
+        ))
+    }
+    /// Skip Entry
+    ///
+    /// - Remark: HTTP `POST /feed-entries/{entry_id}/skip`.
+    /// - Remark: Generated from `#/paths//feed-entries/{entry_id}/skip/post(skip_entry_feed_entries__entry_id__skip_post)`.
+    public func skip_entry_feed_entries__entry_id__skip_post(
+        path: Operations.skip_entry_feed_entries__entry_id__skip_post.Input.Path,
+        headers: Operations.skip_entry_feed_entries__entry_id__skip_post.Input.Headers = .init()
+    ) async throws -> Operations.skip_entry_feed_entries__entry_id__skip_post.Output {
+        try await skip_entry_feed_entries__entry_id__skip_post(Operations.skip_entry_feed_entries__entry_id__skip_post.Input(
+            path: path,
+            headers: headers
+        ))
+    }
+    /// Unskip Entry
+    ///
+    /// - Remark: HTTP `POST /feed-entries/{entry_id}/unskip`.
+    /// - Remark: Generated from `#/paths//feed-entries/{entry_id}/unskip/post(unskip_entry_feed_entries__entry_id__unskip_post)`.
+    public func unskip_entry_feed_entries__entry_id__unskip_post(
+        path: Operations.unskip_entry_feed_entries__entry_id__unskip_post.Input.Path,
+        headers: Operations.unskip_entry_feed_entries__entry_id__unskip_post.Input.Headers = .init()
+    ) async throws -> Operations.unskip_entry_feed_entries__entry_id__unskip_post.Output {
+        try await unskip_entry_feed_entries__entry_id__unskip_post(Operations.unskip_entry_feed_entries__entry_id__unskip_post.Input(
             path: path,
             headers: headers
         ))
@@ -861,8 +908,14 @@ extension APIProtocol {
     ///
     /// - Remark: HTTP `GET /inbox`.
     /// - Remark: Generated from `#/paths//inbox/get(inbox_inbox_get)`.
-    public func inbox_inbox_get(headers: Operations.inbox_inbox_get.Input.Headers = .init()) async throws -> Operations.inbox_inbox_get.Output {
-        try await inbox_inbox_get(Operations.inbox_inbox_get.Input(headers: headers))
+    public func inbox_inbox_get(
+        query: Operations.inbox_inbox_get.Input.Query = .init(),
+        headers: Operations.inbox_inbox_get.Input.Headers = .init()
+    ) async throws -> Operations.inbox_inbox_get.Output {
+        try await inbox_inbox_get(Operations.inbox_inbox_get.Input(
+            query: query,
+            headers: headers
+        ))
     }
     /// Get Library
     ///
@@ -1014,6 +1067,19 @@ extension APIProtocol {
         try await process_snapshot_endpoint_snapshots__snapshot_id__process_post(Operations.process_snapshot_endpoint_snapshots__snapshot_id__process_post.Input(
             path: path,
             headers: headers
+        ))
+    }
+    /// Process Batch Endpoint
+    ///
+    /// - Remark: HTTP `POST /snapshots/process-batch`.
+    /// - Remark: Generated from `#/paths//snapshots/process-batch/post(process_batch_endpoint_snapshots_process_batch_post)`.
+    public func process_batch_endpoint_snapshots_process_batch_post(
+        headers: Operations.process_batch_endpoint_snapshots_process_batch_post.Input.Headers = .init(),
+        body: Operations.process_batch_endpoint_snapshots_process_batch_post.Input.Body
+    ) async throws -> Operations.process_batch_endpoint_snapshots_process_batch_post.Output {
+        try await process_batch_endpoint_snapshots_process_batch_post(Operations.process_batch_endpoint_snapshots_process_batch_post.Input(
+            headers: headers,
+            body: body
         ))
     }
     /// Get Today
@@ -1858,10 +1924,10 @@ public enum Components {
             public var content_html: Swift.String?
             /// - Remark: Generated from `#/components/schemas/FeedEntryOut/read`.
             public var read: Swift.Bool
+            /// - Remark: Generated from `#/components/schemas/FeedEntryOut/skipped`.
+            public var skipped: Swift.Bool
             /// - Remark: Generated from `#/components/schemas/FeedEntryOut/promoted_source_id`.
             public var promoted_source_id: Swift.String?
-            /// - Remark: Generated from `#/components/schemas/FeedEntryOut/promoted_status`.
-            public var promoted_status: Components.Schemas.SnapshotStatus?
             /// - Remark: Generated from `#/components/schemas/FeedEntryOut/created_at`.
             public var created_at: Foundation.Date
             /// Creates a new `FeedEntryOut`.
@@ -1876,8 +1942,8 @@ public enum Components {
             ///   - published_at:
             ///   - content_html:
             ///   - read:
+            ///   - skipped:
             ///   - promoted_source_id:
-            ///   - promoted_status:
             ///   - created_at:
             public init(
                 id: Swift.String,
@@ -1889,8 +1955,8 @@ public enum Components {
                 published_at: Foundation.Date? = nil,
                 content_html: Swift.String? = nil,
                 read: Swift.Bool,
+                skipped: Swift.Bool,
                 promoted_source_id: Swift.String? = nil,
-                promoted_status: Components.Schemas.SnapshotStatus? = nil,
                 created_at: Foundation.Date
             ) {
                 self.id = id
@@ -1902,8 +1968,8 @@ public enum Components {
                 self.published_at = published_at
                 self.content_html = content_html
                 self.read = read
+                self.skipped = skipped
                 self.promoted_source_id = promoted_source_id
-                self.promoted_status = promoted_status
                 self.created_at = created_at
             }
             public enum CodingKeys: String, CodingKey {
@@ -1916,8 +1982,8 @@ public enum Components {
                 case published_at
                 case content_html
                 case read
+                case skipped
                 case promoted_source_id
-                case promoted_status
                 case created_at
             }
         }
@@ -2186,21 +2252,27 @@ public enum Components {
             public var items: [Components.Schemas.SnapshotOut]
             /// - Remark: Generated from `#/components/schemas/InboxOut/count`.
             public var count: Swift.Int
+            /// - Remark: Generated from `#/components/schemas/InboxOut/actionable_count`.
+            public var actionable_count: Swift.Int
             /// Creates a new `InboxOut`.
             ///
             /// - Parameters:
             ///   - items:
             ///   - count:
+            ///   - actionable_count:
             public init(
                 items: [Components.Schemas.SnapshotOut],
-                count: Swift.Int
+                count: Swift.Int,
+                actionable_count: Swift.Int
             ) {
                 self.items = items
                 self.count = count
+                self.actionable_count = actionable_count
             }
             public enum CodingKeys: String, CodingKey {
                 case items
                 case count
+                case actionable_count
             }
         }
         /// - Remark: Generated from `#/components/schemas/LLMSettingsOut`.
@@ -2722,6 +2794,69 @@ public enum Components {
         @frozen public enum PackType: String, Codable, Hashable, Sendable, CaseIterable {
             case paper = "paper"
             case article = "article"
+        }
+        /// - Remark: Generated from `#/components/schemas/ProcessBatchIn`.
+        public struct ProcessBatchIn: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/ProcessBatchIn/ids`.
+            public var ids: [Swift.String]
+            /// Creates a new `ProcessBatchIn`.
+            ///
+            /// - Parameters:
+            ///   - ids:
+            public init(ids: [Swift.String]) {
+                self.ids = ids
+            }
+            public enum CodingKeys: String, CodingKey {
+                case ids
+            }
+        }
+        /// Partial success is normal — one 409 must not fail the batch.
+        ///
+        /// - Remark: Generated from `#/components/schemas/ProcessBatchOut`.
+        public struct ProcessBatchOut: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/ProcessBatchOut/started`.
+            public var started: [Swift.String]
+            /// - Remark: Generated from `#/components/schemas/ProcessBatchOut/skipped`.
+            public var skipped: [Components.Schemas.ProcessSkipped]
+            /// Creates a new `ProcessBatchOut`.
+            ///
+            /// - Parameters:
+            ///   - started:
+            ///   - skipped:
+            public init(
+                started: [Swift.String],
+                skipped: [Components.Schemas.ProcessSkipped]
+            ) {
+                self.started = started
+                self.skipped = skipped
+            }
+            public enum CodingKeys: String, CodingKey {
+                case started
+                case skipped
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/ProcessSkipped`.
+        public struct ProcessSkipped: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/ProcessSkipped/id`.
+            public var id: Swift.String
+            /// - Remark: Generated from `#/components/schemas/ProcessSkipped/reason`.
+            public var reason: Swift.String
+            /// Creates a new `ProcessSkipped`.
+            ///
+            /// - Parameters:
+            ///   - id:
+            ///   - reason:
+            public init(
+                id: Swift.String,
+                reason: Swift.String
+            ) {
+                self.id = id
+                self.reason = reason
+            }
+            public enum CodingKeys: String, CodingKey {
+                case id
+                case reason
+            }
         }
         /// - Remark: Generated from `#/components/schemas/ProseBlockOut`.
         public struct ProseBlockOut: Codable, Hashable, Sendable {
@@ -3329,8 +3464,8 @@ public enum Components {
             public var health: Components.Schemas.SubscriptionOut.healthPayload
             /// - Remark: Generated from `#/components/schemas/SubscriptionOut/muted`.
             public var muted: Swift.Bool
-            /// - Remark: Generated from `#/components/schemas/SubscriptionOut/unread_count`.
-            public var unread_count: Swift.Int
+            /// - Remark: Generated from `#/components/schemas/SubscriptionOut/pending_count`.
+            public var pending_count: Swift.Int
             /// - Remark: Generated from `#/components/schemas/SubscriptionOut/last_fetch_at`.
             public var last_fetch_at: Foundation.Date?
             /// - Remark: Generated from `#/components/schemas/SubscriptionOut/last_fetch_error`.
@@ -3345,7 +3480,7 @@ public enum Components {
             ///   - feed_url:
             ///   - health:
             ///   - muted:
-            ///   - unread_count:
+            ///   - pending_count:
             ///   - last_fetch_at:
             ///   - last_fetch_error:
             ///   - created_at:
@@ -3355,7 +3490,7 @@ public enum Components {
                 feed_url: Swift.String,
                 health: Components.Schemas.SubscriptionOut.healthPayload,
                 muted: Swift.Bool,
-                unread_count: Swift.Int,
+                pending_count: Swift.Int,
                 last_fetch_at: Foundation.Date? = nil,
                 last_fetch_error: Swift.String? = nil,
                 created_at: Foundation.Date
@@ -3365,7 +3500,7 @@ public enum Components {
                 self.feed_url = feed_url
                 self.health = health
                 self.muted = muted
-                self.unread_count = unread_count
+                self.pending_count = pending_count
                 self.last_fetch_at = last_fetch_at
                 self.last_fetch_error = last_fetch_error
                 self.created_at = created_at
@@ -3376,7 +3511,7 @@ public enum Components {
                 case feed_url
                 case health
                 case muted
-                case unread_count
+                case pending_count
                 case last_fetch_at
                 case last_fetch_error
                 case created_at
@@ -8306,16 +8441,19 @@ public enum Operations {
             }
         }
     }
-    /// Read All
+    /// Skip All
     ///
-    /// - Remark: HTTP `POST /subscriptions/{sub_id}/read-all`.
-    /// - Remark: Generated from `#/paths//subscriptions/{sub_id}/read-all/post(read_all_subscriptions__sub_id__read_all_post)`.
-    public enum read_all_subscriptions__sub_id__read_all_post {
-        public static let id: Swift.String = "read_all_subscriptions__sub_id__read_all_post"
+    /// Bulk-dismiss what's undecided. Dismissing is a decision, so this is not
+    /// 'mark all read' (spec 2026-08-01 §4.4).
+    ///
+    /// - Remark: HTTP `POST /subscriptions/{sub_id}/skip-all`.
+    /// - Remark: Generated from `#/paths//subscriptions/{sub_id}/skip-all/post(skip_all_subscriptions__sub_id__skip_all_post)`.
+    public enum skip_all_subscriptions__sub_id__skip_all_post {
+        public static let id: Swift.String = "skip_all_subscriptions__sub_id__skip_all_post"
         public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/subscriptions/{sub_id}/read-all/POST/path`.
+            /// - Remark: Generated from `#/paths/subscriptions/{sub_id}/skip-all/POST/path`.
             public struct Path: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/subscriptions/{sub_id}/read-all/POST/path/sub_id`.
+                /// - Remark: Generated from `#/paths/subscriptions/{sub_id}/skip-all/POST/path/sub_id`.
                 public var sub_id: Swift.String
                 /// Creates a new `Path`.
                 ///
@@ -8325,27 +8463,27 @@ public enum Operations {
                     self.sub_id = sub_id
                 }
             }
-            public var path: Operations.read_all_subscriptions__sub_id__read_all_post.Input.Path
-            /// - Remark: Generated from `#/paths/subscriptions/{sub_id}/read-all/POST/header`.
+            public var path: Operations.skip_all_subscriptions__sub_id__skip_all_post.Input.Path
+            /// - Remark: Generated from `#/paths/subscriptions/{sub_id}/skip-all/POST/header`.
             public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.read_all_subscriptions__sub_id__read_all_post.AcceptableContentType>]
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.skip_all_subscriptions__sub_id__skip_all_post.AcceptableContentType>]
                 /// Creates a new `Headers`.
                 ///
                 /// - Parameters:
                 ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.read_all_subscriptions__sub_id__read_all_post.AcceptableContentType>] = .defaultValues()) {
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.skip_all_subscriptions__sub_id__skip_all_post.AcceptableContentType>] = .defaultValues()) {
                     self.accept = accept
                 }
             }
-            public var headers: Operations.read_all_subscriptions__sub_id__read_all_post.Input.Headers
+            public var headers: Operations.skip_all_subscriptions__sub_id__skip_all_post.Input.Headers
             /// Creates a new `Input`.
             ///
             /// - Parameters:
             ///   - path:
             ///   - headers:
             public init(
-                path: Operations.read_all_subscriptions__sub_id__read_all_post.Input.Path,
-                headers: Operations.read_all_subscriptions__sub_id__read_all_post.Input.Headers = .init()
+                path: Operations.skip_all_subscriptions__sub_id__skip_all_post.Input.Path,
+                headers: Operations.skip_all_subscriptions__sub_id__skip_all_post.Input.Headers = .init()
             ) {
                 self.path = path
                 self.headers = headers
@@ -8358,13 +8496,13 @@ public enum Operations {
             }
             /// Successful Response
             ///
-            /// - Remark: Generated from `#/paths//subscriptions/{sub_id}/read-all/post(read_all_subscriptions__sub_id__read_all_post)/responses/204`.
+            /// - Remark: Generated from `#/paths//subscriptions/{sub_id}/skip-all/post(skip_all_subscriptions__sub_id__skip_all_post)/responses/204`.
             ///
             /// HTTP response code: `204 noContent`.
-            case noContent(Operations.read_all_subscriptions__sub_id__read_all_post.Output.NoContent)
+            case noContent(Operations.skip_all_subscriptions__sub_id__skip_all_post.Output.NoContent)
             /// Successful Response
             ///
-            /// - Remark: Generated from `#/paths//subscriptions/{sub_id}/read-all/post(read_all_subscriptions__sub_id__read_all_post)/responses/204`.
+            /// - Remark: Generated from `#/paths//subscriptions/{sub_id}/skip-all/post(skip_all_subscriptions__sub_id__skip_all_post)/responses/204`.
             ///
             /// HTTP response code: `204 noContent`.
             public static var noContent: Self {
@@ -8374,7 +8512,7 @@ public enum Operations {
             ///
             /// - Throws: An error if `self` is not `.noContent`.
             /// - SeeAlso: `.noContent`.
-            public var noContent: Operations.read_all_subscriptions__sub_id__read_all_post.Output.NoContent {
+            public var noContent: Operations.skip_all_subscriptions__sub_id__skip_all_post.Output.NoContent {
                 get throws {
                     switch self {
                     case let .noContent(response):
@@ -8388,9 +8526,9 @@ public enum Operations {
                 }
             }
             public struct UnprocessableContent: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/subscriptions/{sub_id}/read-all/POST/responses/422/content`.
+                /// - Remark: Generated from `#/paths/subscriptions/{sub_id}/skip-all/POST/responses/422/content`.
                 @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/subscriptions/{sub_id}/read-all/POST/responses/422/content/application\/json`.
+                    /// - Remark: Generated from `#/paths/subscriptions/{sub_id}/skip-all/POST/responses/422/content/application\/json`.
                     case json(Components.Schemas.HTTPValidationError)
                     /// The associated value of the enum case if `self` is `.json`.
                     ///
@@ -8406,26 +8544,26 @@ public enum Operations {
                     }
                 }
                 /// Received HTTP response body
-                public var body: Operations.read_all_subscriptions__sub_id__read_all_post.Output.UnprocessableContent.Body
+                public var body: Operations.skip_all_subscriptions__sub_id__skip_all_post.Output.UnprocessableContent.Body
                 /// Creates a new `UnprocessableContent`.
                 ///
                 /// - Parameters:
                 ///   - body: Received HTTP response body
-                public init(body: Operations.read_all_subscriptions__sub_id__read_all_post.Output.UnprocessableContent.Body) {
+                public init(body: Operations.skip_all_subscriptions__sub_id__skip_all_post.Output.UnprocessableContent.Body) {
                     self.body = body
                 }
             }
             /// Validation Error
             ///
-            /// - Remark: Generated from `#/paths//subscriptions/{sub_id}/read-all/post(read_all_subscriptions__sub_id__read_all_post)/responses/422`.
+            /// - Remark: Generated from `#/paths//subscriptions/{sub_id}/skip-all/post(skip_all_subscriptions__sub_id__skip_all_post)/responses/422`.
             ///
             /// HTTP response code: `422 unprocessableContent`.
-            case unprocessableContent(Operations.read_all_subscriptions__sub_id__read_all_post.Output.UnprocessableContent)
+            case unprocessableContent(Operations.skip_all_subscriptions__sub_id__skip_all_post.Output.UnprocessableContent)
             /// The associated value of the enum case if `self` is `.unprocessableContent`.
             ///
             /// - Throws: An error if `self` is not `.unprocessableContent`.
             /// - SeeAlso: `.unprocessableContent`.
-            public var unprocessableContent: Operations.read_all_subscriptions__sub_id__read_all_post.Output.UnprocessableContent {
+            public var unprocessableContent: Operations.skip_all_subscriptions__sub_id__skip_all_post.Output.UnprocessableContent {
                 get throws {
                     switch self {
                     case let .unprocessableContent(response):
@@ -8491,8 +8629,8 @@ public enum Operations {
             public var path: Operations.subscription_entries_subscriptions__sub_id__entries_get.Input.Path
             /// - Remark: Generated from `#/paths/subscriptions/{sub_id}/entries/GET/query`.
             public struct Query: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/subscriptions/{sub_id}/entries/GET/query/unread_only`.
-                public var unread_only: Swift.Bool?
+                /// - Remark: Generated from `#/paths/subscriptions/{sub_id}/entries/GET/query/pending_only`.
+                public var pending_only: Swift.Bool?
                 /// - Remark: Generated from `#/paths/subscriptions/{sub_id}/entries/GET/query/limit`.
                 public var limit: Swift.Int?
                 /// - Remark: Generated from `#/paths/subscriptions/{sub_id}/entries/GET/query/offset`.
@@ -8500,15 +8638,15 @@ public enum Operations {
                 /// Creates a new `Query`.
                 ///
                 /// - Parameters:
-                ///   - unread_only:
+                ///   - pending_only:
                 ///   - limit:
                 ///   - offset:
                 public init(
-                    unread_only: Swift.Bool? = nil,
+                    pending_only: Swift.Bool? = nil,
                     limit: Swift.Int? = nil,
                     offset: Swift.Int? = nil
                 ) {
-                    self.unread_only = unread_only
+                    self.pending_only = pending_only
                     self.limit = limit
                     self.offset = offset
                 }
@@ -8685,8 +8823,8 @@ public enum Operations {
         public struct Input: Sendable, Hashable {
             /// - Remark: Generated from `#/paths/feed-entries/GET/query`.
             public struct Query: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/feed-entries/GET/query/unread_only`.
-                public var unread_only: Swift.Bool?
+                /// - Remark: Generated from `#/paths/feed-entries/GET/query/pending_only`.
+                public var pending_only: Swift.Bool?
                 /// - Remark: Generated from `#/paths/feed-entries/GET/query/limit`.
                 public var limit: Swift.Int?
                 /// - Remark: Generated from `#/paths/feed-entries/GET/query/offset`.
@@ -8694,15 +8832,15 @@ public enum Operations {
                 /// Creates a new `Query`.
                 ///
                 /// - Parameters:
-                ///   - unread_only:
+                ///   - pending_only:
                 ///   - limit:
                 ///   - offset:
                 public init(
-                    unread_only: Swift.Bool? = nil,
+                    pending_only: Swift.Bool? = nil,
                     limit: Swift.Int? = nil,
                     offset: Swift.Int? = nil
                 ) {
-                    self.unread_only = unread_only
+                    self.pending_only = pending_only
                     self.limit = limit
                     self.offset = offset
                 }
@@ -9150,6 +9288,332 @@ public enum Operations {
             /// - Throws: An error if `self` is not `.unprocessableContent`.
             /// - SeeAlso: `.unprocessableContent`.
             public var unprocessableContent: Operations.mark_unread_feed_entries__entry_id__unread_post.Output.UnprocessableContent {
+                get throws {
+                    switch self {
+                    case let .unprocessableContent(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unprocessableContent",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        @frozen public enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            public var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            public static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// Skip Entry
+    ///
+    /// - Remark: HTTP `POST /feed-entries/{entry_id}/skip`.
+    /// - Remark: Generated from `#/paths//feed-entries/{entry_id}/skip/post(skip_entry_feed_entries__entry_id__skip_post)`.
+    public enum skip_entry_feed_entries__entry_id__skip_post {
+        public static let id: Swift.String = "skip_entry_feed_entries__entry_id__skip_post"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/feed-entries/{entry_id}/skip/POST/path`.
+            public struct Path: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/feed-entries/{entry_id}/skip/POST/path/entry_id`.
+                public var entry_id: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - entry_id:
+                public init(entry_id: Swift.String) {
+                    self.entry_id = entry_id
+                }
+            }
+            public var path: Operations.skip_entry_feed_entries__entry_id__skip_post.Input.Path
+            /// - Remark: Generated from `#/paths/feed-entries/{entry_id}/skip/POST/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.skip_entry_feed_entries__entry_id__skip_post.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.skip_entry_feed_entries__entry_id__skip_post.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.skip_entry_feed_entries__entry_id__skip_post.Input.Headers
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - headers:
+            public init(
+                path: Operations.skip_entry_feed_entries__entry_id__skip_post.Input.Path,
+                headers: Operations.skip_entry_feed_entries__entry_id__skip_post.Input.Headers = .init()
+            ) {
+                self.path = path
+                self.headers = headers
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct NoContent: Sendable, Hashable {
+                /// Creates a new `NoContent`.
+                public init() {}
+            }
+            /// Successful Response
+            ///
+            /// - Remark: Generated from `#/paths//feed-entries/{entry_id}/skip/post(skip_entry_feed_entries__entry_id__skip_post)/responses/204`.
+            ///
+            /// HTTP response code: `204 noContent`.
+            case noContent(Operations.skip_entry_feed_entries__entry_id__skip_post.Output.NoContent)
+            /// Successful Response
+            ///
+            /// - Remark: Generated from `#/paths//feed-entries/{entry_id}/skip/post(skip_entry_feed_entries__entry_id__skip_post)/responses/204`.
+            ///
+            /// HTTP response code: `204 noContent`.
+            public static var noContent: Self {
+                .noContent(.init())
+            }
+            /// The associated value of the enum case if `self` is `.noContent`.
+            ///
+            /// - Throws: An error if `self` is not `.noContent`.
+            /// - SeeAlso: `.noContent`.
+            public var noContent: Operations.skip_entry_feed_entries__entry_id__skip_post.Output.NoContent {
+                get throws {
+                    switch self {
+                    case let .noContent(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "noContent",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct UnprocessableContent: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/feed-entries/{entry_id}/skip/POST/responses/422/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/feed-entries/{entry_id}/skip/POST/responses/422/content/application\/json`.
+                    case json(Components.Schemas.HTTPValidationError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.HTTPValidationError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.skip_entry_feed_entries__entry_id__skip_post.Output.UnprocessableContent.Body
+                /// Creates a new `UnprocessableContent`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.skip_entry_feed_entries__entry_id__skip_post.Output.UnprocessableContent.Body) {
+                    self.body = body
+                }
+            }
+            /// Validation Error
+            ///
+            /// - Remark: Generated from `#/paths//feed-entries/{entry_id}/skip/post(skip_entry_feed_entries__entry_id__skip_post)/responses/422`.
+            ///
+            /// HTTP response code: `422 unprocessableContent`.
+            case unprocessableContent(Operations.skip_entry_feed_entries__entry_id__skip_post.Output.UnprocessableContent)
+            /// The associated value of the enum case if `self` is `.unprocessableContent`.
+            ///
+            /// - Throws: An error if `self` is not `.unprocessableContent`.
+            /// - SeeAlso: `.unprocessableContent`.
+            public var unprocessableContent: Operations.skip_entry_feed_entries__entry_id__skip_post.Output.UnprocessableContent {
+                get throws {
+                    switch self {
+                    case let .unprocessableContent(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unprocessableContent",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        @frozen public enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            public var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            public static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// Unskip Entry
+    ///
+    /// - Remark: HTTP `POST /feed-entries/{entry_id}/unskip`.
+    /// - Remark: Generated from `#/paths//feed-entries/{entry_id}/unskip/post(unskip_entry_feed_entries__entry_id__unskip_post)`.
+    public enum unskip_entry_feed_entries__entry_id__unskip_post {
+        public static let id: Swift.String = "unskip_entry_feed_entries__entry_id__unskip_post"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/feed-entries/{entry_id}/unskip/POST/path`.
+            public struct Path: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/feed-entries/{entry_id}/unskip/POST/path/entry_id`.
+                public var entry_id: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - entry_id:
+                public init(entry_id: Swift.String) {
+                    self.entry_id = entry_id
+                }
+            }
+            public var path: Operations.unskip_entry_feed_entries__entry_id__unskip_post.Input.Path
+            /// - Remark: Generated from `#/paths/feed-entries/{entry_id}/unskip/POST/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.unskip_entry_feed_entries__entry_id__unskip_post.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.unskip_entry_feed_entries__entry_id__unskip_post.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.unskip_entry_feed_entries__entry_id__unskip_post.Input.Headers
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - headers:
+            public init(
+                path: Operations.unskip_entry_feed_entries__entry_id__unskip_post.Input.Path,
+                headers: Operations.unskip_entry_feed_entries__entry_id__unskip_post.Input.Headers = .init()
+            ) {
+                self.path = path
+                self.headers = headers
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct NoContent: Sendable, Hashable {
+                /// Creates a new `NoContent`.
+                public init() {}
+            }
+            /// Successful Response
+            ///
+            /// - Remark: Generated from `#/paths//feed-entries/{entry_id}/unskip/post(unskip_entry_feed_entries__entry_id__unskip_post)/responses/204`.
+            ///
+            /// HTTP response code: `204 noContent`.
+            case noContent(Operations.unskip_entry_feed_entries__entry_id__unskip_post.Output.NoContent)
+            /// Successful Response
+            ///
+            /// - Remark: Generated from `#/paths//feed-entries/{entry_id}/unskip/post(unskip_entry_feed_entries__entry_id__unskip_post)/responses/204`.
+            ///
+            /// HTTP response code: `204 noContent`.
+            public static var noContent: Self {
+                .noContent(.init())
+            }
+            /// The associated value of the enum case if `self` is `.noContent`.
+            ///
+            /// - Throws: An error if `self` is not `.noContent`.
+            /// - SeeAlso: `.noContent`.
+            public var noContent: Operations.unskip_entry_feed_entries__entry_id__unskip_post.Output.NoContent {
+                get throws {
+                    switch self {
+                    case let .noContent(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "noContent",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct UnprocessableContent: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/feed-entries/{entry_id}/unskip/POST/responses/422/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/feed-entries/{entry_id}/unskip/POST/responses/422/content/application\/json`.
+                    case json(Components.Schemas.HTTPValidationError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.HTTPValidationError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.unskip_entry_feed_entries__entry_id__unskip_post.Output.UnprocessableContent.Body
+                /// Creates a new `UnprocessableContent`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.unskip_entry_feed_entries__entry_id__unskip_post.Output.UnprocessableContent.Body) {
+                    self.body = body
+                }
+            }
+            /// Validation Error
+            ///
+            /// - Remark: Generated from `#/paths//feed-entries/{entry_id}/unskip/post(unskip_entry_feed_entries__entry_id__unskip_post)/responses/422`.
+            ///
+            /// HTTP response code: `422 unprocessableContent`.
+            case unprocessableContent(Operations.unskip_entry_feed_entries__entry_id__unskip_post.Output.UnprocessableContent)
+            /// The associated value of the enum case if `self` is `.unprocessableContent`.
+            ///
+            /// - Throws: An error if `self` is not `.unprocessableContent`.
+            /// - SeeAlso: `.unprocessableContent`.
+            public var unprocessableContent: Operations.unskip_entry_feed_entries__entry_id__unskip_post.Output.UnprocessableContent {
                 get throws {
                     switch self {
                     case let .unprocessableContent(response):
@@ -11130,6 +11594,26 @@ public enum Operations {
     public enum inbox_inbox_get {
         public static let id: Swift.String = "inbox_inbox_get"
         public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/inbox/GET/query`.
+            public struct Query: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/inbox/GET/query/emitted_by`.
+                public var emitted_by: Swift.String?
+                /// - Remark: Generated from `#/paths/inbox/GET/query/ad_hoc_only`.
+                public var ad_hoc_only: Swift.Bool?
+                /// Creates a new `Query`.
+                ///
+                /// - Parameters:
+                ///   - emitted_by:
+                ///   - ad_hoc_only:
+                public init(
+                    emitted_by: Swift.String? = nil,
+                    ad_hoc_only: Swift.Bool? = nil
+                ) {
+                    self.emitted_by = emitted_by
+                    self.ad_hoc_only = ad_hoc_only
+                }
+            }
+            public var query: Operations.inbox_inbox_get.Input.Query
             /// - Remark: Generated from `#/paths/inbox/GET/header`.
             public struct Headers: Sendable, Hashable {
                 public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.inbox_inbox_get.AcceptableContentType>]
@@ -11145,8 +11629,13 @@ public enum Operations {
             /// Creates a new `Input`.
             ///
             /// - Parameters:
+            ///   - query:
             ///   - headers:
-            public init(headers: Operations.inbox_inbox_get.Input.Headers = .init()) {
+            public init(
+                query: Operations.inbox_inbox_get.Input.Query = .init(),
+                headers: Operations.inbox_inbox_get.Input.Headers = .init()
+            ) {
+                self.query = query
                 self.headers = headers
             }
         }
@@ -11197,6 +11686,57 @@ public enum Operations {
                     default:
                         try throwUnexpectedResponseStatus(
                             expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct UnprocessableContent: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/inbox/GET/responses/422/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/inbox/GET/responses/422/content/application\/json`.
+                    case json(Components.Schemas.HTTPValidationError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.HTTPValidationError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.inbox_inbox_get.Output.UnprocessableContent.Body
+                /// Creates a new `UnprocessableContent`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.inbox_inbox_get.Output.UnprocessableContent.Body) {
+                    self.body = body
+                }
+            }
+            /// Validation Error
+            ///
+            /// - Remark: Generated from `#/paths//inbox/get(inbox_inbox_get)/responses/422`.
+            ///
+            /// HTTP response code: `422 unprocessableContent`.
+            case unprocessableContent(Operations.inbox_inbox_get.Output.UnprocessableContent)
+            /// The associated value of the enum case if `self` is `.unprocessableContent`.
+            ///
+            /// - Throws: An error if `self` is not `.unprocessableContent`.
+            /// - SeeAlso: `.unprocessableContent`.
+            public var unprocessableContent: Operations.inbox_inbox_get.Output.UnprocessableContent {
+                get throws {
+                    switch self {
+                    case let .unprocessableContent(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unprocessableContent",
                             response: self
                         )
                     }
@@ -13324,6 +13864,178 @@ public enum Operations {
             /// - Throws: An error if `self` is not `.unprocessableContent`.
             /// - SeeAlso: `.unprocessableContent`.
             public var unprocessableContent: Operations.process_snapshot_endpoint_snapshots__snapshot_id__process_post.Output.UnprocessableContent {
+                get throws {
+                    switch self {
+                    case let .unprocessableContent(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unprocessableContent",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        @frozen public enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            public var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            public static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// Process Batch Endpoint
+    ///
+    /// - Remark: HTTP `POST /snapshots/process-batch`.
+    /// - Remark: Generated from `#/paths//snapshots/process-batch/post(process_batch_endpoint_snapshots_process_batch_post)`.
+    public enum process_batch_endpoint_snapshots_process_batch_post {
+        public static let id: Swift.String = "process_batch_endpoint_snapshots_process_batch_post"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/snapshots/process-batch/POST/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.process_batch_endpoint_snapshots_process_batch_post.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.process_batch_endpoint_snapshots_process_batch_post.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.process_batch_endpoint_snapshots_process_batch_post.Input.Headers
+            /// - Remark: Generated from `#/paths/snapshots/process-batch/POST/requestBody`.
+            @frozen public enum Body: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/snapshots/process-batch/POST/requestBody/content/application\/json`.
+                case json(Components.Schemas.ProcessBatchIn)
+            }
+            public var body: Operations.process_batch_endpoint_snapshots_process_batch_post.Input.Body
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - headers:
+            ///   - body:
+            public init(
+                headers: Operations.process_batch_endpoint_snapshots_process_batch_post.Input.Headers = .init(),
+                body: Operations.process_batch_endpoint_snapshots_process_batch_post.Input.Body
+            ) {
+                self.headers = headers
+                self.body = body
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/snapshots/process-batch/POST/responses/200/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/snapshots/process-batch/POST/responses/200/content/application\/json`.
+                    case json(Components.Schemas.ProcessBatchOut)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.ProcessBatchOut {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.process_batch_endpoint_snapshots_process_batch_post.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.process_batch_endpoint_snapshots_process_batch_post.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// Successful Response
+            ///
+            /// - Remark: Generated from `#/paths//snapshots/process-batch/post(process_batch_endpoint_snapshots_process_batch_post)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.process_batch_endpoint_snapshots_process_batch_post.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            public var ok: Operations.process_batch_endpoint_snapshots_process_batch_post.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct UnprocessableContent: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/snapshots/process-batch/POST/responses/422/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/snapshots/process-batch/POST/responses/422/content/application\/json`.
+                    case json(Components.Schemas.HTTPValidationError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.HTTPValidationError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.process_batch_endpoint_snapshots_process_batch_post.Output.UnprocessableContent.Body
+                /// Creates a new `UnprocessableContent`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.process_batch_endpoint_snapshots_process_batch_post.Output.UnprocessableContent.Body) {
+                    self.body = body
+                }
+            }
+            /// Validation Error
+            ///
+            /// - Remark: Generated from `#/paths//snapshots/process-batch/post(process_batch_endpoint_snapshots_process_batch_post)/responses/422`.
+            ///
+            /// HTTP response code: `422 unprocessableContent`.
+            case unprocessableContent(Operations.process_batch_endpoint_snapshots_process_batch_post.Output.UnprocessableContent)
+            /// The associated value of the enum case if `self` is `.unprocessableContent`.
+            ///
+            /// - Throws: An error if `self` is not `.unprocessableContent`.
+            /// - SeeAlso: `.unprocessableContent`.
+            public var unprocessableContent: Operations.process_batch_endpoint_snapshots_process_batch_post.Output.UnprocessableContent {
                 get throws {
                     switch self {
                     case let .unprocessableContent(response):

@@ -2183,17 +2183,20 @@ public struct Client: APIProtocol {
             }
         )
     }
-    /// Read All
+    /// Skip All
     ///
-    /// - Remark: HTTP `POST /subscriptions/{sub_id}/read-all`.
-    /// - Remark: Generated from `#/paths//subscriptions/{sub_id}/read-all/post(read_all_subscriptions__sub_id__read_all_post)`.
-    public func read_all_subscriptions__sub_id__read_all_post(_ input: Operations.read_all_subscriptions__sub_id__read_all_post.Input) async throws -> Operations.read_all_subscriptions__sub_id__read_all_post.Output {
+    /// Bulk-dismiss what's undecided. Dismissing is a decision, so this is not
+    /// 'mark all read' (spec 2026-08-01 §4.4).
+    ///
+    /// - Remark: HTTP `POST /subscriptions/{sub_id}/skip-all`.
+    /// - Remark: Generated from `#/paths//subscriptions/{sub_id}/skip-all/post(skip_all_subscriptions__sub_id__skip_all_post)`.
+    public func skip_all_subscriptions__sub_id__skip_all_post(_ input: Operations.skip_all_subscriptions__sub_id__skip_all_post.Input) async throws -> Operations.skip_all_subscriptions__sub_id__skip_all_post.Output {
         try await client.send(
             input: input,
-            forOperation: Operations.read_all_subscriptions__sub_id__read_all_post.id,
+            forOperation: Operations.skip_all_subscriptions__sub_id__skip_all_post.id,
             serializer: { input in
                 let path = try converter.renderedPath(
-                    template: "/subscriptions/{}/read-all",
+                    template: "/subscriptions/{}/skip-all",
                     parameters: [
                         input.path.sub_id
                     ]
@@ -2215,7 +2218,7 @@ public struct Client: APIProtocol {
                     return .noContent(.init())
                 case 422:
                     let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.read_all_subscriptions__sub_id__read_all_post.Output.UnprocessableContent.Body
+                    let body: Operations.skip_all_subscriptions__sub_id__skip_all_post.Output.UnprocessableContent.Body
                     let chosenContentType = try converter.bestContentType(
                         received: contentType,
                         options: [
@@ -2271,8 +2274,8 @@ public struct Client: APIProtocol {
                     in: &request,
                     style: .form,
                     explode: true,
-                    name: "unread_only",
-                    value: input.query.unread_only
+                    name: "pending_only",
+                    value: input.query.pending_only
                 )
                 try converter.setQueryItemAsURI(
                     in: &request,
@@ -2374,8 +2377,8 @@ public struct Client: APIProtocol {
                     in: &request,
                     style: .form,
                     explode: true,
-                    name: "unread_only",
-                    value: input.query.unread_only
+                    name: "pending_only",
+                    value: input.query.pending_only
                 )
                 try converter.setQueryItemAsURI(
                     in: &request,
@@ -2552,6 +2555,134 @@ public struct Client: APIProtocol {
                 case 422:
                     let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
                     let body: Operations.mark_unread_feed_entries__entry_id__unread_post.Output.UnprocessableContent.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.HTTPValidationError.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .unprocessableContent(.init(body: body))
+                default:
+                    return .undocumented(
+                        statusCode: response.status.code,
+                        .init(
+                            headerFields: response.headerFields,
+                            body: responseBody
+                        )
+                    )
+                }
+            }
+        )
+    }
+    /// Skip Entry
+    ///
+    /// - Remark: HTTP `POST /feed-entries/{entry_id}/skip`.
+    /// - Remark: Generated from `#/paths//feed-entries/{entry_id}/skip/post(skip_entry_feed_entries__entry_id__skip_post)`.
+    public func skip_entry_feed_entries__entry_id__skip_post(_ input: Operations.skip_entry_feed_entries__entry_id__skip_post.Input) async throws -> Operations.skip_entry_feed_entries__entry_id__skip_post.Output {
+        try await client.send(
+            input: input,
+            forOperation: Operations.skip_entry_feed_entries__entry_id__skip_post.id,
+            serializer: { input in
+                let path = try converter.renderedPath(
+                    template: "/feed-entries/{}/skip",
+                    parameters: [
+                        input.path.entry_id
+                    ]
+                )
+                var request: HTTPTypes.HTTPRequest = .init(
+                    soar_path: path,
+                    method: .post
+                )
+                suppressMutabilityWarning(&request)
+                converter.setAcceptHeader(
+                    in: &request.headerFields,
+                    contentTypes: input.headers.accept
+                )
+                return (request, nil)
+            },
+            deserializer: { response, responseBody in
+                switch response.status.code {
+                case 204:
+                    return .noContent(.init())
+                case 422:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.skip_entry_feed_entries__entry_id__skip_post.Output.UnprocessableContent.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.HTTPValidationError.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .unprocessableContent(.init(body: body))
+                default:
+                    return .undocumented(
+                        statusCode: response.status.code,
+                        .init(
+                            headerFields: response.headerFields,
+                            body: responseBody
+                        )
+                    )
+                }
+            }
+        )
+    }
+    /// Unskip Entry
+    ///
+    /// - Remark: HTTP `POST /feed-entries/{entry_id}/unskip`.
+    /// - Remark: Generated from `#/paths//feed-entries/{entry_id}/unskip/post(unskip_entry_feed_entries__entry_id__unskip_post)`.
+    public func unskip_entry_feed_entries__entry_id__unskip_post(_ input: Operations.unskip_entry_feed_entries__entry_id__unskip_post.Input) async throws -> Operations.unskip_entry_feed_entries__entry_id__unskip_post.Output {
+        try await client.send(
+            input: input,
+            forOperation: Operations.unskip_entry_feed_entries__entry_id__unskip_post.id,
+            serializer: { input in
+                let path = try converter.renderedPath(
+                    template: "/feed-entries/{}/unskip",
+                    parameters: [
+                        input.path.entry_id
+                    ]
+                )
+                var request: HTTPTypes.HTTPRequest = .init(
+                    soar_path: path,
+                    method: .post
+                )
+                suppressMutabilityWarning(&request)
+                converter.setAcceptHeader(
+                    in: &request.headerFields,
+                    contentTypes: input.headers.accept
+                )
+                return (request, nil)
+            },
+            deserializer: { response, responseBody in
+                switch response.status.code {
+                case 204:
+                    return .noContent(.init())
+                case 422:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.unskip_entry_feed_entries__entry_id__unskip_post.Output.UnprocessableContent.Body
                     let chosenContentType = try converter.bestContentType(
                         received: contentType,
                         options: [
@@ -3546,6 +3677,20 @@ public struct Client: APIProtocol {
                     method: .get
                 )
                 suppressMutabilityWarning(&request)
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: true,
+                    name: "emitted_by",
+                    value: input.query.emitted_by
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: true,
+                    name: "ad_hoc_only",
+                    value: input.query.ad_hoc_only
+                )
                 converter.setAcceptHeader(
                     in: &request.headerFields,
                     contentTypes: input.headers.accept
@@ -3576,6 +3721,28 @@ public struct Client: APIProtocol {
                         preconditionFailure("bestContentType chose an invalid content type.")
                     }
                     return .ok(.init(body: body))
+                case 422:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.inbox_inbox_get.Output.UnprocessableContent.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.HTTPValidationError.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .unprocessableContent(.init(body: body))
                 default:
                     return .undocumented(
                         statusCode: response.status.code,
@@ -4503,6 +4670,97 @@ public struct Client: APIProtocol {
                 case 422:
                     let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
                     let body: Operations.process_snapshot_endpoint_snapshots__snapshot_id__process_post.Output.UnprocessableContent.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.HTTPValidationError.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .unprocessableContent(.init(body: body))
+                default:
+                    return .undocumented(
+                        statusCode: response.status.code,
+                        .init(
+                            headerFields: response.headerFields,
+                            body: responseBody
+                        )
+                    )
+                }
+            }
+        )
+    }
+    /// Process Batch Endpoint
+    ///
+    /// - Remark: HTTP `POST /snapshots/process-batch`.
+    /// - Remark: Generated from `#/paths//snapshots/process-batch/post(process_batch_endpoint_snapshots_process_batch_post)`.
+    public func process_batch_endpoint_snapshots_process_batch_post(_ input: Operations.process_batch_endpoint_snapshots_process_batch_post.Input) async throws -> Operations.process_batch_endpoint_snapshots_process_batch_post.Output {
+        try await client.send(
+            input: input,
+            forOperation: Operations.process_batch_endpoint_snapshots_process_batch_post.id,
+            serializer: { input in
+                let path = try converter.renderedPath(
+                    template: "/snapshots/process-batch",
+                    parameters: []
+                )
+                var request: HTTPTypes.HTTPRequest = .init(
+                    soar_path: path,
+                    method: .post
+                )
+                suppressMutabilityWarning(&request)
+                converter.setAcceptHeader(
+                    in: &request.headerFields,
+                    contentTypes: input.headers.accept
+                )
+                let body: OpenAPIRuntime.HTTPBody?
+                switch input.body {
+                case let .json(value):
+                    body = try converter.setRequiredRequestBodyAsJSON(
+                        value,
+                        headerFields: &request.headerFields,
+                        contentType: "application/json; charset=utf-8"
+                    )
+                }
+                return (request, body)
+            },
+            deserializer: { response, responseBody in
+                switch response.status.code {
+                case 200:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.process_batch_endpoint_snapshots_process_batch_post.Output.Ok.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.ProcessBatchOut.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .ok(.init(body: body))
+                case 422:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.process_batch_endpoint_snapshots_process_batch_post.Output.UnprocessableContent.Body
                     let chosenContentType = try converter.bestContentType(
                         received: contentType,
                         options: [

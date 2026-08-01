@@ -1096,13 +1096,14 @@
         }
       }
     },
-    "/subscriptions/{sub_id}/read-all": {
+    "/subscriptions/{sub_id}/skip-all": {
       "post": {
         "tags": [
           "feeds"
         ],
-        "summary": "Read All",
-        "operationId": "read_all_subscriptions__sub_id__read_all_post",
+        "summary": "Skip All",
+        "description": "Bulk-dismiss what's undecided. Dismissing is a decision, so this is not\n'mark all read' (spec 2026-08-01 §4.4).",
+        "operationId": "skip_all_subscriptions__sub_id__skip_all_post",
         "parameters": [
           {
             "name": "sub_id",
@@ -1151,13 +1152,13 @@
             }
           },
           {
-            "name": "unread_only",
+            "name": "pending_only",
             "in": "query",
             "required": false,
             "schema": {
               "type": "boolean",
-              "default": false,
-              "title": "Unread Only"
+              "default": true,
+              "title": "Pending Only"
             }
           },
           {
@@ -1214,13 +1215,13 @@
         "operationId": "all_entries_feed_entries_get",
         "parameters": [
           {
-            "name": "unread_only",
+            "name": "pending_only",
             "in": "query",
             "required": false,
             "schema": {
               "type": "boolean",
-              "default": false,
-              "title": "Unread Only"
+              "default": true,
+              "title": "Pending Only"
             }
           },
           {
@@ -1311,6 +1312,78 @@
         ],
         "summary": "Mark Unread",
         "operationId": "mark_unread_feed_entries__entry_id__unread_post",
+        "parameters": [
+          {
+            "name": "entry_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Entry Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/feed-entries/{entry_id}/skip": {
+      "post": {
+        "tags": [
+          "feeds"
+        ],
+        "summary": "Skip Entry",
+        "operationId": "skip_entry_feed_entries__entry_id__skip_post",
+        "parameters": [
+          {
+            "name": "entry_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Entry Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/feed-entries/{entry_id}/unskip": {
+      "post": {
+        "tags": [
+          "feeds"
+        ],
+        "summary": "Unskip Entry",
+        "operationId": "unskip_entry_feed_entries__entry_id__unskip_post",
         "parameters": [
           {
             "name": "entry_id",
@@ -1848,6 +1921,28 @@
         ],
         "summary": "Inbox",
         "operationId": "inbox_inbox_get",
+        "parameters": [
+          {
+            "name": "emitted_by",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "title": "Emitted By",
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "ad_hoc_only",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Ad Hoc Only"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -1855,6 +1950,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/InboxOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
             }
@@ -2422,6 +2527,47 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/SnapshotOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/snapshots/process-batch": {
+      "post": {
+        "tags": [
+          "processing"
+        ],
+        "summary": "Process Batch Endpoint",
+        "operationId": "process_batch_endpoint_snapshots_process_batch_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProcessBatchIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProcessBatchOut"
                 }
               }
             }
@@ -3202,13 +3348,14 @@
             "type": "boolean",
             "title": "Read"
           },
+          "skipped": {
+            "type": "boolean",
+            "title": "Skipped"
+          },
           "promoted_source_id": {
             "title": "Promoted Source Id",
             "type": "string",
             "format": "uuid"
-          },
-          "promoted_status": {
-            "$ref": "#/components/schemas/SnapshotStatus"
           },
           "created_at": {
             "type": "string",
@@ -3223,6 +3370,7 @@
           "subscription_title",
           "title",
           "read",
+          "skipped",
           "created_at"
         ],
         "title": "FeedEntryOut"
@@ -3436,12 +3584,17 @@
           "count": {
             "type": "integer",
             "title": "Count"
+          },
+          "actionable_count": {
+            "type": "integer",
+            "title": "Actionable Count"
           }
         },
         "type": "object",
         "required": [
           "items",
-          "count"
+          "count",
+          "actionable_count"
         ],
         "title": "InboxOut"
       },
@@ -3880,6 +4033,68 @@
         ],
         "title": "PackType",
         "description": "Discriminator selecting the pack implementation (docs/02 §4.4):\n`paper` = LLM-authored deep report; `article` = deterministic preserve\nof the source's own structure."
+      },
+      "ProcessBatchIn": {
+        "properties": {
+          "ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "title": "Ids"
+          }
+        },
+        "type": "object",
+        "required": [
+          "ids"
+        ],
+        "title": "ProcessBatchIn"
+      },
+      "ProcessBatchOut": {
+        "properties": {
+          "started": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "title": "Started"
+          },
+          "skipped": {
+            "items": {
+              "$ref": "#/components/schemas/ProcessSkipped"
+            },
+            "type": "array",
+            "title": "Skipped"
+          }
+        },
+        "type": "object",
+        "required": [
+          "started",
+          "skipped"
+        ],
+        "title": "ProcessBatchOut",
+        "description": "Partial success is normal — one 409 must not fail the batch."
+      },
+      "ProcessSkipped": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "reason"
+        ],
+        "title": "ProcessSkipped"
       },
       "ProseBlockOut": {
         "properties": {
@@ -4380,9 +4595,9 @@
             "type": "boolean",
             "title": "Muted"
           },
-          "unread_count": {
+          "pending_count": {
             "type": "integer",
-            "title": "Unread Count"
+            "title": "Pending Count"
           },
           "last_fetch_at": {
             "title": "Last Fetch At",
@@ -4406,7 +4621,7 @@
           "feed_url",
           "health",
           "muted",
-          "unread_count",
+          "pending_count",
           "created_at"
         ],
         "title": "SubscriptionOut"

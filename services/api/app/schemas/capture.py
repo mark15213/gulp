@@ -82,6 +82,26 @@ class CaptureResponse(BaseModel):
 class InboxOut(BaseModel):
     items: list[SnapshotOut]
     count: int
+    # What waits on the owner (`unprocessed` + `exported` + `needs_attention`),
+    # computed unfiltered — this is the sidebar badge, and it must not move
+    # when the surface is filtered by source (spec 2026-08-01 §4.5).
+    actionable_count: int
+
+
+class ProcessBatchIn(BaseModel):
+    ids: list[uuid.UUID]
+
+
+class ProcessSkipped(BaseModel):
+    id: uuid.UUID
+    reason: str
+
+
+class ProcessBatchOut(BaseModel):
+    """Partial success is normal — one 409 must not fail the batch."""
+
+    started: list[uuid.UUID]
+    skipped: list[ProcessSkipped]
 
 
 class LibraryOut(BaseModel):

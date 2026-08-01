@@ -9,8 +9,8 @@ export default function DiscoverPage() {
     <div className={styles.page}>
       <header className={styles.header}>
         <h1 className="t-title-l">Discover</h1>
-        <Link href="/feeds" className={styles.back}>
-          ← Feeds
+        <Link href="/inbox" className={styles.back}>
+          ← Inbox
         </Link>
       </header>
       <DiscoverSearch />

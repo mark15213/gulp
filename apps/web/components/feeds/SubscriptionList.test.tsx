@@ -13,7 +13,7 @@ const sub = (over: Partial<Subscription>): Subscription =>
     feed_url: "rsshub://anthropic/research",
     health: "active",
     muted: false,
-    unread_count: 3,
+    pending_count: 3,
     last_fetch_at: null,
     last_fetch_error: null,
     created_at: "2026-07-09T00:00:00Z",
@@ -23,12 +23,13 @@ const sub = (over: Partial<Subscription>): Subscription =>
 const noop = () => {};
 
 describe("SubscriptionList", () => {
-  it("renders unread count and fires selection", () => {
+  it("renders the pending count and fires selection", () => {
     const onSelect = vi.fn();
     render(
       <SubscriptionList
         subscriptions={[sub({})]}
-        selectedId={null}
+        selected={{ kind: "all" }}
+        capturedCount={0}
         onSelect={onSelect}
         onToggleMute={noop}
         onDelete={noop}
@@ -38,18 +39,19 @@ describe("SubscriptionList", () => {
     expect(screen.getByText("3")).toBeDefined();
     expect(
       screen
-        .getByRole("button", { name: "All feeds" })
+        .getByRole("button", { name: "All sources" })
         .getAttribute("aria-pressed"),
     ).toBe("true");
     fireEvent.click(screen.getByText("Anthropic Research"));
-    expect(onSelect).toHaveBeenCalledWith("s1");
+    expect(onSelect).toHaveBeenCalledWith({ kind: "sub", id: "s1" });
   });
 
   it("marks error health with the fetch error as tooltip", () => {
     render(
       <SubscriptionList
         subscriptions={[sub({ health: "error", last_fetch_error: "boom" })]}
-        selectedId={null}
+        selected={{ kind: "all" }}
+        capturedCount={0}
         onSelect={noop}
         onToggleMute={noop}
         onDelete={noop}
@@ -73,7 +75,8 @@ describe("SubscriptionList", () => {
     render(
       <SubscriptionList
         subscriptions={[]}
-        selectedId={null}
+        selected={{ kind: "all" }}
+        capturedCount={0}
         onSelect={noop}
         onToggleMute={noop}
         onDelete={noop}

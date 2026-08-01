@@ -10,8 +10,8 @@ from sqlalchemy.orm import Session
 
 from app.core.auth import get_current_user
 from app.deps import get_db, get_enqueue
-from app.schemas.capture import SnapshotOut
-from app.services.processing import start_processing
+from app.schemas.capture import ProcessBatchIn, ProcessBatchOut, ProcessSkipped, SnapshotOut
+from app.services.processing import start_processing, start_processing_batch
 from app.services.snapshots import to_out
 
 router = APIRouter()
@@ -32,3 +32,17 @@ def process_snapshot_endpoint(
     except ValueError as exc:
         raise HTTPException(status_code=409, detail=str(exc)) from exc
     return to_out(db, source)
+
+
+@router.post("/snapshots/process-batch", response_model=ProcessBatchOut)
+def process_batch_endpoint(
+    req: ProcessBatchIn,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+    enqueue: Callable[..., None] = Depends(get_enqueue),
+) -> ProcessBatchOut:
+    started, skipped = start_processing_batch(db, user.id, req.ids, enqueue)
+    return ProcessBatchOut(
+        started=started,
+        skipped=[ProcessSkipped(id=i, reason=r) for i, r in skipped],
+    )

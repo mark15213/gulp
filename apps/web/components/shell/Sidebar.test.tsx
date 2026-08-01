@@ -23,23 +23,22 @@ afterEach(() => {
 });
 
 describe("Sidebar", () => {
-  it("nav is Today · Feeds · Inbox · Library, Today first, wired hrefs", async () => {
+  it("nav is Today · Inbox · Library, Today first, wired hrefs", async () => {
     (api.getInbox as ReturnType<typeof vi.fn>).mockResolvedValue({
       items: [],
       count: 2,
+      actionable_count: 2,
     });
     render(await Sidebar());
     const nav = screen.getByRole("navigation", { name: "Primary" });
     const links = Array.from(nav.querySelectorAll("a"));
     expect(links.map((l) => l.textContent?.replace(/\d+$/, ""))).toEqual([
       "Today",
-      "Feeds",
       "Inbox",
       "Library",
     ]);
     expect(links.map((l) => l.getAttribute("href"))).toEqual([
       "/",
-      "/feeds",
       "/inbox",
       "/library",
     ]);

@@ -37,6 +37,7 @@ describe("SidebarNav", () => {
     (api.getInbox as ReturnType<typeof vi.fn>).mockResolvedValue({
       items: [],
       count: 0,
+      actionable_count: 0,
     });
 
     render(<SidebarNav inboxCount={1} />);
@@ -46,10 +47,10 @@ describe("SidebarNav", () => {
   });
 
   it("rechecks the count after a client-side route change", async () => {
-    usePathname.mockReturnValue("/feeds");
+    usePathname.mockReturnValue("/library");
     (api.getInbox as ReturnType<typeof vi.fn>)
-      .mockResolvedValueOnce({ items: [], count: 2 })
-      .mockResolvedValueOnce({ items: [], count: 0 });
+      .mockResolvedValueOnce({ items: [], count: 2, actionable_count: 2 })
+      .mockResolvedValueOnce({ items: [], count: 0, actionable_count: 0 });
 
     const view = render(<SidebarNav inboxCount={2} />);
     await waitFor(() => expect(api.getInbox).toHaveBeenCalledTimes(1));
@@ -106,13 +107,13 @@ describe("SidebarNav", () => {
     expect(screen.queryByRole("link", { current: "page" })).toBeNull();
   });
 
-  it("lights Feeds on its subtree", () => {
-    usePathname.mockReturnValue("/feeds/discover");
+  it("lights Inbox on its subtree — Discover lives under it now", () => {
+    usePathname.mockReturnValue("/inbox/discover");
     (api.getInbox as ReturnType<typeof vi.fn>).mockImplementation(
       () => new Promise(() => {}),
     );
     render(<SidebarNav inboxCount={0} />);
     const current = screen.getByRole("link", { current: "page" });
-    expect(current.textContent).toContain("Feeds");
+    expect(current.textContent).toContain("Inbox");
   });
 });

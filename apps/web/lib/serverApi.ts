@@ -29,8 +29,11 @@ export async function getCurrentGulpSession() {
   return getCurrentGulpSessionFromApi(await authenticatedRequest());
 }
 
-export async function getInbox() {
-  return getInboxFromApi(await authenticatedRequest());
+export async function getInbox(params?: {
+  emittedBy?: string;
+  adHocOnly?: boolean;
+}) {
+  return getInboxFromApi(params, await authenticatedRequest());
 }
 
 export async function getLibrary() {

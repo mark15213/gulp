@@ -36,11 +36,20 @@ function BellGlyph({ muted }: { muted: boolean }) {
   );
 }
 
-// Left pane (docs/03 §7.11): per-subscription health, mono unread count,
+/** The rail selects an inflow *source*: everything, one subscription, or the
+ *  ad-hoc `Captured` bucket. Sections own stage; the rail owns source. */
+export type SourceFilter = { kind: "all" } | { kind: "sub"; id: string } | { kind: "captured" };
+
+export function sameSource(a: SourceFilter, b: SourceFilter): boolean {
+  return a.kind === b.kind && (a.kind !== "sub" || a.id === (b as { id: string }).id);
+}
+
+// Left pane (docs/03 §7.11): per-subscription health, mono pending count,
 // mute toggle. Health is derived server-side: active / muted / error.
 export function SubscriptionList({
   subscriptions,
-  selectedId,
+  selected,
+  capturedCount,
   onSelect,
   onToggleMute,
   onDelete,
@@ -48,22 +57,24 @@ export function SubscriptionList({
   onAdd,
 }: {
   subscriptions: Subscription[];
-  selectedId: string | null;
-  onSelect: (id: string | null) => void;
+  selected: SourceFilter;
+  capturedCount: number;
+  onSelect: (next: SourceFilter) => void;
   onToggleMute: (sub: Subscription) => void;
   onDelete: (sub: Subscription) => void;
   onRefresh?: (sub: Subscription) => void;
   onAdd: () => void;
 }) {
+  const selectedId = selected.kind === "sub" ? selected.id : null;
   return (
-    <aside className={styles.pane} aria-label="Subscriptions">
+    <aside className={styles.pane} aria-label="Sources">
       <button
         type="button"
-        className={`${styles.allRow} ${selectedId === null ? styles.selected : ""}`}
-        aria-pressed={selectedId === null}
-        onClick={() => onSelect(null)}
+        className={`${styles.allRow} ${selected.kind === "all" ? styles.selected : ""}`}
+        aria-pressed={selected.kind === "all"}
+        onClick={() => onSelect({ kind: "all" })}
       >
-        All feeds
+        All sources
       </button>
       <ul className={styles.list}>
         {subscriptions.map((sub) => (
@@ -92,7 +103,7 @@ export function SubscriptionList({
               type="button"
               className={styles.title}
               aria-pressed={selectedId === sub.id}
-              onClick={() => onSelect(sub.id)}
+              onClick={() => onSelect({ kind: "sub", id: sub.id })}
             >
               {sub.title}
             </button>
@@ -107,9 +118,9 @@ export function SubscriptionList({
                 {sub.health === "error" ? "Error" : "Muted"}
               </span>
             )}
-            {sub.unread_count > 0 && (
+            {sub.pending_count > 0 && (
               <span className={`t-data ${styles.count}`}>
-                {sub.unread_count}
+                {sub.pending_count}
               </span>
             )}
             <span className={styles.actions}>
@@ -151,11 +162,25 @@ export function SubscriptionList({
           No feeds yet — add one or explore Discover.
         </p>
       )}
+      {/* Ad-hoc intake. It has no New section — pressing ⌘K *is* that decision. */}
+      <button
+        type="button"
+        className={`${styles.allRow} ${styles.captured} ${
+          selected.kind === "captured" ? styles.selected : ""
+        }`}
+        aria-pressed={selected.kind === "captured"}
+        onClick={() => onSelect({ kind: "captured" })}
+      >
+        Captured
+        {capturedCount > 0 && (
+          <span className={`t-data ${styles.count}`}>{capturedCount}</span>
+        )}
+      </button>
       <footer className={styles.footer}>
         <button type="button" className={styles.add} onClick={onAdd}>
           + Add feed
         </button>
-        <Link href="/feeds/discover" className={styles.discover}>
+        <Link href="/inbox/discover" className={styles.discover}>
           Discover →
         </Link>
       </footer>

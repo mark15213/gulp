@@ -193,9 +193,14 @@ Entry rows (New): `pending` = full-contrast title + leading dot;
 `forwarded` entries are absent from New and reviewable under the **All**
 filter (§4.4).
 
-Keyboard on the middle pane: `j`/`k` move, `f` forward, `s` skip, `u` undo,
-`enter` opens in the preview pane. On a Kept row, `f` is inert and `enter`
-opens the snapshot.
+Keyboard on the middle pane: `j`/`k` move the cursor, `enter` opens the row in
+the preview pane, `o` opens it properly (the reader for a snapshot, the
+original for an entry), `f` forwards, `s` skips, `u` undoes a skip. `f`/`s`/`u`
+are inert on snapshot rows — those decisions belong to stage 1.
+
+*(Settled during implementation: `enter` and `o` are separate. Folding "open
+the reader" into `enter` would make the cheapest key the one that navigates
+away from the list, which is backwards for a scan-and-keep loop.)*
 
 ### 4.4 Right pane — decision preview, not a reader
 
@@ -231,8 +236,10 @@ Deep reading and the article conversation live where they already do —
 2026-07-10: collapsible chat, `[[block:ID]]` citations, per-block *add to
 chat*). This surface must never grow a second reader.
 
-**The row title is the link.** Clicking any row's title — in any section, at
-any status — opens the reader. That works because the reader page is already
+**The row title is the link.** Clicking a **snapshot** row's title — in any
+section, at any status — opens the reader. An **entry** has no snapshot yet, so
+its title opens the decision preview instead; the rule is "the title takes you
+to the fullest view this thing has". That works because the reader page is already
 status-complete: `unprocessed` shows Start, `queued`/`processing` shows the
 skeleton plus `ProcessingPoller`, `needs_attention` shows the banner, `ready`
 shows the pack. So "open it and watch the pack fill in, then start reading and

@@ -27,7 +27,15 @@ class FeedEntry(TimestampedBase, Base):
         DateTime(timezone=True), default=None
     )
     content_html: Mapped[str | None] = mapped_column(Text, default=None)
+    # "Seen" — set when the entry is opened. Drives row dimming only; it feeds
+    # no count and no filter (spec 2026-08-01 §2).
     read_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), default=None
+    )
+    # Explicit dismissal ("not interested"), reversible. Together with
+    # promoted_source_id it *derives* the triage state: forwarded > skipped >
+    # pending — nothing is stored.
+    skipped_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), default=None
     )
     promoted_source_id: Mapped[uuid.UUID | None] = mapped_column(
