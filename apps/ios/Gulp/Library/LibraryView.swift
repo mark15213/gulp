@@ -41,7 +41,10 @@ struct LibraryView: View {
                             if index > 0 {
                                 Rectangle().fill(Ink.line).frame(height: 1)
                             }
-                            LibraryRow(snapshot: item)
+                            NavigationLink { ReaderView(snapshot: item) } label: {
+                                LibraryRow(snapshot: item)
+                            }
+                            .buttonStyle(.plain)
                         }
                         .padding(.top, Space.x2)
                     }

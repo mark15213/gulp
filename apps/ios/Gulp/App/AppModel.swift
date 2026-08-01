@@ -9,7 +9,7 @@ import Observation
 @Observable
 @MainActor
 final class AppModel {
-    enum Load: Equatable {
+    enum Load: Equatable, Sendable {
         case idle
         case loading
         case failed(String)

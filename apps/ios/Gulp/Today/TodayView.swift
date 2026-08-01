@@ -164,8 +164,15 @@ private struct RecentlyForwarded: View {
                 if index > 0 {
                     Rectangle().fill(Ink.line).frame(height: 1)
                 }
-                SnapshotRow(snapshot: snapshot) {
-                    Task { await model.startProcessing(snapshot.id) }
+                if snapshot.status == .ready {
+                    NavigationLink { ReaderView(snapshot: snapshot) } label: {
+                        SnapshotRow(snapshot: snapshot) {}
+                    }
+                    .buttonStyle(.plain)
+                } else {
+                    SnapshotRow(snapshot: snapshot) {
+                        Task { await model.startProcessing(snapshot.id) }
+                    }
                 }
             }
             .padding(.top, Space.x2)
