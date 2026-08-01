@@ -1,0 +1,6 @@
+# Types + client only: this package is a client, never a server.
+# `public` so the app target and the share extension can both reach it.
+generate:
+  - types
+  - client
+accessModifier: public

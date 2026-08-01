@@ -18,6 +18,9 @@ dev = [
 [tool.ruff]
 line-length = 100
 target-version = "py313"
+# SwiftPM vendors third-party sources (including a few LLDB helper scripts)
+# under .build/ when the iOS client resolves its dependencies.
+extend-exclude = [".build"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]

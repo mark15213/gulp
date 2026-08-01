@@ -2,10 +2,12 @@ import SwiftUI
 
 @main
 struct GulpApp: App {
+    @State private var auth = Auth()
+
     var body: some Scene {
         WindowGroup {
-            // Task 3 replaces this with the three-tab shell.
-            DesignSystemPreview()
+            RootView()
+                .environment(auth)
         }
     }
 }

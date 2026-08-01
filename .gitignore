@@ -71,3 +71,7 @@ apps/ios/**/xcuserdata/
 apps/ios/**/*.xcworkspace/xcuserdata/
 apps/ios/build/
 DerivedData/
+
+# SwiftPM
+apps/ios/**/.build/
+apps/ios/**/.swiftpm/

@@ -30,6 +30,27 @@
 		<key>UIColorName</key>
 		<string></string>
 	</dict>
+	<!-- Development only: `just dev` serves the API over plain HTTP on the
+	     host, and App Transport Security blocks that by default. The exception
+	     is scoped to loopback, so it cannot weaken any real connection — but
+	     it must be removed, or moved behind a debug-only Info.plist, before a
+	     build is ever distributed. -->
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSExceptionDomains</key>
+		<dict>
+			<key>localhost</key>
+			<dict>
+				<key>NSExceptionAllowsInsecureHTTPLoads</key>
+				<true/>
+			</dict>
+			<key>127.0.0.1</key>
+			<dict>
+				<key>NSExceptionAllowsInsecureHTTPLoads</key>
+				<true/>
+			</dict>
+		</dict>
+	</dict>
 	<key>UIAppFonts</key>
 	<array>
 		<string>GeistMono-Regular.ttf</string>

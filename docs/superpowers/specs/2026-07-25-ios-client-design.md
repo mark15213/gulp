@@ -208,6 +208,32 @@ Everything the client needs already ships. No endpoint is added for v1.
 | Chat | `GET /snapshots/{id}/messages` · `POST /snapshots/{id}/messages/stream` (SSE) |
 | You | `GET /me` · `POST /logout` |
 
+## 3.1 Two things the contract does not survive on its own
+
+Both were found by building the Swift client, not by reading the schema, and
+both would have silently corrupted every screen downstream.
+
+**Nullable fields vanish.** FastAPI writes an optional field as an OpenAPI 3.1
+union with the null type — `anyOf: [{type: string}, {type: "null"}]`.
+swift-openapi-generator 1.13 does not support `type: "null"` and drops the
+**whole property**. On this API that is 73 fields, 34 of them required,
+including `SessionCardOut.answer` and `.explanation` — the two the reveal
+screen is built on (§2.2) — and the entire body of
+`GET /gulp/sessions/current`, which generated as an empty struct.
+`apps/ios/Tools/openapi_for_swift.py` rewrites each such union to its non-null
+branch and drops the field from `required`, so it lands as a Swift optional:
+the same meaning, in a shape the generator understands. It runs as the first
+step of `just gen-client-swift` and is not optional.
+
+**Timestamps come in two shapes.** `datetime.isoformat()` emits microseconds,
+except when they are exactly zero, when it omits the fraction entirely. The
+runtime's stock ISO8601 transcoder accepts one shape or the other, so roughly
+one response in a million — and every response from a coarse clock — fails to
+decode. `FlexibleISO8601` in `Net/GulpClient.swift` accepts both.
+
+Neither needs a server change, but both are worth knowing before a third
+client is written against this API.
+
 ## 4. Visual system — the mobile register as built
 
 Tokens are `03 §3.2`'s mobile (warm) column, unchanged: `--bg #FAFAF7`,

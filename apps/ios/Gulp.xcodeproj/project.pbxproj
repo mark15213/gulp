@@ -6,6 +6,20 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		1000000000000000000001D0 /* GulpAPI in Frameworks */ = {isa = PBXBuildFile; productRef = 1000000000000000000001C0 /* GulpAPI */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		100000000000000000000190 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 100000000000000000000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 100000000000000000000010;
+			remoteInfo = Gulp;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
 		100000000000000000000070 /* Gulp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Gulp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		100000000000000000000080 /* GulpTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = GulpTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -16,7 +30,6 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
-				Gulp.entitlements,
 			);
 			target = 100000000000000000000010 /* Gulp */;
 		};
@@ -43,6 +56,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1000000000000000000001D0 /* GulpAPI in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -94,6 +108,7 @@
 			);
 			name = Gulp;
 			packageProductDependencies = (
+				1000000000000000000001C0 /* GulpAPI */,
 			);
 			productName = Gulp;
 			productReference = 100000000000000000000070 /* Gulp.app */;
@@ -150,6 +165,9 @@
 			);
 			mainGroup = 100000000000000000000030;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				1000000000000000000001B0 /* XCLocalSwiftPackageReference "Packages/GulpAPI" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 100000000000000000000040 /* Products */;
 			projectDirPath = "";
@@ -202,16 +220,6 @@
 			targetProxy = 100000000000000000000190 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
-
-/* Begin PBXContainerItemProxy section */
-		100000000000000000000190 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 100000000000000000000001 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 100000000000000000000010;
-			remoteInfo = Gulp;
-		};
-/* End PBXContainerItemProxy section */
 
 /* Begin XCBuildConfiguration section */
 		100000000000000000000120 /* Debug */ = {
@@ -359,6 +367,20 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		1000000000000000000001B0 /* XCLocalSwiftPackageReference "Packages/GulpAPI" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/GulpAPI;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		1000000000000000000001C0 /* GulpAPI */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = GulpAPI;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 100000000000000000000001 /* Project object */;
 }

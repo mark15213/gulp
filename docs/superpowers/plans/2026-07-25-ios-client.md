@@ -60,17 +60,17 @@ Spec §7.3 is closed; Task 0 below is **done**. The answers everything else assu
 
 ---
 
-### Task 2: Generated client and the session
+### Task 2: Generated client and the session ✅ done 2026-08-01
 
 **Files:** `apps/ios/Packages/GulpAPI/*`, `apps/ios/Gulp/Net/*`, `justfile`
 
-- [ ] **Step 1:** Add `GulpAPI`, a local SwiftPM package with `swift-openapi-generator` reading `packages/api-client/openapi.json`. Commit the generated sources.
-- [ ] **Step 2:** Wire the generator into `just gen-client` so TS and Swift can never drift.
-- [ ] **Step 3:** `Session.swift` — auth. **Use the cookie**, not a PAT: `_set_cookie` sets `max_age = session_ttl_days * 86400`, so it is a persistent cookie that `HTTPCookieStorage` keeps across launches, and `POST /auth/login` needs no server change. Back the store with `HTTPCookieStorage.sharedCookieStorage(forGroupContainerIdentifier:)` so the share extension inherits the login. (This closes spec §7.2; record the decision there.)
-- [ ] **Step 4:** Sign-in and register screens — email + password, ink primary button, inline error text that says what to fix (`03 §2.7`: never blame the user).
-- [ ] **Step 5:** A `401` anywhere clears the session and returns to sign-in without losing the pending action.
+- [x] **Step 1:** Add `GulpAPI`, a local SwiftPM package with `swift-openapi-generator` reading `packages/api-client/openapi.json`. Commit the generated sources.
+- [x] **Step 2:** Wire the generator into `just gen-client` so TS and Swift can never drift.
+- [x] **Step 3:** `Session.swift` — auth. **Use the cookie**, not a PAT: `_set_cookie` sets `max_age = session_ttl_days * 86400`, so it is a persistent cookie that `HTTPCookieStorage` keeps across launches, and `POST /auth/login` needs no server change. Back the store with `HTTPCookieStorage.sharedCookieStorage(forGroupContainerIdentifier:)` so the share extension inherits the login. (This closes spec §7.2; record the decision there.)
+- [x] **Step 4:** Sign-in and register screens — email + password, ink primary button, inline error text that says what to fix (`03 §2.7`: never blame the user).
+- [x] **Step 5:** A `401` anywhere clears the session and returns to sign-in without losing the pending action.
 
-**Verify:** sign in on a simulator against a local `just dev`; kill and relaunch; still signed in.
+**Verify:** ✅ `just ios-test-live` green — 16 tests, including four that sign in against a running `just dev`. Cookie sharing proven across processes: the test host signs in, the app relaunches and restores without a login form. `just ios-test` skips the live suite **by name** rather than self-skipping on a missing variable, because a test that passes when it never ran is worse than no test.
 
 ---
 
