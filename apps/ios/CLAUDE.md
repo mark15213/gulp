@@ -28,7 +28,10 @@ The **consumption end** (`docs/01 §3`): forward from anywhere, run the daily Gu
 - `just ios-test` — unit tests, no server needed
 - `just ios-test-live` — adds the suites that sign in against a running `just dev`
 - `just ios-uitest` — drives the real app: taps, sessions, forwarding. Needs `just dev`. **It writes** — one review (graded `Missed`) and one capture per run.
+- `just ios-icon` — rebuild the app icon from the repo's `icon.png`
 - `just gen-client` — regenerate both clients from the API schema
+
+Running on a real phone needs signing, a LAN address and an API bound to it: [`RUNNING-ON-DEVICE.md`](RUNNING-ON-DEVICE.md).
 
 ## Testing
 
