@@ -4,17 +4,19 @@ import UniformTypeIdentifiers
 
 /// The only platform extension in v1, and the reason this client is native
 /// (spec §2.3). It inherits the login from the app through the shared cookie
-/// store in the App Group — no token plumbing, no second sign-in.
+/// store in the App Group — no token plumbing, no second sign-in — and when
+/// that login is gone or the network is, it leaves the capture in the App
+/// Group queue for the app to flush.
 final class ShareViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .clear
 
         Task {
-            let payload = await extractPayload()
+            let draft = await extractDraft()
             let sheet = UIHostingController(
                 rootView: ForwardSheet(
-                    payload: payload,
+                    draft: draft,
                     finish: { [weak self] in self?.finish() }
                 )
             )
@@ -34,45 +36,29 @@ final class ShareViewController: UIViewController {
     /// Whatever the host app handed over: a URL if there is one, otherwise
     /// text. Anything unrecognised still forwards — an unsupported type is
     /// stored raw rather than refused (`01 §10.3`).
-    private func extractPayload() async -> SharePayload {
+    private func extractDraft() async -> ForwardDraft {
         guard let items = extensionContext?.inputItems as? [NSExtensionItem] else {
-            return SharePayload()
+            return ForwardDraft()
         }
-        var payload = SharePayload()
+        var draft = ForwardDraft()
         for item in items {
-            if let title = item.attributedContentText?.string, payload.text == nil {
-                payload.text = title
+            if let title = item.attributedContentText?.string, draft.text == nil {
+                draft.text = title
             }
             for provider in item.attachments ?? [] {
                 if provider.hasItemConformingToTypeIdentifier(UTType.url.identifier),
                    let url = try? await provider.loadItem(
                        forTypeIdentifier: UTType.url.identifier
                    ) as? URL {
-                    payload.url = url.absoluteString
+                    draft.url = url.absoluteString
                 } else if provider.hasItemConformingToTypeIdentifier(UTType.plainText.identifier),
                           let text = try? await provider.loadItem(
                               forTypeIdentifier: UTType.plainText.identifier
                           ) as? String {
-                    payload.text = text
+                    draft.text = text
                 }
             }
         }
-        return payload
-    }
-}
-
-struct SharePayload {
-    var url: String?
-    var text: String?
-
-    var detectedTitle: String {
-        if let text, !text.isEmpty, text.count < 120 { return text }
-        if let url, let host = URL(string: url)?.host() { return host }
-        return "Untitled"
-    }
-
-    var host: String? {
-        guard let url else { return nil }
-        return URL(string: url)?.host()
+        return draft
     }
 }

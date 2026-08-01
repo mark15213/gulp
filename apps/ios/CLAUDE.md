@@ -6,8 +6,10 @@ The **consumption end** (`docs/01 §3`): forward from anywhere, run the daily Gu
 
 ## Layout
 
-- `Gulp/` — app target. `DesignSystem/`, `Net/`, then one folder per screen (`Today/`, `Session/`, `Library/`, `You/`, `Reader/`).
+- `Gulp/` — app target. One folder per screen (`Today/`, `Session/`, `Library/`, `You/`, `Reader/`), plus `App/` and `Net/`.
+- `Shared/` — compiled into **both** the app and the extension: `DesignSystem/`, `Net/`, `Forward/`. Anything both targets need lives here; nothing else does.
 - `GulpShare/` — share-extension target. Same App Group as the app, which is how it inherits the login.
+- `GulpTests/` / `GulpUITests/` — unit and UI tests.
 - `Packages/GulpAPI/` — the generated Swift client. **Generated, committed, never hand-edited.**
 
 ## Conventions
@@ -23,5 +25,16 @@ The **consumption end** (`docs/01 §3`): forward from anywhere, run the daily Gu
 ## Commands
 
 - `just ios` — open the Xcode project
-- `just ios-test` — `xcodebuild test` on a simulator
+- `just ios-test` — unit tests, no server needed
+- `just ios-test-live` — adds the suites that sign in against a running `just dev`
+- `just ios-uitest` — drives the real app: taps, sessions, forwarding. Needs `just dev`. **It writes** — one review (graded `Missed`) and one capture per run.
 - `just gen-client` — regenerate both clients from the API schema
+
+## Testing
+
+Anything reachable only by tapping goes in `GulpUITests`, not in a comment saying it was checked by hand. XCUITest runs inside the simulator through iOS's accessibility layer, so it needs no macOS Accessibility permission and works headless — there is no excuse for an untested tap.
+
+Two traps that cost a cycle each, both invisible until something reads the accessibility tree:
+
+- **Uppercase labels.** `gulpLabel()` applies `.textCase(.uppercase)`, which rewrites the *accessibility* label for `Text("a literal")` but not for `Text(aVariable)`. So `Due today` is published as `DUE TODAY` while a card type is published as-is. Match case-insensitively (`AppDriver`'s `gulpLabel(_:)` does).
+- **Environment variables.** A UI-test runner is a separate process; only scheme variables prefixed `TEST_RUNNER_` reach it, with the prefix stripped. The scheme sets both forms of `GULP_TEST_API` for that reason.

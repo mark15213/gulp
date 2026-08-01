@@ -35,7 +35,10 @@ struct MainTabs: View {
         .tint(Ink.primary)
         .toolbarBackground(Ink.surface, for: .tabBar)
         .toolbarBackground(.visible, for: .tabBar)
-        .task { await model.refreshToday() }
+        .task {
+            await model.refreshToday()
+            await model.flushPendingForwards()
+        }
         // A session is full-bleed with no tab bar (`03 §7.7`). Presenting it
         // over the whole shell makes that structural, rather than something
         // each screen has to remember to do.

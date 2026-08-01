@@ -27,6 +27,13 @@
 			remoteGlobalIDString = 100000000000000000000260;
 			remoteInfo = GulpShare;
 		};
+		100000000000000000000410 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 100000000000000000000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 100000000000000000000010;
+			remoteInfo = Gulp;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -47,6 +54,7 @@
 		100000000000000000000070 /* Gulp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Gulp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		100000000000000000000080 /* GulpTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = GulpTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		100000000000000000000280 /* GulpShare.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = GulpShare.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		100000000000000000000370 /* GulpUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = GulpUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -93,6 +101,11 @@
 			path = GulpShare;
 			sourceTree = "<group>";
 		};
+		100000000000000000000380 /* GulpUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = GulpUITests;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -119,6 +132,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		1000000000000000000003B0 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -129,6 +149,7 @@
 				100000000000000000000240 /* Shared */,
 				100000000000000000000250 /* GulpShare */,
 				100000000000000000000060 /* GulpTests */,
+				100000000000000000000380 /* GulpUITests */,
 				100000000000000000000040 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -139,6 +160,7 @@
 				100000000000000000000070 /* Gulp.app */,
 				100000000000000000000280 /* GulpShare.appex */,
 				100000000000000000000080 /* GulpTests.xctest */,
+				100000000000000000000370 /* GulpUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -219,6 +241,29 @@
 			productReference = 100000000000000000000280 /* GulpShare.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
+		100000000000000000000390 /* GulpUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1000000000000000000003D0 /* Build configuration list for PBXNativeTarget "GulpUITests" */;
+			buildPhases = (
+				1000000000000000000003A0 /* Sources */,
+				1000000000000000000003B0 /* Frameworks */,
+				1000000000000000000003C0 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				100000000000000000000400 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				100000000000000000000380 /* GulpUITests */,
+			);
+			name = GulpUITests;
+			packageProductDependencies = (
+			);
+			productName = GulpUITests;
+			productReference = 100000000000000000000370 /* GulpUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -233,6 +278,10 @@
 						CreatedOnToolsVersion = 26.3;
 					};
 					100000000000000000000020 = {
+						CreatedOnToolsVersion = 26.3;
+						TestTargetID = 100000000000000000000010;
+					};
+					100000000000000000000390 = {
 						CreatedOnToolsVersion = 26.3;
 						TestTargetID = 100000000000000000000010;
 					};
@@ -258,6 +307,7 @@
 				100000000000000000000010 /* Gulp */,
 				100000000000000000000260 /* GulpShare */,
 				100000000000000000000020 /* GulpTests */,
+				100000000000000000000390 /* GulpUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -278,6 +328,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		100000000000000000000330 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		1000000000000000000003C0 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -308,6 +365,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		1000000000000000000003A0 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -320,6 +384,11 @@
 			isa = PBXTargetDependency;
 			target = 100000000000000000000260 /* GulpShare */;
 			targetProxy = 100000000000000000000340 /* PBXContainerItemProxy */;
+		};
+		100000000000000000000400 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 100000000000000000000010 /* Gulp */;
+			targetProxy = 100000000000000000000410 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -482,6 +551,34 @@
 			};
 			name = Release;
 		};
+		1000000000000000000003E0 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 0.1;
+				PRODUCT_BUNDLE_IDENTIFIER = app.gulp.ios.uitests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_TARGET_NAME = Gulp;
+			};
+			name = Debug;
+		};
+		1000000000000000000003F0 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 0.1;
+				PRODUCT_BUNDLE_IDENTIFIER = app.gulp.ios.uitests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_TARGET_NAME = Gulp;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -517,6 +614,15 @@
 			buildConfigurations = (
 				100000000000000000000350 /* Debug */,
 				100000000000000000000360 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		1000000000000000000003D0 /* Build configuration list for PBXNativeTarget "GulpUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1000000000000000000003E0 /* Debug */,
+				1000000000000000000003F0 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

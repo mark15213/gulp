@@ -275,6 +275,9 @@ private struct BlockView: View {
                 .contextMenu { askButton(code.id) }
             }
         }
+        // One stable anchor for every block type, so a UI test can reach the
+        // long-press that opens block-scoped chat without guessing at copy.
+        .accessibilityIdentifier("pack.block")
     }
 
     private func askButton(_ id: String) -> some View {

@@ -33,6 +33,11 @@
             value = "http://127.0.0.1:8000"
             isEnabled = "YES">
          </EnvironmentVariable>
+         <EnvironmentVariable
+            key = "TEST_RUNNER_GULP_TEST_API"
+            value = "http://127.0.0.1:8000"
+            isEnabled = "YES">
+         </EnvironmentVariable>
       </EnvironmentVariables>
       <Testables>
          <TestableReference
@@ -42,6 +47,16 @@
                BlueprintIdentifier = "100000000000000000000020"
                BuildableName = "GulpTests.xctest"
                BlueprintName = "GulpTests"
+               ReferencedContainer = "container:Gulp.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
+         <TestableReference
+            skipped = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "100000000000000000000390"
+               BuildableName = "GulpUITests.xctest"
+               BlueprintName = "GulpUITests"
                ReferencedContainer = "container:Gulp.xcodeproj">
             </BuildableReference>
          </TestableReference>

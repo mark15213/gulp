@@ -51,6 +51,15 @@ final class AppModel {
         self.auth = auth
     }
 
+    /// Anything the share extension could not send — offline, or a login that
+    /// had expired by the time you shared — is waiting in the App Group queue.
+    /// The app is the only process that gets a second chance, so it takes it
+    /// on every launch before asking what is due.
+    func flushPendingForwards() async {
+        let sent = await ForwardQueue.flush(client: client)
+        if sent > 0 { await refreshToday() }
+    }
+
     func refreshToday() async {
         if todayLoad == .idle { todayLoad = .loading }
         do {

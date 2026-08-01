@@ -5,6 +5,8 @@ import GulpAPI
 struct TodayView: View {
     @Environment(AppModel.self) private var model
 
+    @State private var forwarding = false
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
@@ -32,9 +34,11 @@ struct TodayView: View {
         .refreshable { await model.refreshToday() }
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
-                // Capture lives here, not in a tab: the share sheet is the
-                // real entry (spec §0). Task 9 gives it the same sheet.
-                Button { } label: {
+                // Capture lives here, not in a tab: the share sheet is the real
+                // entry (spec §0). This is the fallback for when you are
+                // already in the app with something on the clipboard, and it
+                // presents the same form the extension does.
+                Button { forwarding = true } label: {
                     Image(systemName: "plus")
                         .font(.system(size: 17, weight: .medium))
                         .foregroundStyle(Ink.primary)
@@ -42,6 +46,14 @@ struct TodayView: View {
                 }
                 .accessibilityLabel("Forward something")
             }
+        }
+        .sheet(isPresented: $forwarding) {
+            ForwardForm(draft: ForwardDraft(), autoConfirmAfter: nil) {
+                forwarding = false
+                Task { await model.refreshToday() }
+            }
+            .presentationDetents([.height(340)])
+            .presentationBackground(Ink.surface)
         }
     }
 

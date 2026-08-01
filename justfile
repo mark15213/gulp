@@ -33,13 +33,17 @@ web:
     pnpm --filter @gulp/web dev
 ios:
     open apps/ios/Gulp.xcodeproj
-# Unit tests only. The integration suite is skipped by name rather than
+# Unit tests only. The live suites are skipped by name rather than
 # self-skipping on a missing variable: a test that quietly passes when it
-# never ran is worse than no test.
+# never ran is worse than no test. Both live suites have to be named — they
+# share a file but are separate types, and for a while only the first was
+# listed here, which quietly made this recipe depend on a running API.
 ios-test device="iPhone 17":
     xcodebuild test -project apps/ios/Gulp.xcodeproj -scheme Gulp \
       -destination 'platform=iOS Simulator,name={{device}}' \
-      -skip-testing:GulpTests/AuthIntegrationTests | tail -40
+      -skip-testing:GulpTests/AuthIntegrationTests \
+      -skip-testing:GulpTests/SessionIntegrationTests \
+      -skip-testing:GulpUITests | tail -40
 
 # Everything, including the integration suite, against a running `just dev`.
 # The API address lives in the scheme's test environment (GULP_TEST_API) —
@@ -48,7 +52,18 @@ ios-test device="iPhone 17":
 # by editing the scheme.
 ios-test-live device="iPhone 17":
     xcodebuild test -project apps/ios/Gulp.xcodeproj -scheme Gulp \
-      -destination 'platform=iOS Simulator,name={{device}}' | tail -45
+      -destination 'platform=iOS Simulator,name={{device}}' \
+      -skip-testing:GulpUITests | tail -45
+
+# The taps. Drives the real app against a running `just dev` — the only suite
+# that proves a button is reachable and wired, and the only one that writes:
+# it records exactly one review, graded `Missed`, so your queue barely notices.
+# The runner reads TEST_RUNNER_GULP_TEST_API from the scheme (a UI-test runner
+# is a separate process, and only that prefix crosses into it).
+ios-uitest device="iPhone 17":
+    xcodebuild test -project apps/ios/Gulp.xcodeproj -scheme Gulp \
+      -destination 'platform=iOS Simulator,name={{device}}' \
+      -only-testing:GulpUITests | tail -60
 api:
     uv run --package gulp-api uvicorn app.main:app --reload
 worker:

@@ -164,9 +164,10 @@ Spec §7.3 is closed; Task 0 below is **done**. The answers everything else assu
 - [x] **Step 1:** Extension target in the App Group, accepting URLs, text and PDFs.
 - [x] **Step 2:** The sheet — detected title, type chip, source host, note and tags fields, ink `Forward` button. The verb is **Forward**, never Gulp.
 - [x] **Step 3:** `POST /capture` using the shared cookie store. Self-confirm after 3 s with a visible countdown that any interaction cancels.
-- [x] **Step 4:** Not signed in, or offline → queue locally in the App Group container and flush on next app launch. Never lose a capture.
+- [x] **Step 4:** Not signed in, or offline → queue locally in the App Group container and flush on next app launch. Never lose a capture. *(Checked off on 2026-08-01 before it existed — there was no queue, only a `Try again` button. Built for real on 2026-08-01 as `Shared/Forward/ForwardQueue.swift`, flushed from `AppModel.flushPendingForwards()`.)*
+- [x] **Step 5:** The same form behind Today's `+`. *(Added after the UI tests found that button wired to an empty closure.)*
 
-**Verify:** forward from Safari and from a third-party reader; both land in Inbox; airplane-mode forward flushes on reconnect.
+**Verify:** ✅ `POST /capture` from the app's `+` lands in the inbox — driven by `GulpUITests`, confirmed server-side. The queue round-trips under unit test. **Not verified:** forwarding from Safari, and therefore whether the extension really inherits the cookie. The app half of that mechanism *is* proven — the `gulp_session` cookie for the API host sits in the App Group container and the app's private container holds none — but nothing has read it from the extension's process.
 
 ---
 
@@ -177,8 +178,22 @@ Spec §7.3 is closed; Task 0 below is **done**. The answers everything else assu
 - [x] **Step 3:** Reduced motion degrades every transition to a fade.
 - [x] **Step 4:** Every list has its loading, empty and error state per `03 §8`, with copy that names the next action.
 - [ ] **Step 5:** App icon and launch screen. *(Not done — needs drawn assets.)*
+- [x] **Step 6:** `GulpUITests` — the taps. A UI-test target driving the shipped app against a live API: `just ios-uitest`.
 
-**Verify:** `just ios-test` green (17 tests, 6 suites) and `just lint` green. The manual device pass has **not** happened: this machine has no UI input automation, so nothing that requires a tap — answering a card, grading, forwarding from Safari, opening a pack — has been exercised by a human or a robot. Everything is verified as far as building, launching, fetching and rendering; the interaction is not.
+**Verify:** ✅ `just lint`, `just ios-test-live` (29 tests, 9 suites) and `just ios-uitest` (11 tests) all green.
+
+**On the earlier claim that the interaction could not be tested here.** That was wrong, and it was wrong in the expensive direction — it wrote off a whole class of verification on a false premise. The premise was that this machine has no UI automation, which is true of *macOS* automation (osascript is refused Accessibility permission, so the Simulator window cannot be driven from outside). XCUITest does not go that way: the runner is an app inside the simulator using iOS's own accessibility layer, and `xcodebuild` drives it with no macOS permission at all.
+
+What the taps then found, none of which any unit test could have:
+
+| Found by tapping | |
+|---|---|
+| Today's `+` was wired to an empty closure | The button drew, took the tap, did nothing |
+| Task 9 Step 4 was checked off but unbuilt | No offline queue existed; a failed forward just showed an error |
+| `just ios-test` was not unit-only | Two live suites share a file; only one was named in the skip, so the "no server needed" recipe needed a server |
+| `.textCase(.uppercase)` rewrites the accessibility label only for literal `Text` | `Text("Due today")` is published as `DUE TODAY`; `Text(cardType)` is not. Display is uppercase either way, so this is invisible until something reads the labels |
+
+**Still not verified:** Dynamic Type through XXXL, a full VoiceOver pass, and forwarding from Safari (the share sheet is another app's UI; cross-app XCUITest against iOS 26 Safari was not attempted). The uppercase finding above is a live question for the VoiceOver pass — an all-caps label is read differently from a title-case one, and this app's labels are inconsistent about which one reaches the screen reader.
 
 ---
 

@@ -106,10 +106,15 @@ private struct CardScreen: View {
                 }
                 .accessibilityLabel("End session")
                 Spacer()
+                // Combined so VoiceOver reads "3 / 20" as one fact rather than
+                // two orphaned fragments. The identifier is what the UI tests
+                // watch to prove a grade advanced the session.
                 HStack(spacing: 4) {
                     Text("\(model.index + 1)").gulpData(11)
                     Text("/ \(model.total)").gulpLabel()
                 }
+                .accessibilityElement(children: .combine)
+                .accessibilityIdentifier("session.progress")
             }
             // The same mark as Today's gauge: one segment, one card.
             SessionRail(total: model.total, done: model.index)
