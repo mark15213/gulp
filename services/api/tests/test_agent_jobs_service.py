@@ -8,6 +8,7 @@ import pytest
 from app.services import agent_jobs as svc
 from app.services.agent_jobs import AgentJobUnavailable
 from gulp_shared.contracts import archive_entries as ae
+from gulp_shared.domain.agent_jobs import latest_job
 from gulp_shared.models import (
     AgentJob,
     AgentJobKind,
@@ -348,3 +349,126 @@ def test_report_failure(db, owner):  # type: ignore[no-untyped-def]
     db.refresh(job)
     assert job.state is AgentJobState.failed
     assert job.last_error == "model kept hallucinating"
+
+
+# --- publish_job + candidates (spec 2026-07-16 §3; agent-side publish) ---
+
+def _capture(db, **kw):  # type: ignore[no-untyped-def]
+    """A snapshot as `POST /capture` leaves it: kept, unread, unrouted."""
+    s = Source(owner_id=DEV_USER_ID, kind=SourceKind.snapshot, title="Fresh paper",
+               status=SnapshotStatus.unprocessed, **kw)
+    db.add(s)
+    db.commit()
+    return s
+
+
+def test_candidates_are_opt_in(db, owner):  # type: ignore[no-untyped-def]
+    _capture(db)
+    assert svc.list_jobs(db, owner) == []
+    rows = svc.list_jobs(db, owner, include_candidates=True)
+    assert len(rows) == 1
+    assert rows[0]["state"] == "unpublished" and rows[0]["job_id"] is None
+    assert rows[0]["kind"] == "digest"
+
+
+def test_candidates_exclude_snapshots_that_already_have_a_live_job(db, owner):  # type: ignore[no-untyped-def]
+    s = _capture(db)
+    _job(db, s, state=AgentJobState.pending)
+    rows = svc.list_jobs(db, owner, include_candidates=True)
+    assert [r["state"] for r in rows] == ["pending"]  # the job, not a duplicate candidate
+
+
+def test_candidates_exclude_non_paper_and_already_routed(db, owner):  # type: ignore[no-untyped-def]
+    from gulp_shared.models.source import SourceGenre
+    _capture(db, genre=SourceGenre.article)  # zero-LLM genre — no digest to outsource
+    _snap(db, status=SnapshotStatus.ready)  # already has a pack
+    _snap(db, status=SnapshotStatus.processing)  # the in-app pipeline owns it
+    _snap(db, status=SnapshotStatus.needs_attention)  # publishable on request, never auto-listed
+    deleted = _capture(db)
+    deleted.deleted_at = datetime.now(UTC)
+    db.commit()
+    assert svc.list_jobs(db, owner, include_candidates=True) == []
+
+
+def test_candidates_are_owner_scoped(db, owner):  # type: ignore[no-untyped-def]
+    from gulp_shared.models.user import User
+    other = User(display_name="other")
+    db.add(other)
+    db.commit()
+    db.add(Source(owner_id=other.id, kind=SourceKind.snapshot, title="Theirs",
+                  status=SnapshotStatus.unprocessed))
+    db.commit()
+    assert svc.list_jobs(db, owner, include_candidates=True) == []
+
+
+def test_candidates_absent_for_cards_kind(db, owner):  # type: ignore[no-untyped-def]
+    _capture(db)
+    assert svc.list_jobs(db, owner, "cards", include_candidates=True) == []
+    assert len(svc.list_jobs(db, owner, "digest", include_candidates=True)) == 1
+
+
+def test_publish_job_builds_and_enqueues(db, owner, enqueue, enqueue_calls):  # type: ignore[no-untyped-def]
+    s = _capture(db)
+    out = svc.publish_job(db, owner, str(s.id), enqueue)
+    assert out["state"] == "building"
+    assert out["retry_after_s"] == svc.REBUILD_AFTER_S
+    assert out["snapshot_id"] == str(s.id) and out["title"] == "Fresh paper"
+    assert enqueue_calls == [("build_export", str(s.id))]
+    job = latest_job(db, s.id, AgentJobKind.digest)
+    assert job is not None and str(job.id) == out["job_id"]
+
+
+def test_publish_job_is_idempotent(db, owner, enqueue, enqueue_calls):  # type: ignore[no-untyped-def]
+    s = _capture(db)
+    first = svc.publish_job(db, owner, str(s.id), enqueue)
+    second = svc.publish_job(db, owner, str(s.id), enqueue)
+    assert first["job_id"] == second["job_id"]
+    assert len(enqueue_calls) == 1  # the second call did not re-queue the build
+
+
+def test_publish_job_returns_a_pending_job_untouched(db, owner, enqueue, enqueue_calls):  # type: ignore[no-untyped-def]
+    """A built job is claimable — re-publishing must not knock it back to building."""
+    s = _capture(db)
+    job = _job(db, s, state=AgentJobState.pending)
+    out = svc.publish_job(db, owner, str(s.id), enqueue)
+    assert out["job_id"] == str(job.id) and out["state"] == "pending"
+    assert "retry_after_s" not in out
+    assert enqueue_calls == []
+    db.refresh(job)
+    assert job.state is AgentJobState.pending
+
+
+def test_publish_job_rejects_non_paper_genre(db, owner, enqueue):  # type: ignore[no-untyped-def]
+    from gulp_shared.models.source import SourceGenre
+    s = _capture(db, genre=SourceGenre.note)
+    with pytest.raises(AgentJobUnavailable) as exc:
+        svc.publish_job(db, owner, str(s.id), enqueue)
+    assert exc.value.code == "not_applicable"
+
+
+def test_publish_job_rejects_a_snapshot_someone_else_owns_the_flow_of(db, owner, enqueue):  # type: ignore[no-untyped-def]
+    for status in (SnapshotStatus.ready, SnapshotStatus.processing, SnapshotStatus.queued):
+        s = _snap(db, status=status)
+        with pytest.raises(AgentJobUnavailable) as exc:
+            svc.publish_job(db, owner, str(s.id), enqueue)
+        assert exc.value.code == "not_publishable", status
+
+
+def test_publish_job_accepts_needs_attention_as_a_retry(db, owner, enqueue):  # type: ignore[no-untyped-def]
+    s = _snap(db, status=SnapshotStatus.needs_attention)
+    assert svc.publish_job(db, owner, str(s.id), enqueue)["state"] == "building"
+
+
+def test_publish_job_foreign_or_missing_snapshot_not_found(db, owner, enqueue):  # type: ignore[no-untyped-def]
+    from gulp_shared.models.user import User
+    other = User(display_name="other")
+    db.add(other)
+    db.commit()
+    theirs = Source(owner_id=other.id, kind=SourceKind.snapshot, title="Theirs",
+                    status=SnapshotStatus.unprocessed)
+    db.add(theirs)
+    db.commit()
+    for bad in (str(uuid.uuid4()), "not-a-uuid", str(theirs.id)):
+        with pytest.raises(AgentJobUnavailable) as exc:
+            svc.publish_job(db, owner, bad, enqueue)
+        assert exc.value.code == "not_found", bad

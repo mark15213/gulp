@@ -25,6 +25,15 @@ def _rpc(method: str, params: dict | None = None) -> dict:
     return {"jsonrpc": "2.0", "id": 1, "method": method, "params": params or {}}
 
 
+def _tool_result(response):  # type: ignore[no-untyped-def]
+    """The tool's own return value, out of the JSON-RPC + MCP envelope. FastMCP
+    puts a dict-annotated return straight into structuredContent but wraps a
+    non-object one (list_jobs' list) under a "result" key — and repeats either as
+    serialized text in `content`, so assert on this rather than on r.text."""
+    structured = response.json()["result"]["structuredContent"]
+    return structured["result"] if list(structured) == ["result"] else structured
+
+
 @pytest.fixture
 def pat(db, owner):  # type: ignore[no-untyped-def]
     from app.services.tokens import create_token
@@ -84,7 +93,7 @@ def test_tools_list(mcp_client, pat):  # type: ignore[no-untyped-def]
         headers={**HEADERS, "Authorization": f"Bearer {pat}"},
     )
     assert r.status_code == 200
-    for name in ("list_jobs", "claim_job", "submit_result", "report_failure"):
+    for name in ("list_jobs", "publish_job", "claim_job", "submit_result", "report_failure"):
         assert name in r.text
 
 
@@ -102,6 +111,43 @@ def test_list_jobs_tool_scoped_to_pat_owner(mcp_client, pat, db):  # type: ignor
     )
     assert r.status_code == 200
     assert "MCP Paper" in r.text
+
+
+def test_publish_job_tool_turns_a_capture_into_a_job(mcp_client, pat, db):  # type: ignore[no-untyped-def]
+    """The zero-click path: an agent discovers an unrouted capture and publishes
+    it itself. Exercised end-to-end because the tool wrappers pass their args
+    positionally through _offload — a service signature this layer disagrees with
+    is invisible to the service-level tests."""
+    s = Source(owner_id=DEV_USER_ID, kind=SourceKind.snapshot, title="Unrouted Paper",
+               status=SnapshotStatus.unprocessed)
+    db.add(s)
+    db.commit()
+    listed = mcp_client.post(
+        "/mcp",
+        json=_rpc("tools/call",
+                  {"name": "list_jobs", "arguments": {"include_candidates": True}}),
+        headers={**HEADERS, "Authorization": f"Bearer {pat}"},
+    )
+    assert [(c["state"], c["title"], c["job_id"]) for c in _tool_result(listed)] == [
+        ("unpublished", "Unrouted Paper", None)
+    ]
+    r = mcp_client.post(
+        "/mcp",
+        json=_rpc("tools/call",
+                  {"name": "publish_job", "arguments": {"snapshot_id": str(s.id)}}),
+        headers={**HEADERS, "Authorization": f"Bearer {pat}"},
+    )
+    assert r.status_code == 200
+    published = _tool_result(r)
+    assert published["state"] == "building" and published["retry_after_s"] == 30
+    # …and it is a real job now, listed without asking for candidates.
+    plain = mcp_client.post(
+        "/mcp", json=_rpc("tools/call", {"name": "list_jobs", "arguments": {}}),
+        headers={**HEADERS, "Authorization": f"Bearer {pat}"},
+    )
+    assert [(j["job_id"], j["state"]) for j in _tool_result(plain)] == [
+        (published["job_id"], "building")
+    ]
 
 
 def test_unknown_path_still_404(mcp_client, pat):  # type: ignore[no-untyped-def]

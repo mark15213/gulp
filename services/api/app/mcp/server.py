@@ -82,13 +82,29 @@ async def _offload(ctx: Ctx, fn: Callable[..., Any], *args: Any) -> Any:
 
 @mcp.tool()
 async def list_jobs(
-    ctx: Ctx, kind: str | None = None
+    ctx: Ctx, kind: str | None = None, include_candidates: bool = False
 ) -> list[dict[str, Any]] | dict[str, Any]:
     """List your pending Gulp jobs. Optional kind filter: "digest" | "cards".
-    Jobs in state "building" are not claimable yet — retry them later."""
+    Jobs in state "building" are not claimable yet — retry them later.
+
+    With include_candidates=true the list also carries captured snapshots that
+    have no job yet: state "unpublished", job_id null. They become claimable
+    jobs only after publish_job(snapshot_id)."""
     return cast(
         "list[dict[str, Any]] | dict[str, Any]",
-        await _offload(ctx, agent_jobs.list_jobs, kind),
+        await _offload(ctx, agent_jobs.list_jobs, kind, include_candidates),
+    )
+
+
+@mcp.tool()
+async def publish_job(ctx: Ctx, snapshot_id: str) -> dict[str, Any]:
+    """Turn a captured snapshot into a digest job (what the web Export button
+    does). Returns the job in state "building" — the archive is packaged
+    asynchronously, so wait retry_after_s before claim_job. Idempotent: a
+    snapshot that already has a live job returns that one."""
+    return cast(
+        "dict[str, Any]",
+        await _offload(ctx, agent_jobs.publish_job, snapshot_id, deps.enqueue),
     )
 
 
