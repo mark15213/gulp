@@ -22,10 +22,21 @@ export default async function SnapshotPage({ params }: { params: Promise<{ id: s
   const body = (
     <>
       {snap.status === "unprocessed" && (
-        <div className={styles.actions}>
-          <StartButton id={id} />
-          <ExportActions id={id} status={snap.status} />
-        </div>
+        <>
+          {/* Both routes are icon buttons whose names live in a tooltip, which
+              left this state reading as an empty page. Name them in the body. */}
+          <p className={styles.lede}>Not read yet. Two ways to get a pack:</p>
+          <div className={styles.actions}>
+            <StartButton id={id} />
+            <span className={`t-data ${styles.hint}`}>Read it here, with your own model.</span>
+          </div>
+          <div className={styles.actions}>
+            <ExportActions id={id} status={snap.status} />
+            <span className={`t-data ${styles.hint}`}>
+              Hand it to your agent — then run <code>/gulp-work</code> in Claude Code.
+            </span>
+          </div>
+        </>
       )}
 
       {(snap.status === "processing" || snap.status === "queued") && (
@@ -44,17 +55,24 @@ export default async function SnapshotPage({ params }: { params: Promise<{ id: s
           <div className={styles.actions}>
             <StartButton id={id} label="Retry" />
             <ExportActions id={id} status={snap.status} />
+            <span className={`t-data ${styles.hint}`}>Retry here, or hand it to your agent.</span>
           </div>
         </>
       )}
 
       {snap.status === "exported" && (
-        <div className={styles.actions}>
-          <ExportActions id={id} status={snap.status} />
-          <p className="t-data" style={{ color: "var(--text-muted, #777)" }}>
-            Exported — run it in Claude Code, then upload the result zip.
+        <>
+          <p className={styles.lede}>
+            Queued for your agent. Run <code>/gulp-work</code> in Claude Code — it submits
+            the result back over MCP.
           </p>
-        </div>
+          <div className={styles.actions}>
+            <ExportActions id={id} status={snap.status} />
+            <span className={`t-data ${styles.hint}`}>
+              Or do it by hand: download the job, upload the result zip.
+            </span>
+          </div>
+        </>
       )}
 
       {snap.status === "ready" && (await renderPack(id, snap.cards_status ?? null))}

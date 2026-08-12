@@ -18,6 +18,7 @@ import {
   setEntryRead,
   setEntrySkipped,
   skipAllSubscription,
+  startExport,
   startProcessing,
 } from "@gulp/api-client";
 import {
@@ -203,6 +204,23 @@ export function InboxWorkspace({
         await startProcessing(snapshot.id);
       } catch {
         await reloadItems(); // 409 or transient — the server's view wins
+      }
+    },
+    [reloadItems, track],
+  );
+
+  // Hand the snapshot to the agent channel instead of the in-app pipeline. The
+  // worker packages the archive, so this rides the same in-flight belt as
+  // `start` — the row lands back in Needs as `exported` when the zip is stashed.
+  const exportOne = useCallback(
+    async (snapshot: Snapshot) => {
+      track(snapshot);
+      try {
+        await startExport(snapshot.id);
+      } catch {
+        await reloadItems();
+        // The one refusal a user can actually act on: /export is paper-only.
+        window.alert(`Couldn't export "${snapshot.title}" — only papers can be exported.`);
       }
     },
     [reloadItems, track],
@@ -545,8 +563,8 @@ export function InboxWorkspace({
                       : undefined
                   }
                   onExport={
-                    stage.key === "kept" || stage.key === "needs"
-                      ? () => router.push(`/snapshots/${item.id}`)
+                    stage.key === "kept" || item.status === "needs_attention"
+                      ? () => void exportOne(item)
                       : undefined
                   }
                   onDelete={stage.key !== "flight" ? () => void removeSnapshot(item) : undefined}

@@ -5,9 +5,9 @@ import userEvent from "@testing-library/user-event";
 import type { FeedEntry, Snapshot, Subscription } from "@gulp/api-client";
 import { InboxWorkspace } from "./InboxWorkspace";
 
-vi.mock("next/navigation", () => ({
-  useRouter: () => ({ refresh: vi.fn(), push: vi.fn() }),
-}));
+// Stable across renders so a test can assert what the surface did NOT navigate to.
+const router = vi.hoisted(() => ({ refresh: vi.fn(), push: vi.fn() }));
+vi.mock("next/navigation", () => ({ useRouter: () => router }));
 
 // vi.mock is hoisted above the module body, so the doubles must be too.
 const api = vi.hoisted(() => ({
@@ -25,6 +25,7 @@ const api = vi.hoisted(() => ({
   setEntryRead: vi.fn(),
   setEntrySkipped: vi.fn(),
   skipAllSubscription: vi.fn(),
+  startExport: vi.fn(),
   startProcessing: vi.fn(),
 }));
 vi.mock("@gulp/api-client", () => api);
@@ -107,6 +108,8 @@ const section = (name: string) =>
 beforeEach(() => {
   window.localStorage.clear();
   Object.values(api).forEach((fn) => fn.mockReset());
+  Object.values(router).forEach((fn) => fn.mockReset());
+  api.startExport.mockResolvedValue({});
   api.deleteSnapshot.mockResolvedValue(undefined);
   api.deleteSubscription.mockResolvedValue(undefined);
   api.patchSubscription.mockResolvedValue({});
@@ -215,6 +218,39 @@ describe("stage 2 → the belt's last frame", () => {
       expect(within(section("In flight")).getByRole("link", { name: "Read →" })).toBeDefined(),
     );
     vi.useRealTimers();
+  });
+
+  it("Export publishes the job — it used to only open the reader", async () => {
+    mount();
+    await userEvent.click(within(section("Kept")).getByRole("button", { name: "⤓ Export" }));
+    await waitFor(() => expect(api.startExport).toHaveBeenCalledWith("s1"));
+    expect(router.push).not.toHaveBeenCalled();
+    // Same in-flight belt as Start: the worker is packaging the archive.
+    expect(within(section("In flight")).getByText("Attention Is All You Need")).toBeDefined();
+  });
+
+  it("an exported snapshot lands back in Needs you, not in Ready", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const exported = snap({ status: "exported" });
+    api.getSnapshot.mockResolvedValue(exported);
+    api.getInbox.mockResolvedValue({ items: [exported], count: 1, actionable_count: 1 });
+    mount();
+    await userEvent.click(within(section("Kept")).getByRole("button", { name: "⤓ Export" }));
+    await vi.advanceTimersByTimeAsync(3200);
+    await waitFor(() =>
+      expect(within(section("Needs you")).getByText("Attention Is All You Need")).toBeDefined(),
+    );
+    vi.useRealTimers();
+  });
+
+  it("says so when the export is refused instead of failing silently", async () => {
+    const alerted = vi.spyOn(window, "alert").mockImplementation(() => {});
+    api.startExport.mockRejectedValue(new Error("export failed"));
+    mount();
+    await userEvent.click(within(section("Kept")).getByRole("button", { name: "⤓ Export" }));
+    await waitFor(() => expect(alerted).toHaveBeenCalled());
+    expect(api.getInbox).toHaveBeenCalled(); // and the server's view is re-read
+    alerted.mockRestore();
   });
 
   it("starts a checked batch through one call", async () => {
